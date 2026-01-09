@@ -1,20 +1,17 @@
-<div class="space-y-6 animate-fade-in">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-            <p class="text-dark-muted text-sm">จัดการคำขออนุมัติงบประมาณประจำปี <?= $fiscalYear ?></p>
+            <p class="text-dark-muted text-sm">รายการคำของบประมาณแผนงานบุคลากรภาครัฐ</p>
         </div>
-        <div class="flex gap-3">
-             <div class="relative">
-                <select onchange="window.location.href='?year=' + this.value" class="input pl-10 pr-8 py-2 text-sm max-w-[140px]">
-                    <?php foreach ($fiscalYears as $year): ?>
-                    <option value="<?= $year['year'] ?>" <?= $year['year'] == $fiscalYear ? 'selected' : '' ?>>
-                        ปี <?= $year['year'] ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-                <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted"></i>
-            </div>
+        <div class="flex items-center gap-3">
+            <span class="text-dark-muted text-sm">ปีงบประมาณ พ.ศ.</span>
+            <select onchange="window.location.href='?year=' + this.value" class="input py-2 px-3 text-sm rounded-lg border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none cursor-pointer">
+                <?php foreach ($fiscalYears as $year): ?>
+                <option value="<?= $year['year'] ?>" <?= $year['year'] == $fiscalYear ? 'selected' : '' ?>>
+                    <?= $year['year'] ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
             
             <a href="<?= \App\Core\View::url('/requests/create') ?>" class="btn btn-primary">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
@@ -24,45 +21,57 @@
     </div>
 
     <!-- Requests Table -->
-    <div class="bg-dark-card border border-dark-border rounded-xl overflow-hidden">
+    <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl overflow-hidden shadow-2xl">
+        <div class="px-6 py-4 border-b border-dark-border flex items-center gap-3 bg-slate-800/30">
+            <div class="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-400">
+                <i data-lucide="table" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-semibold text-lg text-white">คำของบประมาณแผนงานบุคลากรภาครัฐ</h3>
+        </div>
         <div class="overflow-x-auto">
             <table class="table w-full whitespace-nowrap">
-                <thead>
-                    <tr>
-                        <th class="w-10">#</th>
-                        <th>หัวข้อคำขอ</th>
-                        <th>ผู้ขอ</th>
-                        <th class="text-right">ยอดรวม</th>
-                        <th>วันที่บันทึก</th>
-                        <th class="text-center">จัดการ</th>
+                <thead class="bg-slate-800/80 backdrop-blur-sm">
+                    <tr class="text-slate-300 border-b border-dark-border">
+                        <th style="text-align:center" class="w-16 py-4 font-semibold">ลำดับ</th>
+                        <th style="text-align:center" class="py-4 font-semibold">แบบคำขอ</th>
+                        <th style="text-align:center" class="py-4 font-semibold">กอง</th>
+                        <th style="text-align:center" class="py-4 font-semibold">ยอดรวม</th>
+                        <th style="text-align:center" class="py-4 font-semibold">วันที่บันทึก</th>
+                        <th style="text-align:center" class="w-32 py-4 font-semibold">จัดการ</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-dark-border">
                     <?php if (!empty($requests)): ?>
                         <?php foreach ($requests as $i => $req): ?>
-                        <tr class="hover:bg-dark-border/20 transition-colors">
-                            <td class="text-dark-muted"><?= $i + 1 + ($pagination['current'] - 1) * $pagination['perPage'] ?></td>
-                            <td>
-                                <div class="font-medium text-white"><?= htmlspecialchars($req['request_title']) ?></div>
+                        <tr class="bg-dark-bg hover:bg-white/5 transition-colors group">
+                            <td style="text-align:center" class="w-16 py-4 text-dark-muted font-medium align-middle"><?= $i + 1 + ($pagination['current'] - 1) * $pagination['perPage'] ?></td>
+                            <td style="text-align:center" class="py-4 align-middle">
+                                <div class="font-medium text-white group-hover:text-primary-400 transition-colors"><?= htmlspecialchars($req['request_title']) ?></div>
                             </td>
-                            <td class="text-dark-muted">
+                            <td style="text-align:center" class="py-4 text-dark-muted align-middle">
                                 <?= htmlspecialchars($req['created_by_name'] ?? '-') ?>
                             </td>
-                            <td class="text-right font-medium">
-                                <?= \App\Core\View::currency($req['total_amount']) ?>
+                            <td style="text-align:center" class="py-4 font-medium text-emerald-400 align-middle">
+                                <?= number_format($req['total_amount'], 2) ?>
                             </td>
-                            <td class="text-dark-muted text-sm">
-                                <?= date('d/m/Y', strtotime($req['created_at'])) ?>
+                            <td style="text-align:center" class="py-4 text-dark-muted text-sm align-middle">
+                                <?php 
+                                    $date = strtotime($req['created_at']);
+                                    echo date('d/m/', $date) . (date('Y', $date) + 543);
+                                ?>
                             </td>
-                            <td class="text-center">
-                                <div class="flex items-center justify-center gap-0.5">
-                                    <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="btn btn-icon btn-ghost-primary" title="บันทึกข้อมูล">
+                            <td style="text-align:center" class="w-32 py-4 align-middle">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-sky-400 transition-colors" title="เรียกดู">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                    <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="w-8 h-8 flex items-center justify-center text-amber-500 hover:text-amber-400 transition-colors" title="แก้ไข">
                                         <i data-lucide="square-pen" class="w-4 h-4"></i>
                                     </a>
                                     <?php if (\App\Core\Auth::hasRole('admin')): ?>
-                                    <form action="<?= \App\Core\View::url('/requests/' . $req['id'] . '/delete') ?>" method="POST" class="delete-form inline-flex m-0 p-0">
+                                    <form action="<?= \App\Core\View::url('/requests/' . $req['id'] . '/delete') ?>" method="POST" class="w-8 h-8 flex items-center justify-center m-0 p-0">
                                         <?= \App\Core\View::csrf() ?>
-                                        <button type="button" class="btn btn-icon text-red-400 hover:text-red-300 hover:bg-red-400/10 btn-delete" title="ลบคำขอ">
+                                        <button type="button" class="w-full h-full flex items-center justify-center text-rose-500 hover:text-rose-400 transition-colors btn-delete" title="ลบคำขอ">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </form>
@@ -73,9 +82,12 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-12 text-dark-muted">
-                                <i data-lucide="files" class="w-10 h-10 mx-auto mb-3 text-dark-muted"></i>
-                                ยังไม่มีคำของบประมาณ
+                            <td colspan="6" class="text-center py-16 text-dark-muted">
+                                <div class="bg-dark-border/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="files" class="w-8 h-8 text-slate-500"></i>
+                                </div>
+                                <p class="text-lg font-medium text-slate-400">ยังไม่มีคำของบประมาณ</p>
+                                <p class="text-sm mt-1 text-slate-600">กดปุ่ม "สร้างคำขอ" เพื่อเริ่มรายการใหม่</p>
                             </td>
                         </tr>
                     <?php endif; ?>
