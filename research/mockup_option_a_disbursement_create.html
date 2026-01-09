@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option A: Disbursement Create Form - HR Budget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', system-ui, sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        /* Hide Number Spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Color-coded input styles */
+        .input-allocated {
+            color: #e2e8f0;
+        }
+
+        .input-transfer {
+            color: #67e8f9;
+        }
+
+        .input-transfer:focus {
+            border-color: #06b6d4 !important;
+        }
+
+        .input-disbursed {
+            color: #fdba74;
+        }
+
+        .input-disbursed:focus {
+            border-color: #f97316 !important;
+        }
+
+        .input-pending {
+            color: #fde047;
+        }
+
+        .input-pending:focus {
+            border-color: #eab308 !important;
+        }
+
+        .input-po {
+            color: #93c5fd;
+        }
+
+        .input-po:focus {
+            border-color: #3b82f6 !important;
+        }
+
+        /* Balance status */
+        .balance-positive {
+            color: #34d399;
+        }
+
+        .balance-negative {
+            color: #f87171;
+        }
+
+        /* Collapsible rows animation */
+        .collapse-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-icon.rotated {
+            transform: rotate(-90deg);
+        }
+
+        .category-hidden {
+            display: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans Thai', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="text-sm mb-6 text-slate-400">
+            <a href="#" class="hover:text-primary-400">หน้าหลัก</a>
+            <span class="mx-2">›</span>
+            <a href="#" class="hover:text-primary-400">รายการเบิกจ่าย</a>
+            <span class="mx-2">›</span>
+            <span class="text-slate-200">สร้างรายการเบิกจ่าย</span>
+        </nav>
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-3">
+                <i data-lucide="file-plus" class="text-primary-500"></i>
+                Option A: สร้างรายการเบิกจ่าย
+            </h1>
+            <p class="text-slate-400">URL: /budgets/disbursements/create → หน้าใหม่สำหรับบันทึกข้อมูลเบิกจ่ายรายเดือน
+            </p>
+        </div>
+
+        <!-- Step 1: Header Form -->
+        <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-2xl mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-slate-100 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm">1</span>
+                    ฟอร์มสร้างรายการเบิกจ่าย (Header)
+                </h2>
+            </div>
+
+            <form class="space-y-6">
+                <!-- Row 1: ปีงบประมาณ + เดือน -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- ปีงบประมาณ -->
+                    <div class="group">
+                        <label class="block text-sm font-medium text-slate-400 mb-2">
+                            ปีงบประมาณ <span class="text-red-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <select class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                       text-slate-100 cursor-pointer
+                                       focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                       transition-all duration-200">
+                                <option value="2568" selected>2568</option>
+                                <option value="2567">2567</option>
+                                <option value="2569">2569</option>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                    <path
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- เดือน -->
+                    <div class="group">
+                        <label class="block text-sm font-medium text-slate-400 mb-2">
+                            เดือน <span class="text-red-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <select class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                       text-slate-100 cursor-pointer
+                                       focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                       transition-all duration-200">
+                                <option value="">-- เลือกเดือน --</option>
+                                <option value="10">ตุลาคม</option>
+                                <option value="11">พฤศจิกายน</option>
+                                <option value="12" selected>ธันวาคม</option>
+                                <option value="1">มกราคม</option>
+                                <option value="2">กุมภาพันธ์</option>
+                                <option value="3">มีนาคม</option>
+                                <option value="4">เมษายน</option>
+                                <option value="5">พฤษภาคม</option>
+                                <option value="6">มิถุนายน</option>
+                                <option value="7">กรกฎาคม</option>
+                                <option value="8">สิงหาคม</option>
+                                <option value="9">กันยายน</option>
+                            </select>
+                            <div
+                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                    <path
+                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: หน่วยงาน -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        หน่วยงาน <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="building-2" class="text-slate-500 w-4 h-4"></i>
+                        </div>
+                        <select class="appearance-none block w-full pl-11 pr-10 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกหน่วยงาน --</option>
+                            <option value="1">กองยุทธศาสตร์และแผนงาน</option>
+                            <option value="2" selected>กองบริหารทรัพยากรบุคคล</option>
+                            <option value="3">กองคลัง</option>
+                            <option value="4">สำนักเลขานุการกรม</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 3: วันที่บันทึก -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        วันที่บันทึก <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="calendar" class="text-slate-500 w-4 h-4"></i>
+                        </div>
+                        <input type="date" value="2025-12-27" class="block w-full pl-11 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                    </div>
+                </div>
+
+                <!-- Action Buttons - Right Aligned -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-700">
+                    <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700 text-slate-100 rounded-lg 
+                               font-medium border border-slate-600
+                               hover:bg-slate-600 hover:border-slate-500
+                               transition-all duration-200">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg 
+                               font-medium shadow-lg shadow-primary-500/25
+                               hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]
+                               active:scale-[0.98]
+                               transition-all duration-200">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        บันทึกและดำเนินการต่อ
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- After Save: Show List -->
+        <div class="bg-slate-900/50 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-6 shadow-2xl mb-8">
+            <div class="flex items-center gap-2 text-emerald-400 mb-4">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span class="font-medium">หลังบันทึกสำเร็จ: แสดงตารางรายการ</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-300">
+                            <th class="px-4 py-3 text-left">#</th>
+                            <th class="px-4 py-3 text-left">ปีงบ</th>
+                            <th class="px-4 py-3 text-left">เดือน</th>
+                            <th class="px-4 py-3 text-left">หน่วยงาน</th>
+                            <th class="px-4 py-3 text-left">วันที่บันทึก</th>
+                            <th class="px-4 py-3 text-center">สถานะ</th>
+                            <th class="px-4 py-3 text-center">จำนวนรายการ</th>
+                            <th class="px-4 py-3 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="px-4 py-3 text-slate-400">1</td>
+                            <td class="px-4 py-3">2568</td>
+                            <td class="px-4 py-3">ธันวาคม</td>
+                            <td class="px-4 py-3">กองบริหารทรัพยากรบุคคล</td>
+                            <td class="px-4 py-3">27/12/2567</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">ร่าง</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">0</td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button class="p-1.5 rounded hover:bg-slate-700 text-primary-400"
+                                        title="ดูรายละเอียด">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded hover:bg-slate-700 text-amber-400" title="แก้ไข">
+                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded hover:bg-slate-700 text-emerald-400"
+                                        title="เพิ่มรายละเอียด">
+                                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded hover:bg-slate-700 text-red-400" title="ลบ">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Step 2: Detail Form (แผนงานบุคลากรภาครัฐ) -->
+        <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-slate-100 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm">2</span>
+                    รายละเอียดบันทึกรายการงบประมาณ (แผนงานบุคลากรภาครัฐ)
+                </h2>
+            </div>
+
+            <form class="space-y-6">
+                <!-- แผนงาน -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        แผนงาน <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="plan_id" class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกแผนงาน --</option>
+                            <option value="1" selected>แผนงานบุคลากรภาครัฐ</option>
+                            <option value="2">แผนงานพื้นฐานด้านการพัฒนาและเสริมสร้างศักยภาพทรัพยากรมนุษย์</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ผลผลิต/โครงการ (Hierarchical) -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        ผลผลิต/โครงการ <span class="text-red-400">*</span>
+                        <span class="text-xs text-primary-400 ml-2">← ข้อมูลขึ้นกับแผนงาน</span>
+                    </label>
+                    <div class="relative">
+                        <select id="output_id" class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกผลผลิต/โครงการ --</option>
+                            <option value="1" selected>ผลผลิตที่ 1: รายการค่าใช้จ่ายบุคลากรภาครัฐ</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- กิจกรรม (Hierarchical) -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        กิจกรรม <span class="text-red-400">*</span>
+                        <span class="text-xs text-primary-400 ml-2">← ข้อมูลขึ้นกับผลผลิต</span>
+                    </label>
+                    <div class="relative">
+                        <select id="activity_id" class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกกิจกรรม --</option>
+                            <option value="1" selected>กิจกรรมหลัก: ค่าใช้จ่ายบุคลากรภาครัฐ กรมคุมประพฤติ</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ประเภทรายจ่าย -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">
+                        ประเภทรายจ่าย <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="expense_type_id" class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกประเภทรายจ่าย --</option>
+                            <option value="1" selected>งบบุคลากร</option>
+                            <option value="2">งบดำเนินงาน</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- รายการงบประมาณ - แยกตามประเภทรายจ่าย -->
+                <div class="space-y-4">
+
+                    <!-- ===== งบบุคลากร ===== -->
+                    <div class="rounded-lg overflow-hidden border border-slate-700/50">
+                        <div class="bg-gradient-to-r from-blue-900/40 to-slate-800/40 px-4 py-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                            onclick="toggleExpenseType('budget-personnel')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 text-blue-400 collapse-icon"
+                                        id="icon-budget-personnel"></i>
+                                    <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>
+                                    <span class="text-lg font-semibold text-blue-300">งบบุคลากร</span>
+                                    <span class="text-xs text-slate-500">(2 หมวด)</span>
+                                </div>
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-slate-400">งบจัดสรร: <span
+                                            class="text-slate-100 font-semibold">6,325,000</span></span>
+                                    <span class="text-slate-400">เบิกจ่าย: <span
+                                            class="text-orange-400 font-semibold">4,245,000</span></span>
+                                    <span class="text-slate-400">คงเหลือ: <span
+                                            class="text-amber-400 font-bold">2,080,000</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="budget-personnel" class="budget-section">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
+                                        <th class="px-4 py-2 text-left min-w-[280px]">รายการ</th>
+                                        <th class="px-4 py-2 text-center w-20">จำนวน</th>
+                                        <th class="px-4 py-2 text-right w-28">งบจัดสรร</th>
+                                        <th class="px-4 py-2 text-right w-24">โอน +/-</th>
+                                        <th class="px-4 py-2 text-right w-28">เบิกจ่าย</th>
+                                        <th class="px-4 py-2 text-right w-24">ขออนุมัติ</th>
+                                        <th class="px-4 py-2 text-right w-24">PO</th>
+                                        <th class="px-4 py-2 text-right w-28 text-amber-400">คงเหลือ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- เงินเดือน -->
+                                    <tr class="bg-slate-700/30 cursor-pointer" onclick="toggleCategory('cat-salary')">
+                                        <td class="px-4 py-2 text-amber-400 font-medium"><i data-lucide="chevron-down"
+                                                class="w-4 h-4 inline mr-1 collapse-icon" id="icon-cat-salary"></i><i
+                                                data-lucide="folder" class="w-4 h-4 inline mr-2"></i>เงินเดือน</td>
+                                        <td class="px-4 py-2 text-center text-slate-300">135</td>
+                                        <td class="px-4 py-2 text-right text-slate-100">5,800,000</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-orange-400">3,950,000</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-amber-400 font-bold">1,850,000</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-700/30 category-cat-salary" data-item-row>
+                                        <td class="px-4 py-2 text-slate-300 pl-12">อัตราเดิม</td>
+                                        <td class="px-2 py-2 text-center"><input type="number" value="120"
+                                                data-field="qty"
+                                                class="w-16 px-2 py-1 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="5,000,000"
+                                                data-field="allocated"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-slate-100">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="transfer"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="3,500,000"
+                                                data-field="disbursed"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-orange-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="pending"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0" data-field="po"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-4 py-2 text-right text-amber-400 balance-cell">1,500,000</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-700/30 category-cat-salary" data-item-row>
+                                        <td class="px-4 py-2 text-slate-300 pl-12">อัตราใหม่</td>
+                                        <td class="px-2 py-2 text-center"><input type="number" value="15"
+                                                data-field="qty"
+                                                class="w-16 px-2 py-1 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="800,000"
+                                                data-field="allocated"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-slate-100">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="transfer"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="450,000"
+                                                data-field="disbursed"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-orange-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="pending"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0" data-field="po"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-4 py-2 text-right text-amber-400 balance-cell">350,000</td>
+                                    </tr>
+                                    <!-- เงินประจำตำแหน่ง -->
+                                    <tr class="bg-slate-700/30 cursor-pointer" onclick="toggleCategory('cat-position')">
+                                        <td class="px-4 py-2 text-amber-400 font-medium"><i data-lucide="chevron-down"
+                                                class="w-4 h-4 inline mr-1 collapse-icon" id="icon-cat-position"></i><i
+                                                data-lucide="folder" class="w-4 h-4 inline mr-2"></i>เงินประจำตำแหน่ง
+                                        </td>
+                                        <td class="px-4 py-2 text-center text-slate-300">35</td>
+                                        <td class="px-4 py-2 text-right text-slate-100">525,000</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-orange-400">295,000</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-cyan-400">0</td>
+                                        <td class="px-4 py-2 text-right text-amber-400 font-bold">230,000</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-700/30 category-cat-position" data-item-row>
+                                        <td class="px-4 py-2 text-slate-300 pl-12">บริหารและอำนวยการ</td>
+                                        <td class="px-2 py-2 text-center"><input type="number" value="5"
+                                                data-field="qty"
+                                                class="w-16 px-2 py-1 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="150,000"
+                                                data-field="allocated"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-slate-100">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="transfer"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="85,000"
+                                                data-field="disbursed"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-orange-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="pending"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0" data-field="po"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-4 py-2 text-right text-amber-400 balance-cell">65,000</td>
+                                    </tr>
+                                    <tr class="border-b border-slate-700/30 category-cat-position" data-item-row>
+                                        <td class="px-4 py-2 text-slate-300 pl-12">วิชาการ</td>
+                                        <td class="px-2 py-2 text-center"><input type="number" value="25"
+                                                data-field="qty"
+                                                class="w-16 px-2 py-1 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="300,000"
+                                                data-field="allocated"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-slate-100">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="transfer"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="175,000"
+                                                data-field="disbursed"
+                                                class="w-24 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-orange-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0"
+                                                data-field="pending"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-2 py-2 text-right"><input type="text" value="0" data-field="po"
+                                                class="w-20 px-2 py-1 bg-slate-700/50 border-0 rounded text-right text-sm text-cyan-400">
+                                        </td>
+                                        <td class="px-4 py-2 text-right text-amber-400 balance-cell">125,000</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ===== งบดำเนินงาน ===== -->
+                    <div class="rounded-lg overflow-hidden border border-slate-700/50">
+                        <div class="bg-gradient-to-r from-emerald-900/40 to-slate-800/40 px-4 py-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                            onclick="toggleExpenseType('budget-operating')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 text-emerald-400 collapse-icon rotated"
+                                        id="icon-budget-operating"></i>
+                                    <i data-lucide="briefcase" class="w-5 h-5 text-emerald-400"></i>
+                                    <span class="text-lg font-semibold text-emerald-300">งบดำเนินงาน</span>
+                                    <span class="text-xs text-slate-500">(2 หมวด)</span>
+                                </div>
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-slate-400">งบจัดสรร: <span
+                                            class="text-slate-100 font-semibold">1,500,000</span></span>
+                                    <span class="text-slate-400">เบิกจ่าย: <span
+                                            class="text-orange-400 font-semibold">850,000</span></span>
+                                    <span class="text-slate-400">คงเหลือ: <span
+                                            class="text-amber-400 font-bold">650,000</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="budget-operating" class="budget-section hidden">
+                            <div class="px-6 py-4 text-slate-500 text-center italic">คลิกเพื่อดูรายละเอียด งบดำเนินงาน
+                                (ค่าตอบแทน, ค่าใช้สอย, ค่าวัสดุ, ค่าสาธารณูปโภค)</div>
+                        </div>
+                    </div>
+
+                    <!-- ===== งบลงทุน ===== -->
+                    <div class="rounded-lg overflow-hidden border border-slate-700/50">
+                        <div class="bg-gradient-to-r from-purple-900/40 to-slate-800/40 px-4 py-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                            onclick="toggleExpenseType('budget-investment')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 text-purple-400 collapse-icon rotated"
+                                        id="icon-budget-investment"></i>
+                                    <i data-lucide="building" class="w-5 h-5 text-purple-400"></i>
+                                    <span class="text-lg font-semibold text-purple-300">งบลงทุน</span>
+                                    <span class="text-xs text-slate-500">(2 หมวด)</span>
+                                </div>
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-slate-400">งบจัดสรร: <span
+                                            class="text-slate-100 font-semibold">5,000,000</span></span>
+                                    <span class="text-slate-400">เบิกจ่าย: <span
+                                            class="text-orange-400 font-semibold">2,500,000</span></span>
+                                    <span class="text-slate-400">คงเหลือ: <span
+                                            class="text-amber-400 font-bold">2,500,000</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="budget-investment" class="budget-section hidden">
+                            <div class="px-6 py-4 text-slate-500 text-center italic">คลิกเพื่อดูรายละเอียด งบลงทุน
+                                (ครุภัณฑ์, สิ่งก่อสร้าง)</div>
+                        </div>
+                    </div>
+
+                    <!-- ===== งบอุดหนุน ===== -->
+                    <div class="rounded-lg overflow-hidden border border-slate-700/50">
+                        <div class="bg-gradient-to-r from-amber-900/40 to-slate-800/40 px-4 py-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                            onclick="toggleExpenseType('budget-subsidy')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 text-amber-400 collapse-icon rotated"
+                                        id="icon-budget-subsidy"></i>
+                                    <i data-lucide="heart-handshake" class="w-5 h-5 text-amber-400"></i>
+                                    <span class="text-lg font-semibold text-amber-300">งบอุดหนุน</span>
+                                    <span class="text-xs text-slate-500">(1 หมวด)</span>
+                                </div>
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-slate-400">งบจัดสรร: <span
+                                            class="text-slate-100 font-semibold">800,000</span></span>
+                                    <span class="text-slate-400">เบิกจ่าย: <span
+                                            class="text-orange-400 font-semibold">400,000</span></span>
+                                    <span class="text-slate-400">คงเหลือ: <span
+                                            class="text-amber-400 font-bold">400,000</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="budget-subsidy" class="budget-section hidden">
+                            <div class="px-6 py-4 text-slate-500 text-center italic">คลิกเพื่อดูรายละเอียด งบอุดหนุน
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== งบรายจ่ายอื่น ===== -->
+                    <div class="rounded-lg overflow-hidden border border-slate-700/50">
+                        <div class="bg-gradient-to-r from-rose-900/40 to-slate-800/40 px-4 py-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                            onclick="toggleExpenseType('budget-other')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 text-rose-400 collapse-icon rotated"
+                                        id="icon-budget-other"></i>
+                                    <i data-lucide="more-horizontal" class="w-5 h-5 text-rose-400"></i>
+                                    <span class="text-lg font-semibold text-rose-300">งบรายจ่ายอื่น</span>
+                                    <span class="text-xs text-slate-500">(1 หมวด)</span>
+                                </div>
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-slate-400">งบจัดสรร: <span
+                                            class="text-slate-100 font-semibold">500,000</span></span>
+                                    <span class="text-slate-400">เบิกจ่าย: <span
+                                            class="text-orange-400 font-semibold">200,000</span></span>
+                                    <span class="text-slate-400">คงเหลือ: <span
+                                            class="text-amber-400 font-bold">300,000</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="budget-other" class="budget-section hidden">
+                            <div class="px-6 py-4 text-slate-500 text-center italic">คลิกเพื่อดูรายละเอียด งบรายจ่ายอื่น
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total Footer -->
+                    <div class="bg-slate-700/60 rounded-lg px-4 py-3 flex items-center justify-between font-bold">
+                        <span class="text-slate-200">รวมทั้งสิ้น (Total)</span>
+                        <div class="flex items-center gap-8 text-sm">
+                            <span class="text-slate-200" id="total-qty">170</span>
+                            <span class="text-slate-100" id="total-allocated">14,125,000</span>
+                            <span class="text-cyan-400" id="total-transfer">0</span>
+                            <span class="text-orange-400" id="total-disbursed">8,195,000</span>
+                            <span class="text-cyan-400" id="total-pending">0</span>
+                            <span class="text-cyan-400" id="total-po">0</span>
+                            <span class="text-amber-400 font-bold text-base" id="total-balance">5,930,000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons - Right Aligned -->
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-700">
+                    <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700 text-slate-100 rounded-lg 
+                               font-medium border border-slate-600
+                               hover:bg-slate-600 hover:border-slate-500
+                               transition-all duration-200">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg 
+                               font-medium shadow-lg shadow-primary-500/25
+                               hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]
+                               active:scale-[0.98]
+                               transition-all duration-200">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Notes -->
+        <div class="mt-8 bg-slate-900/30 border border-slate-800 rounded-lg p-6">
+            <h3 class="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wide">📝 Option A Summary</h3>
+            <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
+                <li><strong class="text-slate-200">URL:</strong> /budgets/disbursements/create</li>
+                <li><strong class="text-slate-200">Workflow:</strong> สร้าง Header → แสดง List → เพิ่ม Detail Items</li>
+                <li><strong class="text-slate-200">ข้อดี:</strong> แยก Header/Detail ชัดเจน, รองรับหลายรายการต่อ 1
+                    Header</li>
+                <li><strong class="text-slate-200">ข้อเสีย:</strong> ต้องสร้าง tables ใหม่ 3 ตาราง</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Number formatting helper
+        function formatNumber(num) {
+            return num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function parseNumber(str) {
+            if (!str) return 0;
+            return parseFloat(str.toString().replace(/,/g, '')) || 0;
+        }
+
+        // Calculate balance for each row
+        function calculateRowBalance(row) {
+            const allocated = parseNumber(row.querySelector('[data-field="allocated"]')?.value);
+            const transfer = parseNumber(row.querySelector('[data-field="transfer"]')?.value);
+            const disbursed = parseNumber(row.querySelector('[data-field="disbursed"]')?.value);
+            const pending = parseNumber(row.querySelector('[data-field="pending"]')?.value);
+            const po = parseNumber(row.querySelector('[data-field="po"]')?.value);
+
+            const totalBudget = allocated + transfer;
+            const totalUsed = disbursed + pending + po;
+            const balance = totalBudget - totalUsed;
+
+            const balanceCell = row.querySelector('.balance-cell');
+            if (balanceCell) {
+                balanceCell.textContent = formatNumber(balance);
+                balanceCell.className = 'px-3 py-2 text-right font-medium balance-cell ' +
+                    (balance >= 0 ? 'balance-positive' : 'balance-negative');
+            }
+
+            return { allocated, transfer, disbursed, pending, po, balance };
+        }
+
+        // Calculate totals for all rows
+        function calculateTotals() {
+            const rows = document.querySelectorAll('tr[data-item-row]');
+            let totals = { qty: 0, allocated: 0, transfer: 0, disbursed: 0, pending: 0, po: 0, balance: 0 };
+
+            rows.forEach(row => {
+                const result = calculateRowBalance(row);
+                const qty = parseNumber(row.querySelector('[data-field="qty"]')?.value);
+                totals.qty += qty;
+                totals.allocated += result.allocated;
+                totals.transfer += result.transfer;
+                totals.disbursed += result.disbursed;
+                totals.pending += result.pending;
+                totals.po += result.po;
+                totals.balance += result.balance;
+            });
+
+            // Update footer
+            document.getElementById('total-qty').textContent = totals.qty;
+            document.getElementById('total-allocated').textContent = formatNumber(totals.allocated);
+            document.getElementById('total-transfer').textContent = formatNumber(totals.transfer);
+            document.getElementById('total-disbursed').textContent = formatNumber(totals.disbursed);
+            document.getElementById('total-pending').textContent = formatNumber(totals.pending);
+            document.getElementById('total-po').textContent = formatNumber(totals.po);
+
+            const totalBalanceEl = document.getElementById('total-balance');
+            totalBalanceEl.textContent = formatNumber(totals.balance);
+            totalBalanceEl.className = 'px-3 py-3 text-right font-bold ' +
+                (totals.balance >= 0 ? 'text-emerald-400' : 'text-red-400');
+        }
+
+        // Add event listeners to all inputs
+        document.querySelectorAll('tr[data-item-row] input').forEach(input => {
+            input.addEventListener('input', calculateTotals);
+            input.addEventListener('blur', function () {
+                // Format number on blur
+                if (this.type !== 'number') {
+                    const val = parseNumber(this.value);
+                    if (val > 0) {
+                        this.value = formatNumber(val);
+                    }
+                }
+            });
+            input.addEventListener('focus', function () {
+                // Remove formatting on focus
+                if (this.type !== 'number') {
+                    this.value = this.value.replace(/,/g, '');
+                }
+            });
+        });
+
+        // Toggle category collapse/expand
+        function toggleCategory(categoryId) {
+            const icon = document.getElementById('icon-' + categoryId);
+            const rows = document.querySelectorAll('.category-' + categoryId);
+
+            icon.classList.toggle('rotated');
+            rows.forEach(row => {
+                row.classList.toggle('category-hidden');
+            });
+        }
+
+        // Toggle expense type section expand/collapse
+        function toggleExpenseType(sectionId) {
+            const icon = document.getElementById('icon-' + sectionId);
+            const section = document.getElementById(sectionId);
+
+            icon.classList.toggle('rotated');
+            section.classList.toggle('hidden');
+        }
+
+        // Initial calculation
+        calculateTotals();
+    </script>
+</body>
+
+</html>

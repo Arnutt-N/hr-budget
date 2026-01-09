@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Form Mockup - HR Budget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', system-ui, sans-serif;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans Thai', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-100 mb-2">Modern Form Mockup</h1>
+            <p class="text-slate-400">Examples of modern input fields for the HR Budget system</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-slate-100 flex items-center gap-2">
+                    <i data-lucide="edit" class="text-primary-500 w-5 h-5"></i>
+                    เพิ่มรายการงบประมาณ (Add Budget Item)
+                </h2>
+                <button
+                    class="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-800 text-slate-300 rounded-lg font-medium hover:bg-slate-700 transition-all border border-slate-700 whitespace-nowrap">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>Import Excel
+                </button>
+            </div>
+
+            <form class="space-y-6">
+                <!-- Budget Name -->
+                <div class="group">
+                    <label for="budget_name" class="block text-sm font-medium text-slate-400 mb-2">
+                        ชื่อรายการ <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" id="budget_name" class="block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                               text-slate-100 placeholder-slate-500
+                               focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                               transition-all duration-200" placeholder="เช่น ค่าวัสดุสำนักงาน">
+                </div>
+
+                <!-- Budget Amount with Currency -->
+                <div class="group">
+                    <label for="budget_amount" class="block text-sm font-medium text-slate-400 mb-2">
+                        งบประมาณที่จัดสรร (Allocated Amount) <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="text-slate-500 font-semibold">฿</span>
+                        </div>
+                        <input type="text" id="budget_amount" class="block w-full pl-10 pr-16 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 placeholder-slate-500 text-right tabular-nums
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200" placeholder="0.00" value="100,000.00">
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <span class="text-slate-500 text-sm font-medium">THB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fiscal Year Select -->
+                <div class="group">
+                    <label for="fiscal_year" class="block text-sm font-medium text-slate-400 mb-2">
+                        ปีงบประมาณ (Fiscal Year) <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="fiscal_year" class="appearance-none block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="2567">2567</option>
+                            <option value="2568" selected>2568</option>
+                            <option value="2569">2569</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category with Icon -->
+                <div class="group">
+                    <label for="category" class="block text-sm font-medium text-slate-400 mb-2">
+                        หมวดหมู่ (Category)
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="folder" class="text-slate-500 w-4 h-4"></i>
+                        </div>
+                        <select id="category" class="appearance-none block w-full pl-11 pr-10 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                                   text-slate-100 cursor-pointer
+                                   focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                                   transition-all duration-200">
+                            <option value="">-- เลือกหมวดหมู่ --</option>
+                            <option value="1">งบบุคลากร</option>
+                            <option value="2" selected>งบดำเนินงาน</option>
+                            <option value="3">งบลงทุน</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                            <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                                <path
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes / Textarea -->
+                <div class="group">
+                    <label for="notes" class="block text-sm font-medium text-slate-400 mb-2">
+                        หมายเหตุ (Notes)
+                    </label>
+                    <textarea id="notes" rows="4" class="block w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg 
+                               text-slate-100 placeholder-slate-500
+                               focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
+                               transition-all duration-200 resize-none"
+                        placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+                </div>
+
+                <!-- Status Radio Buttons -->
+                <div class="group">
+                    <label class="block text-sm font-medium text-slate-400 mb-3">
+                        สถานะ (Status)
+                    </label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer group/radio">
+                            <input type="radio" name="status" value="draft" checked
+                                class="w-4 h-4 text-primary-600 bg-slate-800 border-slate-600 focus:ring-2 focus:ring-primary-500/20">
+                            <span class="text-slate-300 group-hover/radio:text-slate-100 transition-colors">ร่าง
+                                (Draft)</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer group/radio">
+                            <input type="radio" name="status" value="active"
+                                class="w-4 h-4 text-primary-600 bg-slate-800 border-slate-600 focus:ring-2 focus:ring-primary-500/20">
+                            <span class="text-slate-300 group-hover/radio:text-slate-100 transition-colors">ใช้งาน
+                                (Active)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-4 border-t border-slate-700">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg 
+                               font-medium shadow-lg shadow-primary-500/25
+                               hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]
+                               active:scale-[0.98]
+                               transition-all duration-200">
+                        <i data-lucide="save" class="w-5 h-5"></i>
+                        บันทึก (Save)
+                    </button>
+                    <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700 text-slate-100 rounded-lg 
+                               font-medium border border-slate-600
+                               hover:bg-slate-600 hover:border-slate-500
+                               transition-all duration-200">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                        ยกเลิก (Cancel)
+                    </button>
+
+                    <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-lg 
+                               font-medium ml-auto
+                               hover:bg-red-500
+                               transition-all duration-200">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        ลบ (Delete)
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Color Reference -->
+        <div class="mt-8 bg-slate-900/30 border border-slate-800 rounded-lg p-6">
+            <h3 class="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wide">Color Reference</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-slate-950 border border-slate-700"></div>
+                    <span class="text-slate-400">bg-slate-950</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-slate-900 border border-slate-700"></div>
+                    <span class="text-slate-400">bg-slate-900</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-slate-800 border border-slate-700"></div>
+                    <span class="text-slate-400">bg-slate-800</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded bg-primary-600 border border-primary-500"></div>
+                    <span class="text-slate-400">primary-600</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Number formatting for amount input
+        const amountInput = document.getElementById('budget_amount');
+
+        amountInput.addEventListener('focus', function () {
+            // Remove formatting on focus
+            this.value = this.value.replace(/,/g, '');
+        });
+
+        amountInput.addEventListener('blur', function () {
+            // Add thousand separators on blur
+            let value = parseFloat(this.value.replace(/,/g, ''));
+            if (!isNaN(value)) {
+                this.value = value.toLocaleString('th-TH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+        });
+    </script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

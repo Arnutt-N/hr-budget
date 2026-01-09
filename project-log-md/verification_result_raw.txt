@@ -1,0 +1,9 @@
+Checking tables...
+✅ Table 'activities' exists.
+❌ Table 'province_groups' does NOT exist.
+❌ Table 'province_groups_test' does NOT exist.
+❌ Table 'budget_line_items' does NOT exist.
+
+Checking organizations.region column...
+Type: enum('central','regional','provincial')
+❌ ENUM missing 'central_in_region'.

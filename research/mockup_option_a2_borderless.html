@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option A2: Disbursement Form - Borderless Table with Collapsible Rows</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', system-ui, sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        /* Hide Number Spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        /* Color-coded input styles */
+        .input-allocated {
+            color: #e2e8f0;
+        }
+
+        .input-transfer {
+            color: #67e8f9;
+        }
+
+        .input-transfer:focus {
+            border-color: #06b6d4 !important;
+        }
+
+        .input-disbursed {
+            color: #fdba74;
+        }
+
+        .input-disbursed:focus {
+            border-color: #f97316 !important;
+        }
+
+        .input-pending {
+            color: #fde047;
+        }
+
+        .input-pending:focus {
+            border-color: #eab308 !important;
+        }
+
+        .input-po {
+            color: #93c5fd;
+        }
+
+        .input-po:focus {
+            border-color: #3b82f6 !important;
+        }
+
+        /* Balance status */
+        .balance-positive {
+            color: #34d399;
+        }
+
+        .balance-negative {
+            color: #f87171;
+        }
+
+        /* Collapsible animation */
+        .collapse-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            opacity: 0;
+        }
+
+        .collapse-content.expanded {
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-icon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans Thai', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Breadcrumb -->
+        <nav class="text-sm mb-6 text-slate-400">
+            <a href="#" class="hover:text-primary-400">หน้าหลัก</a>
+            <span class="mx-2">›</span>
+            <a href="#" class="hover:text-primary-400">รายการเบิกจ่าย</a>
+            <span class="mx-2">›</span>
+            <span class="text-slate-200">สร้างรายการใหม่ (A2 - Borderless)</span>
+        </nav>
+
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-3">
+                <i data-lucide="file-plus" class="text-primary-500 w-8 h-8"></i>
+                บันทึกเบิกจ่าย - แผนงานบุคลากรภาครัฐ
+            </h1>
+            <p class="text-slate-400">Option A2: ตารางไม่มีกรอบ + Collapsible Rows</p>
+        </div>
+
+        <!-- Step 2: Detail Form -->
+        <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold text-slate-100 flex items-center gap-2">
+                    <i data-lucide="list-tree" class="text-primary-500 w-5 h-5"></i>
+                    รายการ (จาก budget_category_items)
+                </h2>
+                <div class="flex gap-2">
+                    <button
+                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-slate-800 text-slate-300 rounded-lg font-medium hover:bg-slate-700 transition-all border border-slate-700">
+                        <i data-lucide="download" class="w-4 h-4"></i>Export
+                    </button>
+                    <button
+                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-500 transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i>เพิ่มรายการ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Filter -->
+            <div class="grid grid-cols-4 gap-4 mb-6 p-4 bg-slate-800/50 rounded-lg">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">ปีงบประมาณ</label>
+                    <select
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-100">
+                        <option>2568</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">เดือน</label>
+                    <select
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-100">
+                        <option>ธันวาคม</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">หน่วยงาน</label>
+                    <select
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-100">
+                        <option>กองบริหารทรัพยากรบุคคล</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">วันที่บันทึก</label>
+                    <input type="date" value="2025-12-27"
+                        class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-100">
+                </div>
+            </div>
+
+            <!-- Borderless Table with Collapsible Rows -->
+            <div class="space-y-2">
+                <!-- Table Header (Sticky style) -->
+                <div
+                    class="grid grid-cols-12 gap-2 px-4 py-3 bg-slate-700/50 rounded-lg text-xs font-semibold text-slate-300 uppercase tracking-wide">
+                    <div class="col-span-4">รายการ</div>
+                    <div class="text-center">จำนวน</div>
+                    <div class="text-right">งบจัดสรร</div>
+                    <div class="text-right">โอน +/-</div>
+                    <div class="text-right">เบิกจ่าย</div>
+                    <div class="text-right">ขออนุมัติ</div>
+                    <div class="text-right">PO</div>
+                    <div class="text-right text-emerald-400">คงเหลือ</div>
+                    <div class="text-center">Actions</div>
+                </div>
+
+                <!-- Category 1: เงินเดือน (Collapsible) -->
+                <div class="bg-slate-800/30 rounded-lg overflow-hidden">
+                    <!-- Category Header -->
+                    <button onclick="toggleCollapse('cat-salary')"
+                        class="w-full grid grid-cols-12 gap-2 px-4 py-3 bg-slate-700/40 hover:bg-slate-700/60 transition-colors items-center text-left">
+                        <div class="col-span-4 flex items-center gap-2 font-semibold text-slate-200">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-amber-400 collapse-icon"
+                                id="icon-cat-salary"></i>
+                            <i data-lucide="folder" class="w-4 h-4 text-amber-400"></i>
+                            เงินเดือน
+                            <span class="text-xs text-slate-500 font-normal">(2 รายการ)</span>
+                        </div>
+                        <div class="text-center text-slate-400 text-sm">135</div>
+                        <div class="text-right text-slate-200 font-medium">5,800,000</div>
+                        <div class="text-right text-cyan-300">0</div>
+                        <div class="text-right text-orange-300">3,950,000</div>
+                        <div class="text-right text-yellow-300">0</div>
+                        <div class="text-right text-blue-300">0</div>
+                        <div class="text-right text-emerald-400 font-bold">1,850,000</div>
+                        <div></div>
+                    </button>
+
+                    <!-- Collapsible Content -->
+                    <div id="cat-salary" class="collapse-content expanded">
+                        <!-- Item Row 1 -->
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">อัตราเดิม</div>
+                            <div class="text-center">
+                                <input type="number" value="120" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="5,000,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="3,500,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">1,500,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Item Row 2 -->
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">อัตราใหม่</div>
+                            <div class="text-center">
+                                <input type="number" value="15" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="800,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="450,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">350,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category 2: เงินประจำตำแหน่ง (Collapsible) -->
+                <div class="bg-slate-800/30 rounded-lg overflow-hidden">
+                    <!-- Category Header -->
+                    <button onclick="toggleCollapse('cat-position')"
+                        class="w-full grid grid-cols-12 gap-2 px-4 py-3 bg-slate-700/40 hover:bg-slate-700/60 transition-colors items-center text-left">
+                        <div class="col-span-4 flex items-center gap-2 font-semibold text-slate-200">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-amber-400 collapse-icon"
+                                id="icon-cat-position"></i>
+                            <i data-lucide="folder" class="w-4 h-4 text-amber-400"></i>
+                            เงินประจำตำแหน่ง
+                            <span class="text-xs text-slate-500 font-normal">(4 รายการ)</span>
+                        </div>
+                        <div class="text-center text-slate-400 text-sm">35</div>
+                        <div class="text-right text-slate-200 font-medium">525,000</div>
+                        <div class="text-right text-cyan-300">0</div>
+                        <div class="text-right text-orange-300">295,000</div>
+                        <div class="text-right text-yellow-300">0</div>
+                        <div class="text-right text-blue-300">0</div>
+                        <div class="text-right text-emerald-400 font-bold">230,000</div>
+                        <div></div>
+                    </button>
+
+                    <!-- Collapsible Content -->
+                    <div id="cat-position" class="collapse-content expanded">
+                        <!-- Item Rows -->
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">บริหารและอำนวยการ</div>
+                            <div class="text-center">
+                                <input type="number" value="5" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="150,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="85,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">65,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">วิชาการ</div>
+                            <div class="text-center">
+                                <input type="number" value="25" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="300,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="175,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">125,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">วิชาชีพเฉพาะ - นักวิชาการคอมพิวเตอร์</div>
+                            <div class="text-center">
+                                <input type="number" value="3" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="45,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="21,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">24,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-2 px-4 py-3 hover:bg-slate-700/20 transition-colors items-center"
+                            data-item-row>
+                            <div class="col-span-4 pl-8 text-slate-300">วิชาชีพเฉพาะ - วิศวกร/สถาปนิก</div>
+                            <div class="text-center">
+                                <input type="number" value="2" data-field="qty"
+                                    class="w-14 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-center text-slate-100 text-sm focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="30,000" data-field="allocated"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-allocated focus:ring-2 focus:ring-primary-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="transfer"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-transfer focus:ring-2 focus:ring-cyan-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="14,000" data-field="disbursed"
+                                    class="w-24 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-disbursed focus:ring-2 focus:ring-orange-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="pending"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-pending focus:ring-2 focus:ring-yellow-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right">
+                                <input type="text" value="0" data-field="po"
+                                    class="w-20 px-2 py-1.5 bg-slate-700/50 border-0 rounded text-right text-sm input-po focus:ring-2 focus:ring-blue-500/50 focus:outline-none">
+                            </div>
+                            <div class="text-right font-medium balance-cell balance-positive">16,000</div>
+                            <div class="text-center">
+                                <button
+                                    class="p-1.5 hover:bg-slate-600 rounded transition-colors text-slate-400 hover:text-slate-200">
+                                    <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Footer -->
+                <div class="grid grid-cols-12 gap-2 px-4 py-4 bg-slate-700/60 rounded-lg text-sm font-bold">
+                    <div class="col-span-4 text-slate-200">รวมทั้งสิ้น (Total)</div>
+                    <div class="text-center text-slate-200" id="total-qty">170</div>
+                    <div class="text-right text-slate-200" id="total-allocated">6,325,000</div>
+                    <div class="text-right text-cyan-300" id="total-transfer">0</div>
+                    <div class="text-right text-orange-400" id="total-disbursed">4,245,000</div>
+                    <div class="text-right text-yellow-300" id="total-pending">0</div>
+                    <div class="text-right text-blue-300" id="total-po">0</div>
+                    <div class="text-right text-emerald-400" id="total-balance">2,080,000</div>
+                    <div></div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between pt-4">
+                    <div class="text-sm text-slate-500">แสดง 1-6 จาก 23 รายการ</div>
+                    <div class="flex gap-1">
+                        <button
+                            class="px-3 py-1.5 bg-slate-800 text-slate-400 rounded hover:bg-slate-700 transition-colors">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <button class="px-3 py-1.5 bg-primary-600 text-white rounded">1</button>
+                        <button
+                            class="px-3 py-1.5 bg-slate-800 text-slate-400 rounded hover:bg-slate-700 transition-colors">2</button>
+                        <button
+                            class="px-3 py-1.5 bg-slate-800 text-slate-400 rounded hover:bg-slate-700 transition-colors">3</button>
+                        <button
+                            class="px-3 py-1.5 bg-slate-800 text-slate-400 rounded hover:bg-slate-700 transition-colors">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons - Right Aligned -->
+            <div class="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-700">
+                <button type="button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700 text-slate-100 rounded-lg 
+                           font-medium border border-slate-600
+                           hover:bg-slate-600 hover:border-slate-500
+                           transition-all duration-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                    ยกเลิก
+                </button>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg 
+                           font-medium shadow-lg shadow-primary-500/25
+                           hover:bg-primary-500 hover:shadow-xl hover:shadow-primary-500/30 hover:scale-[1.02]
+                           active:scale-[0.98]
+                           transition-all duration-200">
+                    <i data-lucide="save" class="w-5 h-5"></i>
+                    บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mt-8 bg-slate-900/30 border border-slate-800 rounded-lg p-6">
+            <h3 class="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wide">📝 Option A2 Summary</h3>
+            <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
+                <li><strong class="text-slate-200">Features:</strong> Borderless table, CSS Grid layout, Collapsible
+                    rows</li>
+                <li><strong class="text-slate-200">Inputs:</strong> No border (border-0), subtle background, focus ring
+                    effect</li>
+                <li><strong class="text-slate-200">Spacing:</strong> gap-2 for columns, py-3 for rows, pl-8 for indent
+                </li>
+                <li><strong class="text-slate-200">Animation:</strong> Smooth collapse/expand with max-height transition
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Toggle collapse function
+        function toggleCollapse(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+
+            content.classList.toggle('expanded');
+            icon.classList.toggle('rotated');
+        }
+
+        // Number formatting helper
+        function formatNumber(num) {
+            return num.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function parseNumber(str) {
+            if (!str) return 0;
+            return parseFloat(str.toString().replace(/,/g, '')) || 0;
+        }
+
+        // Calculate balance for each row
+        function calculateRowBalance(row) {
+            const allocated = parseNumber(row.querySelector('[data-field="allocated"]')?.value);
+            const transfer = parseNumber(row.querySelector('[data-field="transfer"]')?.value);
+            const disbursed = parseNumber(row.querySelector('[data-field="disbursed"]')?.value);
+            const pending = parseNumber(row.querySelector('[data-field="pending"]')?.value);
+            const po = parseNumber(row.querySelector('[data-field="po"]')?.value);
+
+            const totalBudget = allocated + transfer;
+            const totalUsed = disbursed + pending + po;
+            const balance = totalBudget - totalUsed;
+
+            const balanceCell = row.querySelector('.balance-cell');
+            if (balanceCell) {
+                balanceCell.textContent = formatNumber(balance);
+                balanceCell.className = 'text-right font-medium balance-cell ' +
+                    (balance >= 0 ? 'balance-positive' : 'balance-negative');
+            }
+
+            return { allocated, transfer, disbursed, pending, po, balance };
+        }
+
+        // Calculate totals for all rows
+        function calculateTotals() {
+            const rows = document.querySelectorAll('[data-item-row]');
+            let totals = { qty: 0, allocated: 0, transfer: 0, disbursed: 0, pending: 0, po: 0, balance: 0 };
+
+            rows.forEach(row => {
+                const result = calculateRowBalance(row);
+                const qty = parseNumber(row.querySelector('[data-field="qty"]')?.value);
+                totals.qty += qty;
+                totals.allocated += result.allocated;
+                totals.transfer += result.transfer;
+                totals.disbursed += result.disbursed;
+                totals.pending += result.pending;
+                totals.po += result.po;
+                totals.balance += result.balance;
+            });
+
+            // Update footer
+            document.getElementById('total-qty').textContent = totals.qty;
+            document.getElementById('total-allocated').textContent = formatNumber(totals.allocated);
+            document.getElementById('total-transfer').textContent = formatNumber(totals.transfer);
+            document.getElementById('total-disbursed').textContent = formatNumber(totals.disbursed);
+            document.getElementById('total-pending').textContent = formatNumber(totals.pending);
+            document.getElementById('total-po').textContent = formatNumber(totals.po);
+
+            const totalBalanceEl = document.getElementById('total-balance');
+            totalBalanceEl.textContent = formatNumber(totals.balance);
+            totalBalanceEl.className = 'text-right ' +
+                (totals.balance >= 0 ? 'text-emerald-400' : 'text-red-400');
+        }
+
+        // Add event listeners to all inputs
+        document.querySelectorAll('[data-item-row] input').forEach(input => {
+            input.addEventListener('input', calculateTotals);
+            input.addEventListener('blur', function () {
+                if (this.type !== 'number') {
+                    const val = parseNumber(this.value);
+                    if (val > 0) {
+                        this.value = formatNumber(val);
+                    }
+                }
+            });
+            input.addEventListener('focus', function () {
+                if (this.type !== 'number') {
+                    this.value = this.value.replace(/,/g, '');
+                }
+            });
+        });
+
+        // Initial calculation
+        calculateTotals();
+    </script>
+</body>
+
+</html>

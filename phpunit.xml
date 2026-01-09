@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="false"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         failOnRisky="false"
+         failOnWarning="false"
+         failOnDeprecation="false"
+         failOnNotice="false">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    
+    <source>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+        <exclude>
+            <directory>vendor</directory>
+            <directory>public</directory>
+            <directory>resources</directory>
+        </exclude>
+    </source>
+    
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="DB_HOST" value="localhost"/>
+        <env name="DB_NAME" value="hr_budget_test"/>
+        <env name="DB_USER" value="root"/>
+        <env name="DB_PASS" value=""/>
+    </php>
+</phpunit>
