@@ -1,0 +1,70 @@
+# Dependencies
+/node_modules/
+/vendor/
+/python/venv/
+composer.phar
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+config/database.php
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+desktop.ini
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+/storage/logs/
+/playwright-report/
+/test-results/
+
+# Build & Cache
+dist/
+build/
+*.min.js
+*.min.css
+.cache/
+*.cache
+/bootstrap/cache/*
+/public/hot
+/public/storage
+.phpunit.result.cache
+
+# Archives & Backups
+*.bak
+*.backup
+*.sql
+*.dump
+archives/
+archives/backup/*.zip
+archives/backup/*.rar
+archives/data/*.sql
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keys & Certificates (Security Critical)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa*
+id_ed25519*
+/storage/*.key

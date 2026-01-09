@@ -1,0 +1,73 @@
+2025-12-17 23:15:55
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:29:48
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:32:18
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:33:08
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:34:28
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:37:22
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:37:48
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-17 23:38:00
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-18 00:20:48
+REQUEST_URI: /hr_budget/public/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/public/execution
+
+2025-12-18 00:40:27
+REQUEST_URI: /hr_budget/execution
+SCRIPT_NAME: /hr_budget/public/index.php
+Parsed URI: /hr_budget/execution
+
+URI: /hr_budget/execution
+ScriptDir: /hr_budget/public
+ParentDir: /hr_budget
+FinalURI: /execution
+
+URI: /hr_budget/execution
+ScriptDir: /hr_budget/public
+ParentDir: /hr_budget
+Total Routes: 53
+Route /execution FOUND. Pattern: #^/execution$#
+Method: GET vs Request: GET
+PregMatch Result: YES
+FinalURI: /execution
+
+URI: /hr_budget/execution
+ScriptDir: /hr_budget/public
+ParentDir: /hr_budget
+Total Routes: 53
+Route /execution FOUND. Pattern: #^/execution$#
+Method: GET vs Request: GET
+PregMatch Result: YES
+FinalURI: /execution
+

@@ -1,0 +1,21 @@
+# เปิดการใช้งาน mod_rewrite
+RewriteEngine On
+
+# =============================================
+# บังคับใช้ HTTPS (แก้ Not Secure)
+# ปิดการใช้งานบน localhost สำหรับ development
+# =============================================
+# RewriteCond %{HTTPS} off
+# RewriteCond %{HTTP_HOST} !^localhost$ [NC]
+# RewriteCond %{HTTP_HOST} !^127\.0\.0\.1$ [NC]
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Redirect /public/ URLs to root (remove /public/ from URL)
+RewriteCond %{REQUEST_URI} ^/hr_budget/public/(.*)$
+RewriteRule ^public/(.*)$ /hr_budget/$1 [L,R=301]
+
+# If requested file or directory doesn't exist in root,
+# forward request to public/ directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L,QSA]
