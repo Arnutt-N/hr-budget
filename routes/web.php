@@ -60,6 +60,8 @@ Router::get('/requests/dashboard', [BudgetRequestController::class, 'dashboard']
 Router::get('/requests', [BudgetRequestController::class, 'index']);
 Router::get('/requests/create', [BudgetRequestController::class, 'create']);
 Router::post('/requests', [BudgetRequestController::class, 'store']);
+Router::get('/requests/{id}/edit', [BudgetRequestController::class, 'edit']);
+Router::post('/requests/{id}/update', [BudgetRequestController::class, 'update']);
 Router::get('/requests/{id}', [BudgetRequestController::class, 'show']);
 Router::post('/requests/{id}/submit', [BudgetRequestController::class, 'submit']);
 Router::post('/requests/{id}/approve', [BudgetRequestController::class, 'approve']);

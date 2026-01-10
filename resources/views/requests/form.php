@@ -1,302 +1,673 @@
 <?php
 /**
- * View: Budget Request Form (Part 1 - Hierarchical Entry)
+ * View: Budget Request Form (Hierarchical Entry - Based on Wireframe Part 2)
+ * Adapted from budgets/tracking/form.php logic
  */
+
+// Ensure savedItems is always an array
+$savedItems = $savedItems ?? [];
+
+// Expense Type Metadata (Mapped by Category ID)
+$typeMeta = [];
+$tabMap = [];
+foreach ($budgetTree as $cat) {
+    // Assign colors based on category name pattern
+    $color = 'slate';
+    $icon = 'folder';
+    $name = $cat['name_th'] ?? '';
+    
+    if (strpos($name, 'บุคลากร') !== false) {
+        $color = 'blue';
+        $icon = 'users';
+    } elseif (strpos($name, 'ดำเนินงาน') !== false) {
+        $color = 'emerald';
+        $icon = 'briefcase';
+    } elseif (strpos($name, 'ลงทุน') !== false) {
+        $color = 'purple';
+        $icon = 'building';
+    } elseif (strpos($name, 'อุดหนุน') !== false) {
+        $color = 'amber';
+        $icon = 'heart-handshake';
+    } elseif (strpos($name, 'รายจ่ายอื่น') !== false) {
+        $color = 'rose';
+        $icon = 'receipt';
+    }
+    
+    $typeMeta[$cat['id']] = ['color' => $color, 'icon' => $icon];
+    $tabMap[$cat['id']] = $cat;
+}
+
+// Ensure all 5 tabs exist (add placeholders if missing from database)
+$requiredTabs = [
+    ['id' => 'personnel', 'name_th' => 'งบบุคลากร', 'pattern' => 'บุคลากร'],
+    ['id' => 'operating', 'name_th' => 'งบดำเนินงาน', 'pattern' => 'ดำเนินงาน'],
+    ['id' => 'investment', 'name_th' => 'งบลงทุน', 'pattern' => 'ลงทุน'],
+    ['id' => 'subsidy', 'name_th' => 'งบเงินอุดหนุน', 'pattern' => 'อุดหนุน'],
+    ['id' => 'other', 'name_th' => 'งบรายจ่ายอื่น', 'pattern' => 'รายจ่ายอื่น']
+];
+
+// Build complete tab list
+$allTabs = [];
+foreach ($requiredTabs as $reqTab) {
+    // Check if this tab exists in database data
+    $found = false;
+    foreach ($budgetTree as $dbTab) {
+        $dbName = $dbTab['name_th'] ?? '';
+        if (strpos($dbName, $reqTab['pattern']) !== false) {
+            $allTabs[] = $dbTab;
+            $found = true;
+            break;
+        }
+    }
+    // If not found, add placeholder
+    if (!$found) {
+        $placeholderId = 'placeholder_' . $reqTab['id'];
+        $allTabs[] = [
+            'id' => $placeholderId,
+            'name_th' => $reqTab['name_th'],
+            'is_placeholder' => true
+        ];
+        // Add to typeMeta
+        $colors = [
+            'งบลงทุน' => ['color' => 'purple', 'icon' => 'building'],
+            'งบเงินอุดหนุน' => ['color' => 'amber', 'icon' => 'heart-handshake'],
+            'งบรายจ่ายอื่น' => ['color' => 'rose', 'icon' => 'receipt']
+        ];
+        $typeMeta[$placeholderId] = $colors[$reqTab['name_th']] ?? ['color' => 'slate', 'icon' => 'folder'];
+    }
+}
+
+// Replace budgetTree with complete list
+$budgetTree = $allTabs;
+
+// Get active tab (default to first)
+$activeTabId = $budgetTree[0]['id'] ?? 1;
+
+// Determine form action
+$formAction = ($action === 'create') 
+    ? \App\Core\View::url('/requests') 
+    : \App\Core\View::url('/requests/' . $requestId . '/update');
 ?>
-<div class="animate-fade-in pb-20">
-    <!-- Header context -->
-    <div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2 text-dark-muted mb-2">
-                <a href="<?= \App\Core\View::url('/requests') ?>" class="hover:text-white transition-colors flex items-center gap-1">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> คำขอทั้งหมด
-                </a>
-                <span>/</span>
-                <span class="text-slate-400">สร้างคำขอใหม่</span>
-            </div>
-            <h1 class="text-3xl font-bold text-white mb-1"><?= htmlspecialchars($requestTitle) ?></h1>
-            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                <div class="flex items-center gap-2">
-                    <span class="text-dark-muted">ปีงบประมาณ:</span>
-                    <span class="text-primary-400 font-semibold"><?= htmlspecialchars($fiscalYear) ?></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-dark-muted">หน่วยงาน:</span>
-                    <span class="text-slate-300"><?= htmlspecialchars($organization['name_th'] ?? '-') ?></span>
-                </div>
-            </div>
-        </div>
+
+<style>
+/* Hide number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+</style>
+
+<div class="animate-fade-in">
+    <!-- Main Card -->
+    <div class="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
         
-        <div class="flex items-center gap-3">
-            <button type="button" onclick="history.back()" class="btn btn-secondary border-slate-700 bg-slate-800/50">
-                ยกเลิก
-            </button>
-            <button type="button" id="btnSaveDraft" class="btn btn-primary shadow-lg shadow-primary-500/20">
-                <i data-lucide="save" class="w-4 h-4 mr-1.5"></i>
-                บันทึกร่างคำขอ
-            </button>
+        <!-- Header with Context Info -->
+        <div class="bg-gradient-to-r from-primary-900/30 to-slate-800/30 px-6 py-4 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i data-lucide="file-text" class="w-5 h-5 text-primary-400"></i>
+                        บันทึกคำของบประมาณ
+                    </h3>
+                    <p class="text-sm text-slate-400 mt-1">
+                        <span class="text-blue-400">แผนงานบุคลากรภาครัฐ</span> →
+                        <span class="text-emerald-400">รายการค่าใช้จ่ายบุคลากรภาครัฐ</span> →
+                        <span class="text-amber-400">รายการค่าใช้จ่ายบุคลากรภาครัฐ</span>
+                    </p>
+                </div>
+                <a href="<?= \App\Core\View::url('/requests') ?>" 
+                   class="px-3 py-1.5 text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับ
+                </a>
+            </div>
         </div>
-    </div>
 
-    <!-- Main Entry Form -->
-    <form id="mainRequestForm" action="<?= \App\Core\View::url('/requests') ?>" method="POST">
-        <?= \App\Core\View::csrf() ?>
-        <input type="hidden" name="fiscal_year" value="<?= htmlspecialchars($fiscalYear) ?>">
-        <input type="hidden" name="org_id" value="<?= htmlspecialchars($orgId) ?>">
-        <input type="hidden" name="request_title" value="<?= htmlspecialchars($requestTitle) ?>">
+        <!-- Recording Info Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-6 py-4 bg-slate-800/50 border-b border-slate-700">
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">ปีงบประมาณ</label>
+                <span class="text-lg font-semibold text-slate-100"><?= htmlspecialchars($fiscalYear) ?></span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">หน่วยงาน</label>
+                <span class="text-lg font-semibold text-slate-100"><?= htmlspecialchars($organization['name_th'] ?? '-') ?></span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-400 mb-1">สถานะ</label>
+                <span class="text-lg font-semibold text-primary-400">
+                    <?= isset($request['request_status']) && $request['request_status'] === 'draft' ? 'ร่างคำขอ (Draft)' : ($request['request_status'] ?? 'Draft') ?>
+                </span>
+            </div>
+        </div>
 
-        <!-- Tabs Navigation -->
-        <div class="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden shadow-xl mb-6">
-            <div class="flex border-b border-dark-border overflow-x-auto scrollbar-hide bg-slate-800/30">
-                <?php foreach ($budgetTree as $i => $cat): ?>
-                <button type="button" 
-                        class="tab-btn px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap <?= $i === 0 ? 'border-primary-500 text-primary-400 bg-primary-500/5' : 'border-transparent text-dark-muted hover:text-slate-300' ?>"
-                        data-tab="cat-<?= $cat['id'] ?>">
-                    <?= htmlspecialchars($cat['name_th']) ?>
+        <!-- Tab Navigation -->
+        <div class="border-b border-slate-700">
+            <nav class="flex overflow-x-auto" id="expense-tabs">
+                <?php 
+                foreach ($budgetTree as $i => $tab): 
+                    $tMeta = $typeMeta[$tab['id']] ?? ['color' => 'slate', 'icon' => 'circle'];
+                    $isActive = ($i === 0);
+                    $tColor = $tMeta['color'];
+                    
+                    // Explicit tab classes for Tailwind JIT
+                    $tabClasses = [
+                        'blue' => [
+                            'active' => 'border-b-[3px] border-blue-400 text-blue-300 bg-gradient-to-t from-blue-900/10 to-transparent',
+                            'inactive' => 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        ],
+                        'emerald' => [
+                            'active' => 'border-b-[3px] border-emerald-400 text-emerald-300 bg-gradient-to-t from-emerald-900/10 to-transparent',
+                            'inactive' => 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        ],
+                        'rose' => [
+                            'active' => 'border-b-[3px] border-rose-400 text-rose-300 bg-gradient-to-t from-rose-900/10 to-transparent',
+                            'inactive' => 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        ],
+                        'purple' => [
+                            'active' => 'border-b-[3px] border-purple-400 text-purple-300 bg-gradient-to-t from-purple-900/10 to-transparent',
+                            'inactive' => 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        ],
+                        'amber' => [
+                            'active' => 'border-b-[3px] border-amber-400 text-amber-300 bg-gradient-to-t from-amber-900/10 to-transparent',
+                            'inactive' => 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                        ]
+                    ];
+                    
+                    $activeClass = $isActive 
+                        ? ($tabClasses[$tColor]['active'] ?? 'border-b-[3px] border-slate-400 text-slate-300')
+                        : ($tabClasses[$tColor]['inactive'] ?? 'text-slate-400');
+                ?>
+                <button type="button"
+                    class="tab-btn flex-1 min-w-max px-6 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors <?= $activeClass ?>"
+                    data-tab-id="<?= $tab['id'] ?>"
+                    data-tab-target="content-<?= $tab['id'] ?>">
+                    <i data-lucide="<?= $tMeta['icon'] ?>" class="w-4 h-4"></i>
+                    <?= htmlspecialchars($tab['name_th']) ?>
+                    <span class="ml-2 px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-500 tab-total-badge" data-tab="<?= $tab['id'] ?>">0.00</span>
                 </button>
                 <?php endforeach; ?>
-            </div>
+            </nav>
+        </div>
+
+        <!-- Form -->
+        <form action="<?= $formAction ?>" method="POST" id="mainForm">
+            <?= \App\Core\View::csrf() ?>
+            <input type="hidden" name="fiscal_year" value="<?= htmlspecialchars($fiscalYear) ?>">
+            <input type="hidden" name="org_id" value="<?= htmlspecialchars($orgId) ?>">
+            <input type="hidden" name="request_title" value="<?= htmlspecialchars($requestTitle) ?>">
 
             <!-- Tab Contents -->
-            <div class="p-0">
-                <?php foreach ($budgetTree as $i => $cat): ?>
-                <div id="cat-<?= $cat['id'] ?>" class="tab-content <?= $i === 0 ? '' : 'hidden' ?>">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
-                            <thead>
-                                <tr class="bg-slate-800/50 border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                                    <th class="py-3 px-6 w-[45%] font-semibold">รายการ</th>
-                                    <th class="py-3 px-4 w-[12%] text-center font-semibold text-center">จำนวน</th>
-                                    <th class="py-3 px-4 w-[18%] text-center font-semibold text-center">วงเงิน (บาท)</th>
-                                    <th class="py-3 px-6 w-[25%] font-semibold">หมายเหตุ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-dark-border">
-                                <?php 
-                                    // Fetch hierarchy for this category
-                                    $categoryItems = \App\Models\BudgetCategoryItem::getHierarchy($cat['id']);
-                                    
-                                    function renderItemRow($item, $level = 0) {
-                                        $hasChildren = !empty($item['children']);
-                                        $paddingClass = "pl-" . (6 + ($level * 6));
-                                        $rowClass = $hasChildren ? 'bg-slate-800/10 font-semibold' : 'hover:bg-white/5';
-                                        $id = $item['id'];
-                                ?>
-                                    <tr class="<?= $rowClass ?> group transition-colors" data-level="<?= $level ?>" data-parent="<?= $item['parent_id'] ?>" data-item-id="<?= $id ?>">
-                                        <td class="py-3 px-6 <?= $paddingClass ?> relative align-middle">
-                                            <div class="flex items-center gap-2">
-                                                <?php if ($hasChildren): ?>
-                                                    <button type="button" class="collapse-btn text-slate-500 hover:text-white transition-colors">
-                                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                                <span class="<?= $hasChildren ? 'text-slate-200' : 'text-slate-400' ?>"><?= htmlspecialchars($item['name']) ?></span>
-                                            </div>
-                                        </td>
-                                        <td class="py-2 px-4 text-center align-middle">
-                                            <?php if (!$hasChildren): ?>
-                                                <input type="number" 
-                                                       name="items[<?= $id ?>][quantity]" 
-                                                       value="0" 
-                                                       min="0"
-                                                       class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-2 py-1.5 text-center text-white focus:ring-1 focus:ring-primary-500 outline-none transition-all qty-input">
-                                            <?php else: ?>
-                                                <span class="text-slate-500">-</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="py-2 px-4 text-center align-middle">
-                                            <?php if (!$hasChildren): ?>
-                                                <input type="number" 
-                                                       name="items[<?= $id ?>][amount]" 
-                                                       value="0.00" 
-                                                       step="0.01"
-                                                       min="0"
-                                                       class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-2 py-1.5 text-right text-white focus:ring-1 focus:ring-primary-500 outline-none transition-all amount-input">
-                                            <?php else: ?>
-                                                <input type="text" 
-                                                       readonly 
-                                                       class="w-full bg-transparent border-none px-2 py-1.5 text-right text-emerald-400 font-bold parent-total-amount" 
-                                                       value="0.00">
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="py-2 px-6 align-middle">
-                                            <?php if (!$hasChildren): ?>
-                                                <input type="text" 
-                                                       name="items[<?= $id ?>][note]" 
-                                                       placeholder="ระบุเพิ่มเติม..."
-                                                       class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:ring-1 focus:ring-primary-500 outline-none transition-all">
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                    <?php 
-                                        if ($hasChildren) {
-                                            foreach ($item['children'] as $child) {
-                                                renderItemRow($child, $level + 1);
-                                            }
-                                        }
-                                    }
-
-                                    foreach ($categoryItems as $item) {
-                                        renderItemRow($item);
-                                    }
-                                ?>
-                            </tbody>
-                        </table>
+            <?php foreach ($budgetTree as $i => $category): 
+                $isActiveTab = ($i === 0);
+                $catId = $category['id'];
+                $meta = $typeMeta[$catId] ?? ['color' => 'slate', 'icon' => 'folder'];
+                $color = $meta['color'];
+                
+                // Get tab name for fetching items
+                $tabName = $category['name_th'] ?? '';
+                
+                // Fetch hierarchy from budget_category_items using tab name pattern
+                $categoryItems = \App\Models\BudgetCategoryItem::getRootItemsForTab($tabName);
+                
+                // Color styles
+                $colorStyles = [
+                    'blue' => ['bg' => 'bg-blue-900/20', 'border' => 'border-blue-800/30', 'text' => 'text-blue-300', 'icon' => 'text-blue-400'],
+                    'emerald' => ['bg' => 'bg-emerald-900/20', 'border' => 'border-emerald-800/30', 'text' => 'text-emerald-300', 'icon' => 'text-emerald-400'],
+                    'rose' => ['bg' => 'bg-rose-900/20', 'border' => 'border-rose-800/30', 'text' => 'text-rose-300', 'icon' => 'text-rose-400'],
+                    'purple' => ['bg' => 'bg-purple-900/20', 'border' => 'border-purple-800/30', 'text' => 'text-purple-300', 'icon' => 'text-purple-400'],
+                    'amber' => ['bg' => 'bg-amber-900/20', 'border' => 'border-amber-800/30', 'text' => 'text-amber-300', 'icon' => 'text-amber-400']
+                ];
+                
+                $bgClass = $colorStyles[$color]['bg'] ?? 'bg-slate-800';
+                $borderClass = $colorStyles[$color]['border'] ?? 'border-slate-700';
+                $textClass = $colorStyles[$color]['text'] ?? 'text-slate-300';
+                $iconClass = $colorStyles[$color]['icon'] ?? 'text-slate-400';
+            ?>
+            
+            <div id="content-<?= $catId ?>" class="tab-content p-6 <?= $isActiveTab ? '' : 'hidden' ?>">
+                
+                <!-- Summary Bar -->
+                <div class="flex items-center justify-between mb-4 p-4 <?= $bgClass ?> border <?= $borderClass ?> rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="<?= $meta['icon'] ?>" class="w-6 h-6 <?= $iconClass ?>"></i>
+                        <span class="text-lg font-semibold <?= $textClass ?>"><?= htmlspecialchars($category['name_th']) ?></span>
+                    </div>
+                    <div class="flex items-center gap-6 text-sm">
+                        <span class="text-slate-400">วงเงินรวม: <span class="text-slate-100 font-semibold tab-summary" data-tab="<?= $catId ?>">0.00</span> บาท</span>
                     </div>
                 </div>
-                <?php endforeach; ?>
-            </div>
 
-            <!-- Footer Summary Bar -->
-            <div class="bg-slate-800 p-6 border-t border-slate-700">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="flex items-center gap-8">
-                        <div>
-                            <p class="text-dark-muted text-xs uppercase tracking-wider mb-1">ยอดรวมวงเงินคำขอทั้งหมด</p>
-                            <p class="text-3xl font-bold text-white tracking-tight" id="grandTotalDisplay">0.00 <span class="text-lg font-normal text-slate-500">บาท</span></p>
+                <!-- Data Table -->
+                <div class="overflow-x-auto rounded-lg border border-slate-700">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/50">
+                                <th class="px-4 py-3 text-left w-[40%]">รายการ</th>
+                                <th class="px-4 py-3 text-center w-[12%]">จำนวน (คน)</th>
+                                <th class="px-4 py-3 text-right w-[15%]">ราคาต่อหน่วย</th>
+                                <th class="px-4 py-3 text-right w-[15%] <?= $iconClass ?>">วงเงิน (บาท)</th>
+                                <th class="px-4 py-3 text-left w-[18%]">หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/30">
+                            <?php 
+                            // Recursive rendering function
+                            $renderItems = function($items, $level) use (&$renderItems, $iconClass, $catId, $savedItems) {
+                                foreach ($items as $item): 
+                                    $hasChildren = !empty($item['children']);
+                                    $itemId = $item['id'];
+                                    
+                                    // Retrieve saved values
+                                    $savedItem = $savedItems[$itemId] ?? [];
+                                    $qtyVal = $savedItem['quantity'] ?? 0;
+                                    $unitPriceVal = $savedItem['unit_price'] ?? 0;
+                                    
+                                    // Logic: If Qty=0 and UnitPrice>0, it means the Amount was stored in unit_price (Direct Amount)
+                                    // If Qty>0, then UnitPrice is the actual Unit Price.
+                                    $displayQty = $qtyVal > 0 ? $qtyVal : '';
+                                    
+                                    if ($qtyVal > 0) {
+                                        $displayUnitPrice = $unitPriceVal;
+                                        $displayAmount = $qtyVal * $unitPriceVal;
+                                    } else {
+                                        // Direct Amount Mode
+                                        $displayUnitPrice = ''; // Hide Unit Price if it was holding the Amount
+                                        $displayAmount = $unitPriceVal; // Show the stored value as Amount
+                                    }
+                                    
+                                    // Format if > 0
+                                    $displayUnitPrice = ($displayUnitPrice > 0) ? $displayUnitPrice : '';
+                                    $displayAmount = ($displayAmount > 0) ? $displayAmount : '';
+                                    $noteVal = $savedItem['remark'] ?? '';
+
+                                    $paddingLeft = ($level * 16) + 16 . 'px';
+                                    $rowClass = $hasChildren ? "font-medium text-slate-200" : "text-slate-300";
+                                    $rowStyle = ($level > 0) ? 'display: none;' : '';
+                                    $isParentRow = $hasChildren ? 'parent-row' : '';
+                            ?>
+                            <tr class="hover:bg-slate-800/30 transition-colors item-row <?= $isParentRow ?>" 
+                                style="<?= $rowStyle ?>" 
+                                data-id="<?= $itemId ?>" 
+                                data-parent="<?= $item['parent_id'] ?? '' ?>" 
+                                data-has-children="<?= $hasChildren ? '1' : '0' ?>"
+                                data-category="<?= $catId ?>">
+                                <td class="py-2 pr-4">
+                                    <div style="padding-left: <?= $paddingLeft ?>" class="flex items-center <?= $rowClass ?>">
+                                        <?php if ($hasChildren): ?>
+                                            <button type="button" class="toggle-children mr-2 text-slate-500 hover:text-slate-300" data-target="<?= $itemId ?>">
+                                                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                            </button>
+                                        <?php endif; ?>
+                                        <?= htmlspecialchars($item['name'] ?? $item['name_th'] ?? '') ?>
+                                    </div>
+                                </td>
+                                <td class="p-1 text-center">
+                                    <?php if (!$hasChildren): ?>
+                                        <input type="number" step="1" min="0" 
+                                               class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-center text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-quantity"
+                                               name="items[<?= $itemId ?>][quantity]" value="<?= $displayQty ?>" placeholder="0">
+                                    <?php else: ?>
+                                        <input type="text" disabled readonly
+                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-center text-slate-300 text-sm disabled:opacity-100 disabled:cursor-default inp-parent-qty"
+                                               value="" placeholder="-">
+                                    <?php endif; ?>
+                                </td>
+                                <td class="p-1">
+                                    <?php if (!$hasChildren): ?>
+                                        <input type="number" step="0.01" min="0" 
+                                               class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-unit-price"
+                                               name="items[<?= $itemId ?>][unit_price]" value="<?= $displayUnitPrice ?>" placeholder="0.00">
+                                    <?php else: ?>
+                                        <input type="text" disabled readonly
+                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-right text-slate-300 text-sm disabled:opacity-100 disabled:cursor-default inp-parent-price"
+                                               value="" placeholder="-">
+                                    <?php endif; ?>
+                                </td>
+                                <td class="p-1">
+                                    <input type="number" step="0.01" min="0" <?= $hasChildren ? 'disabled' : '' ?>
+                                           class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right font-medium text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-amount <?= $hasChildren ? 'text-amber-400 disabled:opacity-100 disabled:cursor-default' : 'text-orange-400' ?>"
+                                           name="items[<?= $itemId ?>][amount]" value="<?= $displayAmount ?>" placeholder="0.00">
+                                </td>
+                                <td class="p-1">
+                                    <?php if (!$hasChildren): ?>
+                                        <input type="text"
+                                               class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all"
+                                               name="items[<?= $itemId ?>][note]" value="<?= htmlspecialchars($noteVal) ?>" placeholder="...">
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php
+                                if ($hasChildren) {
+                                    $renderItems($item['children'], $level + 1);
+                                }
+                                endforeach;
+                            };
+
+                            $renderItems($categoryItems, 0);
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <?php endforeach; ?>
+
+            <!-- Grand Total Footer -->
+            <div class="bg-slate-700/60 px-6 py-4 border-t border-slate-600">
+                <div class="flex items-center justify-between">
+                    <span class="text-lg font-bold text-slate-200">รวมทั้งสิ้น (Total)</span>
+                    <div class="flex items-center gap-8 text-sm">
+                        <div class="text-center">
+                            <div class="text-slate-400 text-xs">วงเงินทั้งหมด</div>
+                            <div class="text-2xl font-bold text-amber-400" id="grand-total">0.00</div>
                         </div>
                     </div>
-                    <div class="flex gap-4 w-full md:w-auto">
-                         <button type="submit" class="btn btn-primary btn-lg w-full md:w-48 shadow-xl shadow-primary-500/20">
-                            <i data-lucide="check-circle-2" class="w-5 h-5 mr-2"></i> บันทึกข้อมูล
-                         </button>
-                    </div>
                 </div>
             </div>
-        </div>
-    </form>
+
+            <!-- Action Footer -->
+            <div class="px-6 py-4 bg-slate-800/30 border-t border-slate-700 flex justify-between gap-3">
+                <a href="<?= \App\Core\View::url('/requests') ?>" 
+                   class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-lg font-medium border border-slate-600 hover:bg-slate-600 transition-colors flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับหน้าหลัก
+                </a>
+                
+                <div class="flex gap-3">
+                    <button type="button" id="clearFormBtn"
+                       class="px-5 py-2.5 bg-slate-600 text-slate-200 rounded-lg font-medium border border-slate-500 hover:bg-slate-500 transition-colors flex items-center gap-2">
+                        <i data-lucide="eraser" class="w-4 h-4"></i> ล้างข้อมูล
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium shadow-lg shadow-primary-900/30 hover:bg-primary-500 transition-colors flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> บันทึกคำขอ
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Tab switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.tab;
-
-            tabBtns.forEach(b => {
-                b.classList.remove('border-primary-500', 'text-primary-400', 'bg-primary-500/5');
-                b.classList.add('border-transparent', 'text-dark-muted');
+    const form = document.getElementById('mainForm');
+    
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-tab-target');
+            const targetContent = document.getElementById(targetId);
+            
+            if (!targetContent) {
+                console.error('Target content not found:', targetId);
+                return;
+            }
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.className = b.className.replace(/border-b-\[3px\] border-\w+-\d+ text-\w+-\d+ bg-gradient.*?transparent/g, '');
+                if (!b.className.includes('text-slate-400')) {
+                    b.className += ' text-slate-400 hover:bg-slate-800/50 hover:text-slate-200';
+                }
             });
-
-            tabContents.forEach(c => c.classList.add('hidden'));
-
-            btn.classList.add('border-primary-500', 'text-primary-400', 'bg-primary-500/5');
-            btn.classList.remove('border-transparent', 'text-dark-muted');
-            document.getElementById(target).classList.remove('hidden');
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(c => {
+                c.classList.add('hidden');
+                c.style.display = 'none'; // Ensure display none
+            });
+            
+            // Show active button style
+            this.className = this.className.replace('text-slate-400 hover:bg-slate-800/50 hover:text-slate-200', '');
+            const color = this.querySelector('i').dataset.lucide === 'users' ? 'blue' :
+                         this.querySelector('i').dataset.lucide === 'briefcase' ? 'emerald' :
+                         this.querySelector('i').dataset.lucide === 'building' ? 'purple' :
+                         this.querySelector('i').dataset.lucide === 'heart-handshake' ? 'amber' : 'rose';
+            this.className += ` border-b-[3px] border-${color}-400 text-${color}-300 bg-gradient-to-t from-${color}-900/10 to-transparent`;
+            
+            // Show target content
+            targetContent.classList.remove('hidden');
+            targetContent.style.display = 'block'; // Force display block
         });
     });
+    
+    // Calculation Logic
+    function formatNumber(num) {
+        return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
 
-    // Auto-calculate hierarchy
-    const amountInputs = document.querySelectorAll('.amount-input');
-    const grandTotalDisplay = document.getElementById('grandTotalDisplay');
+    function getVal(el) {
+        return parseFloat(el?.value || 0);
+    }
 
-    function calculateGrandTotal() {
-        let total = 0;
-        // Only sum level 0 parents or all inputs? 
-        // Actually we only need to sum top-level category totals or all child inputs to avoid double counting.
-        // Summing all .amount-input is safest if they are only on leaf nodes.
-        const leafInputs = document.querySelectorAll('.amount-input');
-        leafInputs.forEach(input => {
-            total += parseFloat(input.value) || 0;
+    function updateRow(tr) {
+        if (!tr) return;
+        
+        const qty = getVal(tr.querySelector('.inp-quantity'));
+        const unitPrice = getVal(tr.querySelector('.inp-unit-price'));
+        const amountInput = tr.querySelector('.inp-amount');
+        
+        if (amountInput && !amountInput.disabled) {
+            // Only auto-calculate if unit_price is provided and Qty > 0
+            if (unitPrice > 0 && qty > 0) {
+                // Auto-calculate: Quantity × Unit Price
+                const calculated = qty * unitPrice;
+                amountInput.value = calculated > 0 ? calculated.toFixed(2) : '';
+            }
+            // If unit_price is empty/0, preserve user's manual amount input (Direct Mode)
+        }
+    }
+
+    function updateParentTotals(parentId) {
+        const parentRow = document.querySelector(`tr.parent-row[data-id="${parentId}"]`);
+        if (!parentRow) return;
+        
+        const children = document.querySelectorAll(`tr[data-parent="${parentId}"]`);
+        let sumAmount = 0;
+        let sumQty = 0;
+        let sumPrice = 0;
+        
+        children.forEach(childRow => {
+            const isChildParent = childRow.classList.contains('parent-row');
+            const amountInput = childRow.querySelector('.inp-amount');
+            const qtyInput = childRow.querySelector('.inp-quantity');
+            const priceInput = childRow.querySelector('.inp-unit-price');
+            
+            sumAmount += getVal(amountInput);
+            
+            // Sum qty and price from child rows
+            if (qtyInput) {
+                sumQty += getVal(qtyInput);
+            } else {
+                // Child is also a parent - get from disabled input
+                const qtyParentInput = childRow.querySelector('.inp-parent-qty');
+                if (qtyParentInput && qtyParentInput.value) {
+                    sumQty += parseFloat(qtyParentInput.value.replace(/,/g, '')) || 0;
+                }
+            }
+            
+            if (priceInput) {
+                sumPrice += getVal(priceInput);
+            } else {
+                const priceParentInput = childRow.querySelector('.inp-parent-price');
+                if (priceParentInput && priceParentInput.value) {
+                    sumPrice += parseFloat(priceParentInput.value.replace(/,/g, '')) || 0;
+                }
+            }
         });
-        grandTotalDisplay.textContent = total.toLocaleString('th-TH', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
+        
+        // Update parent row displays
+        const parentAmountInput = parentRow.querySelector('.inp-amount');
+        if (parentAmountInput) {
+            parentAmountInput.value = sumAmount.toFixed(2);
+        }
+        
+        // Update parent qty input
+        const parentQtyInput = parentRow.querySelector('.inp-parent-qty');
+        if (parentQtyInput) {
+            parentQtyInput.value = Math.round(sumQty);
+        }
+        
+        // Update parent price input
+        const parentPriceInput = parentRow.querySelector('.inp-parent-price');
+        if (parentPriceInput) {
+            parentPriceInput.value = formatNumber(sumPrice);
+        }
+    }
+    
+    function updateAllParentTotals() {
+        const parentRows = Array.from(document.querySelectorAll('tr.parent-row'));
+        
+        const rowDepths = parentRows.map(row => {
+            let depth = 0;
+            let parentId = row.dataset.parent;
+            while (parentId) {
+                depth++;
+                const parent = document.querySelector(`tr[data-id="${parentId}"]`);
+                parentId = parent?.dataset.parent;
+            }
+            return { row, depth };
+        });
+        
+        rowDepths.sort((a, b) => b.depth - a.depth);
+        rowDepths.forEach(({row}) => {
+            updateParentTotals(row.dataset.id);
         });
     }
 
-    function updateParentTotals() {
-        // Find all parent rows (rows with parent-total-amount)
-        const parentRows = Array.from(document.querySelectorAll('tr[data-item-id]')).filter(tr => tr.querySelector('.parent-total-amount'));
+    function updateTabTotals() {
+        // Update each tab summary
+        let grandTotal = 0;
         
-        // Sort parents by level descending to calculate from lowest children up
-        parentRows.sort((a, b) => b.dataset.level - a.dataset.level);
+        document.querySelectorAll('.tab-summary').forEach(summary => {
+            const tabId = summary.dataset.tab;
+            let total = 0;
+            
+            document.querySelectorAll(`tr[data-category="${tabId}"]:not(.parent-row)`).forEach(row => {
+                total += getVal(row.querySelector('.inp-amount'));
+            });
+            
+            summary.textContent = formatNumber(total);
+            grandTotal += total;
+            
+            // Update badge
+            const badge = document.querySelector(`.tab-total-badge[data-tab="${tabId}"]`);
+            if (badge) badge.textContent = formatNumber(total);
+        });
+        
+        document.getElementById('grand-total').textContent = formatNumber(grandTotal);
+    }
 
-        parentRows.forEach(row => {
-            const id = row.dataset.itemId;
-            const children = document.querySelectorAll(`tr[data-parent="${id}"]`);
-            let sum = 0;
+    // Input change handlers
+    if (form) {
+        form.addEventListener('input', function(e) {
+            if (e.target.matches('.inp-quantity, .inp-unit-price')) {
+                updateRow(e.target.closest('tr'));
+                updateAllParentTotals();
+                updateTabTotals();
+            } else if (e.target.matches('.inp-amount') && !e.target.disabled) {
+                updateAllParentTotals();
+                updateTabTotals();
+            }
+        });
+    }
 
-            children.forEach(child => {
-                // If child is also a parent, get its calculated value
-                const childTotalInput = child.querySelector('.parent-total-amount');
-                if (childTotalInput) {
-                    sum += parseFloat(childTotalInput.value.replace(/,/g, '')) || 0;
-                } else {
-                    // Child is a leaf, get its input value
-                    const amountInput = child.querySelector('.amount-input');
-                    if (amountInput) {
-                        sum += parseFloat(amountInput.value) || 0;
+    // Clear Form Button Handler
+    const clearBtn = document.getElementById('clearFormBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            if (confirm('ต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')) {
+                // Clear all input fields
+                document.querySelectorAll('.inp-quantity, .inp-unit-price, .inp-amount:not(:disabled)').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Clear parent amounts
+                document.querySelectorAll('.inp-amount:disabled').forEach(input => {
+                    input.value = '';
+                });
+                
+                // Reset parent inputs
+                document.querySelectorAll('.inp-parent-qty, .inp-parent-price').forEach(input => {
+                    input.value = '0';
+                });
+                
+                // Update all totals
+                updateAllParentTotals();
+                updateTabTotals();
+            }
+        });
+    }
+
+    // Collapse/Expand Logic
+    document.querySelectorAll('.toggle-children').forEach(btn => {
+        btn.dataset.expanded = 'false';
+        
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = this.dataset.target;
+            const isExpanded = this.dataset.expanded === 'true';
+            const newState = !isExpanded;
+            
+            this.dataset.expanded = newState;
+            
+            const icon = this.querySelector('svg') || this.querySelector('i');
+            if (icon) {
+                icon.style.transition = 'transform 0.2s ease-in-out';
+                icon.style.transform = newState ? 'rotate(0deg)' : 'rotate(-90deg)';
+            }
+            
+            toggleChildRows(targetId, newState);
+        });
+    });
+
+    function toggleChildRows(parentId, show) {
+        document.querySelectorAll(`tr[data-parent="${parentId}"]`).forEach(row => {
+            row.style.display = show ? '' : 'none';
+            const childId = row.dataset.id;
+            
+            if (!show) {
+                if (row.dataset.hasChildren === '1') {
+                    toggleChildRows(childId, false);
+                }
+            } else {
+                if (row.dataset.hasChildren === '1') {
+                    const btn = row.querySelector('.toggle-children');
+                    const isChildExpanded = btn && btn.dataset.expanded === 'true';
+                    
+                    if (isChildExpanded) {
+                        toggleChildRows(childId, true);
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize Icons and Calculation on Load
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+        
+        setTimeout(() => {
+            document.querySelectorAll('.toggle-children').forEach(btn => {
+                const svg = btn.querySelector('svg');
+                if (svg) {
+                    svg.style.transition = 'transform 0.2s ease-in-out';
+                    if (btn.dataset.expanded === 'false') {
+                        svg.style.transform = 'rotate(-90deg)';
                     }
                 }
             });
-
-            const totalField = row.querySelector('.parent-total-amount');
-            if (totalField) {
-                totalField.value = sum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            }
-        });
-
-        calculateGrandTotal();
-    }
-
-    amountInputs.forEach(input => {
-        input.addEventListener('input', updateParentTotals);
-        // Also handle blur for decimal formatting
-        input.addEventListener('blur', function() {
-            if (this.value === '') this.value = '0.00';
-            else this.value = parseFloat(this.value).toFixed(2);
-        });
-    });
-
-    // Initial calculation
-    updateParentTotals();
-
-    // Collapse/Expand functionality
-    document.querySelectorAll('.collapse-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const row = this.closest('tr');
-            const id = row.dataset.itemId;
-            const icon = this.querySelector('i');
             
-            toggleChildren(id, row.classList.contains('collapsed'));
-            
-            if (row.classList.contains('collapsed')) {
-                row.classList.remove('collapsed');
-                icon.style.transform = '';
-            } else {
-                row.classList.add('collapsed');
-                icon.style.transform = 'rotate(-90deg)';
-            }
-        });
-    });
-
-    function toggleChildren(parentId, show) {
-        const children = document.querySelectorAll(`tr[data-parent="${parentId}"]`);
-        children.forEach(child => {
-            if (show) {
-                child.classList.remove('hidden');
-                // If child was NOT collapsed, also show its children
-                if (!child.classList.contains('collapsed')) {
-                    const childId = child.dataset.itemId;
-                    toggleChildren(childId, true);
-                }
-            } else {
-                child.classList.add('hidden');
-                // Always hide recursively when hiding parent
-                const childId = child.dataset.itemId;
-                toggleChildren(childId, false);
-            }
-        });
-    }
-
-    // Lucide initialization for dynamic icons if needed
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+            // Initial Calculation to populate totals from loaded values
+            updateAllParentTotals();
+            updateTabTotals();
+        }, 50);
     }
 });
 </script>

@@ -37,6 +37,7 @@
                         <th style="text-align:center" class="py-4 font-semibold">กอง</th>
                         <th style="text-align:center" class="py-4 font-semibold">ยอดรวม</th>
                         <th style="text-align:center" class="py-4 font-semibold">วันที่บันทึก</th>
+                        <th style="text-align:center" class="py-4 font-semibold">สถานะ</th>
                         <th style="text-align:center" class="w-32 py-4 font-semibold">จัดการ</th>
                     </tr>
                 </thead>
@@ -60,6 +61,17 @@
                                     echo date('d/m/', $date) . (date('Y', $date) + 543);
                                 ?>
                             </td>
+                            <td style="text-align:center" class="py-4 align-middle">
+                                <?php 
+                                    $isSaved = ($req['total_amount'] > 0);
+                                    $statusClass = $isSaved ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400';
+                                    $statusText = $isSaved ? 'บันทึกแล้ว' : 'ยังไม่ได้บันทึก';
+                                ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
+                                    <i data-lucide="<?= $isSaved ? 'check-circle' : 'clock' ?>" class="w-3 h-3"></i>
+                                    <?= $statusText ?>
+                                </span>
+                            </td>
                             <td style="text-align:center" class="w-32 py-4 align-middle">
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-sky-400 transition-colors" title="เรียกดู">
@@ -82,12 +94,14 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-16 text-dark-muted">
-                                <div class="bg-dark-border/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i data-lucide="files" class="w-8 h-8 text-slate-500"></i>
+                            <td colspan="7" class="py-16 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <div class="bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mb-4 mt-4">
+                                        <i data-lucide="files" class="w-8 h-8 text-slate-500"></i>
+                                    </div>
+                                    <p class="text-lg font-medium text-slate-400">ยังไม่มีคำของบประมาณ</p>
+                                    <p class="text-sm mt-1 text-slate-500 mb-4">กดปุ่ม "สร้างคำขอ" เพื่อเริ่มรายการใหม่</p>
                                 </div>
-                                <p class="text-lg font-medium text-slate-400">ยังไม่มีคำของบประมาณ</p>
-                                <p class="text-sm mt-1 text-slate-600">กดปุ่ม "สร้างคำขอ" เพื่อเริ่มรายการใหม่</p>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -111,7 +125,7 @@
                 <div class="flex items-center justify-between p-4 border-b border-slate-700">
                     <h3 class="text-lg font-semibold text-white flex items-center gap-2" id="modal-title">
                         <i data-lucide="calendar-plus" class="w-5 h-5 text-primary-400"></i>
-                        สร้างรายการเบิกจ่ายใหม่
+                        สร้างคำของบประมาณ
                     </h3>
                     <button type="button" id="btnCloseIcon" class="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white transition-colors">
                         <i data-lucide="x" class="w-5 h-5"></i>
@@ -162,7 +176,7 @@
                             <!-- Division (Kong) - Cascading -->
                             <div>
                                 <label class="block text-sm font-medium text-white mb-2">
-                                    <i data-lucide="building-2" class="w-4 h-4 inline mr-1"></i>กอง/หน่วยงาน <span class="text-rose-500">*</span>
+                                    <i data-lucide="building-2" class="w-4 h-4 inline mr-1"></i>กอง <span class="text-rose-500">*</span>
                                 </label>
                                 <select name="org_id" id="org_select" required disabled
                                     class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white appearance-none transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -200,8 +214,8 @@
                                     });
                                     
                                     orgSelect.disabled = false;
-                                    orgSelect.value = '';
-                                    orgSelect.options[0].text = count > 0 ? '-- เลือกหน่วยงาน --' : '-- ไม่มีหน่วยงานในกรมนี้ --';
+                                    orgSelect.value = ''; // Reset selection
+                                    orgSelect.options[0].text = count > 0 ? '-- เลือกกอง --' : '-- ไม่มีกองในกรมนี้ --';
                                 });
                             </script>
 
@@ -226,26 +240,26 @@
                                     <option selected><?= htmlspecialchars($userOrgName) ?></option>
                                 </select>
                             </div>
+                        <?php endif; ?>
 
-                            <!-- Request Title -->
-                            <div>
-                                <label class="block text-sm font-medium text-white mb-2">ชื่อแบบคำขอ <span class="text-rose-500">*</span></label>
-                                <input type="text" name="request_title" required 
-                                    class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
-                                    placeholder="ระบุชื่อเรียกของคำขอนี้">
-                            </div>
+                        <!-- Request Title (Common) -->
+                        <div>
+                            <label class="block text-sm font-medium text-white mb-2">ชื่อแบบคำขอ <span class="text-rose-500">*</span></label>
+                            <input type="text" name="request_title" required 
+                                class="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 transition-all duration-200 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                                placeholder="ระบุชื่อเรียกของคำขอนี้">
+                        </div>
 
-                            <!-- Info Box (User - Moved to bottom) -->
-                            <div class="bg-blue-900/20 border border-blue-800/30 rounded-lg p-4 mt-2">
-                                <div class="flex items-start gap-3">
-                                    <i data-lucide="info" class="w-5 h-5 text-blue-400 mt-0.5"></i>
-                                    <div class="text-sm text-blue-300">
-                                        ระบบจะสร้างรายการสำหรับกองของคุณ<br>
-                                        โดยใช้วันที่ปัจจุบันเป็นวันที่บันทึก
-                                    </div>
+                        <!-- Info Box (Common) -->
+                        <div class="bg-blue-900/20 border border-blue-800/30 rounded-lg p-4 mt-2">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="info" class="w-5 h-5 text-blue-400 mt-0.5"></i>
+                                <div class="text-sm text-blue-300">
+                                    ระบบจะสร้างรายการสำหรับกองที่เลือก<br>
+                                    โดยใช้วันที่ปัจจุบันเป็นวันที่บันทึก
                                 </div>
                             </div>
-                        <?php endif; ?>
+                        </div>
                     </div>
 
                     <!-- Footer Buttons -->
