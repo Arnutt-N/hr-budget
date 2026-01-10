@@ -16,9 +16,10 @@ class BudgetRequest
      */
     public static function all(array $filters = [], int $limit = 50, int $offset = 0): array
     {
-        $sql = "SELECT br.*, u.name as created_by_name 
+        $sql = "SELECT br.*, u.name as created_by_name, o.name_th as org_name
                 FROM budget_requests br
                 LEFT JOIN users u ON br.created_by = u.id
+                LEFT JOIN organizations o ON br.org_id = o.id
                 WHERE 1=1";
         
         $params = [];

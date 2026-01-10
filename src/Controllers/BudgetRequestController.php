@@ -79,6 +79,7 @@ class BudgetRequestController
             'requests' => $requests,
             'fiscalYear' => $fiscalYear,
             'fiscalYears' => FiscalYear::all(),
+            'organizations' => \App\Models\Organization::all(), // Add this for the modal
             'pagination' => $pagination,
             'currentPage' => 'requests', // Fix: add missing currentPage variable
             'title' => 'คำของบประมาณ'
@@ -92,13 +93,27 @@ class BudgetRequestController
     {
         Auth::require();
         
+        $fiscalYear = $_GET['fiscal_year'] ?? FiscalYear::currentYear();
+        $orgId = $_GET['org_id'] ?? null;
+        $requestTitle = $_GET['request_title'] ?? '';
+        
+        if (!$orgId) {
+            Router::redirect('/requests');
+            return;
+        }
+        
+        $organization = \App\Models\Organization::find($orgId);
+        $budgetTree = \App\Models\BudgetCategory::getTree();
+        
         View::render('requests/form', [
             'action' => 'create',
-            'fiscalYear' => FiscalYear::currentYear(),
-            'fiscalYears' => FiscalYear::getForSelect(),
-            'organizations' => \App\Models\Organization::all(), // Phase 3
+            'fiscalYear' => $fiscalYear,
+            'orgId' => $orgId,
+            'organization' => $organization,
+            'requestTitle' => $requestTitle,
+            'budgetTree' => $budgetTree,
             'currentPage' => 'requests',
-            'title' => 'สร้างคำของบประมาณ'
+            'title' => 'บันทึกคำของบประมาณ'
         ], 'main');
     }
 
@@ -109,22 +124,56 @@ class BudgetRequestController
     {
         Auth::require();
         
-        $data = [
-            'fiscal_year' => $_POST['fiscal_year'],
-            'request_title' => $_POST['request_title'],
+        $fiscalYear = $_POST['fiscal_year'];
+        $requestTitle = $_POST['request_title'];
+        $orgId = !empty($_POST['org_id']) ? $_POST['org_id'] : null;
+        $items = $_POST['items'] ?? [];
+
+        // 1. Calculate Total Amount from items
+        $totalAmount = 0;
+        foreach ($items as $item) {
+            $amount = (float)($item['amount'] ?? 0);
+            $totalAmount += $amount;
+        }
+
+        // 2. Create the Request Record
+        $requestId = BudgetRequest::create([
+            'fiscal_year' => $fiscalYear,
+            'request_title' => $requestTitle,
+            'org_id' => $orgId,
+            'total_amount' => $totalAmount,
             'created_by' => Auth::id(),
-            'org_id' => !empty($_POST['org_id']) ? $_POST['org_id'] : null, // Phase 3
             'request_status' => 'draft'
-        ];
-        
-        $id = BudgetRequest::create($data);
-        
-        if ($id) {
-            BudgetRequestApproval::log($id, 'created', Auth::id(), 'Request created');
-            Router::redirect("/requests/{$id}"); // Go to detail to add items
+        ]);
+
+        if ($requestId) {
+            // 3. Save only items that have an amount > 0
+            foreach ($items as $categoryItemId => $itemData) {
+                $amount = (float)($itemData['amount'] ?? 0);
+                $quantity = (float)($itemData['quantity'] ?? 0);
+                
+                if ($amount > 0 || $quantity > 0) {
+                    // Get item name from category if possible
+                    $catItem = \App\Models\BudgetCategoryItem::find($categoryItemId);
+                    
+                    BudgetRequestItem::create([
+                        'budget_request_id' => $requestId,
+                        'category_item_id' => $categoryItemId,
+                        'item_name' => $catItem['name'] ?? 'Unknown Item',
+                        'quantity' => $quantity,
+                        'unit_price' => $amount, // We use unit_price as the amount field in this context
+                        'remark' => $itemData['note'] ?? null
+                    ]);
+                }
+            }
+
+            BudgetRequestApproval::log($requestId, 'created', Auth::id(), 'Request created from hierarchical form');
+            
+            // Redirect to success or detail page
+            Router::redirect("/requests/{$requestId}");
         } else {
-            // handle error
-            Router::redirect('/requests/create');
+            // Error handling
+            Router::redirect('/requests');
         }
     }
 
