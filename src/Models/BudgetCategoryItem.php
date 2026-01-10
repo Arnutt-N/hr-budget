@@ -51,18 +51,71 @@ class BudgetCategoryItem
     }
 
     /**
-     * Recursively retrieve the full hierarchy for a category
+     * Recursively retrieve the full hierarchy starting from specific parent
+     * @param int|null $parentId - Parent ID to start from (NULL = root items)
      */
-    public static function getHierarchy(int $categoryId): array
+    public static function getHierarchy(?int $parentId = null): array
     {
-        $rootItems = self::getByCategory($categoryId);
-        $build = function ($items) use (&$build) {
-            foreach ($items as &$item) {
-                $item['children'] = $build(self::getChildren($item['id']));
-            }
-            return $items;
-        };
-        return $build($rootItems);
+        $sql = "SELECT * FROM budget_category_items WHERE is_active = 1";
+        
+        if ($parentId === null) {
+            $sql .= " AND parent_id IS NULL";
+            $items = Database::query($sql . " ORDER BY sort_order ASC, id ASC");
+        } else {
+            $sql .= " AND parent_id = ?";
+            $items = Database::query($sql . " ORDER BY sort_order ASC, id ASC", [$parentId]);
+        }
+        
+        foreach ($items as &$item) {
+            $item['children'] = self::getHierarchy($item['id']);
+        }
+        
+        return $items;
+    }
+    
+    /**
+     * Get root items (parent_id IS NULL) matching a pattern
+     * Used for tab filtering
+     */
+    public static function getRootItemsForTab(string $tabName): array
+    {
+        // Map tab names to root item patterns
+        $patterns = [
+            'งบบุคลากร' => ['เงินเดือน', 'ค่าจ้าง', 'ค่าตอบแทนพนักงาน'],
+            'งบดำเนินงาน' => ['ค่าตอบแทนใช้สอย', 'ค่าสาธารณูปโภค'],
+            'งบลงทุน' => ['ค่าครุภัณฑ์'],
+            'งบอุดหนุน' => [],
+            'งบรายจ่ายอื่น' => ['ค่าใช้จ่ายใน', 'ค่าใช้จ่ายสำหรับ', 'ค่าใช้จ่ายโครงการ']
+        ];
+        
+        $matchPatterns = $patterns[$tabName] ?? [];
+        
+        if (empty($matchPatterns)) {
+            return [];
+        }
+        
+        // Build WHERE clause with LIKE
+        $conditions = [];
+        $params = [];
+        foreach ($matchPatterns as $pattern) {
+            $conditions[] = "name LIKE ?";
+            $params[] = $pattern . '%';
+        }
+        
+        $sql = "SELECT * FROM budget_category_items 
+                WHERE is_active = 1 
+                AND parent_id IS NULL 
+                AND (" . implode(' OR ', $conditions) . ")
+                ORDER BY sort_order ASC, id ASC";
+        
+        $items = Database::query($sql, $params);
+        
+        // Build hierarchy for each root item
+        foreach ($items as &$item) {
+            $item['children'] = self::getHierarchy($item['id']);
+        }
+        
+        return $items;
     }
 
     /**

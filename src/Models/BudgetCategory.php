@@ -182,6 +182,27 @@ class BudgetCategory
     }
 
     /**
+     * Get children hierarchy of a category
+     * Returns all descendants as nested array
+     */
+    public static function getChildrenHierarchy(int $parentId, bool $activeOnly = true): array
+    {
+        $sql = "SELECT * FROM budget_categories WHERE parent_id = ?";
+        if ($activeOnly) {
+            $sql .= " AND is_active = 1";
+        }
+        $sql .= " ORDER BY sort_order ASC, id ASC";
+        
+        $children = Database::query($sql, [$parentId]);
+        
+        foreach ($children as &$child) {
+            $child['children'] = self::getChildrenHierarchy($child['id'], $activeOnly);
+        }
+        
+        return $children;
+    }
+
+    /**
      * Get all categories with their items, including hierarchy
      */
     public static function getAllWithItems(): array
