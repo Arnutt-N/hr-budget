@@ -74,48 +74,79 @@ class BudgetCategoryItem
     }
     
     /**
-     * Get root items (parent_id IS NULL) matching a pattern
-     * Used for tab filtering
+     * Get root items for tab using ExpenseType -> ExpenseGroup -> ExpenseItem structure
+     * @param array $explicitItemIds - List of IDs to force include (e.g. already saved items)
      */
-    public static function getRootItemsForTab(string $tabName): array
+    public static function getRootItemsForTab(string $tabName, ?int $organizationId = null, array $explicitItemIds = []): array
     {
-        // Map tab names to root item patterns
-        $patterns = [
-            'งบบุคลากร' => ['เงินเดือน', 'ค่าจ้าง', 'ค่าตอบแทนพนักงาน'],
-            'งบดำเนินงาน' => ['ค่าตอบแทนใช้สอย', 'ค่าสาธารณูปโภค'],
-            'งบลงทุน' => ['ค่าครุภัณฑ์'],
-            'งบอุดหนุน' => [],
-            'งบรายจ่ายอื่น' => ['ค่าใช้จ่ายใน', 'ค่าใช้จ่ายสำหรับ', 'ค่าใช้จ่ายโครงการ']
+        // 1. Map Tab Names to ExpenseType IDs
+        $typeMap = [
+            'งบบุคลากร' => 1,
+            'งบดำเนินงาน' => 2,
+            'งบลงทุน' => 3,
+            'งบเงินอุดหนุน' => 4,
+            'งบรายจ่ายอื่น' => 5
         ];
-        
-        $matchPatterns = $patterns[$tabName] ?? [];
-        
-        if (empty($matchPatterns)) {
+
+        // normalize tab name
+        $normalizedTabName = trim($tabName);
+        foreach ($typeMap as $key => $id) {
+            if (strpos($normalizedTabName, $key) !== false) {
+                $typeId = $id;
+                break;
+            }
+        }
+
+        if (!isset($typeId)) {
             return [];
         }
-        
-        // Build WHERE clause with LIKE
-        $conditions = [];
-        $params = [];
-        foreach ($matchPatterns as $pattern) {
-            $conditions[] = "name LIKE ?";
-            $params[] = $pattern . '%';
+
+        // 2. Fetch Groups and Items using ExpenseGroup model
+        // We use getAllWithItemsByType which returns Groups -> Items tree
+        // User Request: "งบลงทุน ต้องไม่มีรายการ" => Type 3
+        if ($typeId === 3) {
+            return []; // Force empty for Investment Budget
         }
         
-        $sql = "SELECT * FROM budget_category_items 
-                WHERE is_active = 1 
-                AND parent_id IS NULL 
-                AND (" . implode(' OR ', $conditions) . ")
-                ORDER BY sort_order ASC, id ASC";
-        
-        $items = Database::query($sql, $params);
-        
-        // Build hierarchy for each root item
-        foreach ($items as &$item) {
-            $item['children'] = self::getHierarchy($item['id']);
+        // User Request: Strict Hierarchy Filtering (Org -> Plan -> ...)
+        // Retrieve "Personnel Plan" ID dynamically
+        $db = \App\Core\Database::getInstance();
+        $plan = \App\Core\Database::queryOne("SELECT id FROM plans WHERE name_th LIKE ?", ['%บุคลากร%']);
+        $planId = $plan['id'] ?? null;
+
+        $groups = \App\Models\ExpenseGroup::getAllWithItemsByType($typeId, $organizationId, $planId);
+
+        // 3. Transform Groups into "Root Items" structure expected by the View
+        // View expects: [ {id, name, children: [...]}, ... ]
+        $rootItems = [];
+
+        foreach ($groups as $group) {
+            $groupId = 'group_' . $group['id'];
+            
+            // Inject parent_id to children so they link to this group row
+            $children = $group['items'] ?? [];
+            foreach ($children as &$child) {
+                // Top level children of a group should have the group as parent
+                if (empty($child['parent_id'])) {
+                    $child['parent_id'] = $groupId;
+                }
+            }
+            unset($child); // Break reference
+
+            $rootItem = [
+                'id' => $groupId, // Virtual ID for group
+                'name' => $group['name_th'],
+                'name_th' => $group['name_th'],
+                'parent_id' => null,
+                'children' => $children, // These are the actual Expense Items
+                'is_group' => true, // Flag to identify this is a group wrapper
+                // User Request: "แต่ละแทบ รายการหลัก บนสุด ใช้ไอคอน โฟลเดอร์"
+                'icon' => 'folder' 
+            ];
+            $rootItems[] = $rootItem;
         }
-        
-        return $items;
+
+        return $rootItems;
     }
 
     /**
@@ -150,112 +181,69 @@ class BudgetCategoryItem
      */
     public static function create(array $data)
     {
-        $fields = ['category_id', 'name', 'code', 'parent_id', 'level', 'description', 'sort_order', 'is_active', 'created_by'];
-        $values = [];
-        $placeholders = [];
+        $fields = array_keys($data);
+        $placeholders = array_fill(0, count($fields), '?');
         
-        foreach ($fields as $field) {
-            if (isset($data[$field])) {
-                $values[] = $data[$field];
-                $placeholders[] = '?';
-            }
-        }
-        
-        $sql = "INSERT INTO budget_category_items (" . implode(', ', array_keys($data)) . ") 
+        $sql = "INSERT INTO budget_category_items (" . implode(', ', $fields) . ") 
                 VALUES (" . implode(', ', $placeholders) . ")";
         
-        return Database::execute($sql, $values);
+        $db = Database::getInstance();
+        $stmt = $db->prepare($sql);
+        $stmt->execute(array_values($data));
+        return (int) $db->lastInsertId();
     }
 
-    /**
-     * Update item
-     * 
-     * @param int $id
-     * @param array $data
-     * @return bool
-     */
     public static function update(int $id, array $data): bool
     {
         $sets = [];
         $values = [];
         
-        $allowedFields = ['category_id', 'name', 'code', 'parent_id', 'level', 'description', 'sort_order', 'is_active', 'updated_by'];
-        
-        foreach ($allowedFields as $field) {
-            if (isset($data[$field])) {
-                $sets[] = "$field = ?";
-                $values[] = $data[$field];
-            }
+        foreach ($data as $field => $value) {
+            $sets[] = "$field = ?";
+            $values[] = $value;
         }
         
-        if (empty($sets)) {
-            return false;
-        }
+        if (empty($sets)) return false;
         
         $values[] = $id;
         $sql = "UPDATE budget_category_items SET " . implode(', ', $sets) . " WHERE id = ?";
         
-        return Database::execute($sql, $values) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute($values);
     }
 
-    /**
-     * Soft delete item
-     * 
-     * @param int $id
-     * @return bool
-     */
     public static function softDelete(int $id): bool
     {
         $sql = "UPDATE budget_category_items SET deleted_at = NOW() WHERE id = ?";
-        return Database::execute($sql, [$id]) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
-    /**
-     * Restore soft-deleted item
-     * 
-     * @param int $id
-     * @return bool
-     */
     public static function restore(int $id): bool
     {
         $sql = "UPDATE budget_category_items SET deleted_at = NULL WHERE id = ?";
-        return Database::execute($sql, [$id]) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
-    /**
-     * Permanently delete item
-     * 
-     * @param int $id
-     * @return bool
-     */
     public static function delete(int $id): bool
     {
         $sql = "DELETE FROM budget_category_items WHERE id = ?";
-        return Database::execute($sql, [$id]) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
-    /**
-     * Toggle active status
-     * 
-     * @param int $id
-     * @return bool
-     */
     public static function toggleActive(int $id): bool
     {
         $sql = "UPDATE budget_category_items SET is_active = NOT is_active WHERE id = ?";
-        return Database::execute($sql, [$id]) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute([$id]);
     }
 
-    /**
-     * Update sort order
-     * 
-     * @param int $id
-     * @param int $sortOrder
-     * @return bool
-     */
     public static function updateSortOrder(int $id, int $sortOrder): bool
     {
         $sql = "UPDATE budget_category_items SET sort_order = ? WHERE id = ?";
-        return Database::execute($sql, [$sortOrder, $id]) !== false;
+        $stmt = Database::getInstance()->prepare($sql);
+        return $stmt->execute([$sortOrder, $id]);
     }
 }

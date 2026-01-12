@@ -14,16 +14,16 @@ class ExpenseGroup extends Model {
     /**
      * Get all groups with their items for a specific expense type
      */
-    public static function getAllWithItemsByType(int $typeId, ?int $organizationId = null): array
+    public static function getAllWithItemsByType(int $typeId, ?int $organizationId = null, ?int $planId = null): array
     {
-        return self::getAllWithHierarchicalItemsByType($typeId, $organizationId);
+        return self::getAllWithHierarchicalItemsByType($typeId, $organizationId, $planId);
     }
 
     /**
      * Get all groups with their items in a hierarchical tree structure
      * Optional: Filter by Organization ID (based on budget_line_items)
      */
-    public static function getAllWithHierarchicalItemsByType(int $typeId, ?int $organizationId = null): array
+    public static function getAllWithHierarchicalItemsByType(int $typeId, ?int $organizationId = null, ?int $planId = null): array
     {
         $db = \App\Core\Database::getInstance();
         
@@ -49,7 +49,7 @@ class ExpenseGroup extends Model {
 
         // 3. Filter by Organization (if provided)
         if ($organizationId) {
-            $allItems = self::filterItemsByOrganization($allItems, $organizationId, $typeId);
+            $allItems = self::filterItemsByOrganization($allItems, $organizationId, $typeId, $planId);
         }
         
         // 4. Group items by expense_group_id
@@ -77,16 +77,21 @@ class ExpenseGroup extends Model {
         return $validGroups;
     }
 
-    private static function filterItemsByOrganization(array $allItems, int $orgId, int $typeId): array
+    private static function filterItemsByOrganization(array $allItems, int $orgId, int $typeId, ?int $planId = null): array
     {
         // Get whitelisted items for this org
         $sql = "SELECT DISTINCT expense_item_id FROM budget_line_items 
                 WHERE division_id = ? AND expense_type_id = ?";
-        $whitelisted = \App\Core\Database::query($sql, [$orgId, $typeId]);
+        $params = [$orgId, $typeId];
+
+        if ($planId) {
+            $sql .= " AND plan_id = ?";
+            $params[] = $planId;
+        }
+
+        $whitelisted = \App\Core\Database::query($sql, $params);
         $allowedIds = array_column($whitelisted, 'expense_item_id');
 
-        // If no allocation at all, usually return empty
-        // BUT strict filtering: return empty array
         if (empty($allowedIds)) return [];
 
         // Map ID -> Item & Parent
