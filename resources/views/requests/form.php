@@ -139,9 +139,18 @@ input[type="number"] {
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-400 mb-1">สถานะ</label>
-                <span class="text-lg font-semibold text-primary-400">
-                    <?= isset($request['request_status']) && $request['request_status'] === 'draft' ? 'ร่างคำขอ (Draft)' : ($request['request_status'] ?? 'Draft') ?>
-                </span>
+                <?php
+                $statusLabels = [
+                    'draft' => ['text' => 'ร่างคำขอ (Draft)', 'class' => 'text-slate-400'],
+                    'saved' => ['text' => 'บันทึกแล้ว', 'class' => 'text-blue-400'],
+                    'confirmed' => ['text' => '✓ รายการที่เลือก', 'class' => 'text-green-400'],
+                    'pending' => ['text' => 'รอดำเนินการ', 'class' => 'text-amber-400'],
+                    'approved' => ['text' => 'อนุมัติแล้ว', 'class' => 'text-emerald-400']
+                ];
+                $currentStatus = $request['request_status'] ?? 'draft';
+                $config = $statusLabels[$currentStatus] ?? $statusLabels['draft'];
+                ?>
+                <span class="text-lg font-semibold <?= $config['class'] ?>"><?= $config['text'] ?></span>
             </div>
         </div>
 
@@ -185,7 +194,8 @@ input[type="number"] {
                 <button type="button"
                     class="tab-btn flex-1 min-w-max px-6 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors <?= $activeClass ?>"
                     data-tab-id="<?= $tab['id'] ?>"
-                    data-tab-target="content-<?= $tab['id'] ?>">
+                    data-tab-target="content-<?= $tab['id'] ?>"
+                    data-color="<?= $tColor ?>">
                     <i data-lucide="<?= $tMeta['icon'] ?>" class="w-4 h-4"></i>
                     <?= htmlspecialchars($tab['name_th']) ?>
                     <span class="ml-2 px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-500 tab-total-badge" data-tab="<?= $tab['id'] ?>">0.00</span>
@@ -212,7 +222,9 @@ input[type="number"] {
                 $tabName = $category['name_th'] ?? '';
                 
                 // Fetch hierarchy from budget_category_items using tab name pattern
-                $categoryItems = \App\Models\BudgetCategoryItem::getRootItemsForTab($tabName);
+                // User Request: Filter by Organization to remove unrelated items
+                // Redo: Pass saved item IDs so they are not filtered out even if not in whitelist
+                $categoryItems = \App\Models\BudgetCategoryItem::getRootItemsForTab($tabName, $orgId, array_keys($savedItems));
                 
                 // Color styles
                 $colorStyles = [
@@ -258,6 +270,12 @@ input[type="number"] {
                             <?php 
                             // Recursive rendering function
                             $renderItems = function($items, $level) use (&$renderItems, $iconClass, $catId, $savedItems) {
+                                // If no items, show empty message
+                                if (empty($items) && $level === 0) {
+                                    echo '<tr><td colspan="5" class="py-8 text-center text-slate-500 italic">ไม่พบรายการในหมวดนี้</td></tr>';
+                                    return;
+                                }
+
                                 foreach ($items as $item): 
                                     $hasChildren = !empty($item['children']);
                                     $itemId = $item['id'];
@@ -266,23 +284,12 @@ input[type="number"] {
                                     $savedItem = $savedItems[$itemId] ?? [];
                                     $qtyVal = $savedItem['quantity'] ?? 0;
                                     $unitPriceVal = $savedItem['unit_price'] ?? 0;
+                                    $amountVal = $savedItem['amount'] ?? 0; // New: use separate amount column
                                     
-                                    // Logic: If Qty=0 and UnitPrice>0, it means the Amount was stored in unit_price (Direct Amount)
-                                    // If Qty>0, then UnitPrice is the actual Unit Price.
+                                    // Display values directly from DB
                                     $displayQty = $qtyVal > 0 ? $qtyVal : '';
-                                    
-                                    if ($qtyVal > 0) {
-                                        $displayUnitPrice = $unitPriceVal;
-                                        $displayAmount = $qtyVal * $unitPriceVal;
-                                    } else {
-                                        // Direct Amount Mode
-                                        $displayUnitPrice = ''; // Hide Unit Price if it was holding the Amount
-                                        $displayAmount = $unitPriceVal; // Show the stored value as Amount
-                                    }
-                                    
-                                    // Format if > 0
-                                    $displayUnitPrice = ($displayUnitPrice > 0) ? $displayUnitPrice : '';
-                                    $displayAmount = ($displayAmount > 0) ? $displayAmount : '';
+                                    $displayUnitPrice = $unitPriceVal > 0 ? $unitPriceVal : '';
+                                    $displayAmount = $amountVal > 0 ? $amountVal : '';
                                     $noteVal = $savedItem['remark'] ?? '';
 
                                     $paddingLeft = ($level * 16) + 16 . 'px';
@@ -297,40 +304,46 @@ input[type="number"] {
                                 data-has-children="<?= $hasChildren ? '1' : '0' ?>"
                                 data-category="<?= $catId ?>">
                                 <td class="py-2 pr-4">
-                                    <div style="padding-left: <?= $paddingLeft ?>" class="flex items-center <?= $rowClass ?>">
+                                    <div style="padding-left: <?= $paddingLeft ?>" class="flex items-center gap-2 <?= $rowClass ?>">
                                         <?php if ($hasChildren): ?>
-                                            <button type="button" class="toggle-children mr-2 text-slate-500 hover:text-slate-300" data-target="<?= $itemId ?>">
+                                            <button type="button" class="toggle-children text-slate-500 hover:text-slate-300" data-target="<?= $itemId ?>">
                                                 <i data-lucide="chevron-down" class="w-4 h-4"></i>
                                             </button>
                                         <?php endif; ?>
+                                        
+                                        <!-- User Request: Show Folder Icon for Groups -->
+                                        <?php if (!empty($item['icon'])): ?>
+                                            <i data-lucide="<?= $item['icon'] ?>" class="w-4 h-4 <?= $iconClass ?>"></i>
+                                        <?php endif; ?>
+                                        
                                         <?= htmlspecialchars($item['name'] ?? $item['name_th'] ?? '') ?>
                                     </div>
                                 </td>
                                 <td class="p-1 text-center">
                                     <?php if (!$hasChildren): ?>
-                                        <input type="number" step="1" min="0" 
+                                        <input type="text" inputmode="numeric" 
                                                class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-center text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-quantity"
                                                name="items[<?= $itemId ?>][quantity]" value="<?= $displayQty ?>" placeholder="0">
                                     <?php else: ?>
                                         <input type="text" disabled readonly
-                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-center text-slate-300 text-sm disabled:opacity-100 disabled:cursor-default inp-parent-qty"
+                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-center text-slate-300 text-sm disabled:opacity-100 disabled:cursor-not-allowed inp-parent-qty"
                                                value="" placeholder="-">
                                     <?php endif; ?>
                                 </td>
                                 <td class="p-1">
                                     <?php if (!$hasChildren): ?>
-                                        <input type="number" step="0.01" min="0" 
+                                        <input type="text" inputmode="decimal" 
                                                class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-unit-price"
                                                name="items[<?= $itemId ?>][unit_price]" value="<?= $displayUnitPrice ?>" placeholder="0.00">
                                     <?php else: ?>
                                         <input type="text" disabled readonly
-                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-right text-slate-300 text-sm disabled:opacity-100 disabled:cursor-default inp-parent-price"
+                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-right text-slate-300 text-sm disabled:opacity-100 disabled:cursor-not-allowed inp-parent-price"
                                                value="" placeholder="-">
                                     <?php endif; ?>
                                 </td>
                                 <td class="p-1">
-                                    <input type="number" step="0.01" min="0" <?= $hasChildren ? 'disabled' : '' ?>
-                                           class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right font-medium text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-amount <?= $hasChildren ? 'text-amber-400 disabled:opacity-100 disabled:cursor-default' : 'text-orange-400' ?>"
+                                    <input type="text" inputmode="decimal" <?= $hasChildren ? 'disabled' : '' ?>
+                                           class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right font-medium text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-amount <?= $hasChildren ? 'text-amber-400 disabled:opacity-100 disabled:cursor-not-allowed' : 'text-orange-400' ?>"
                                            name="items[<?= $itemId ?>][amount]" value="<?= $displayAmount ?>" placeholder="0.00">
                                 </td>
                                 <td class="p-1">
@@ -351,42 +364,65 @@ input[type="number"] {
                             $renderItems($categoryItems, 0);
                             ?>
                         </tbody>
+                        <tfoot>
+                            <tr class="bg-slate-900/80 border-t-2 border-slate-600">
+                                <td class="px-4 py-3 text-center font-bold text-slate-200">รวมทั้งสิ้น (Total)</td>
+                                <td class="px-4 py-3 text-center font-bold text-amber-400" id="footer-qty-<?= $catId ?>">0</td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3 text-right font-bold text-orange-400" id="footer-amount-<?= $catId ?>">0.00</td>
+                                <td class="px-4 py-3"></td>
+                            </tr>
+                        </tfoot>
                     </table>
+                </div>
+
+                <!-- Action Buttons (Inside Container) -->
+                <div class="flex justify-between items-center gap-3 mt-6">
+                    <a href="<?= \App\Core\View::url('/requests') ?>" 
+                       class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-lg font-medium hover:bg-slate-600 transition-colors flex items-center gap-2">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับ
+                    </a>
+                    
+                    <?php if (empty($readonly)): ?>
+                    <div class="flex gap-3">
+                        <button type="button" class="btn-clear-form px-5 py-2.5 bg-slate-600 text-slate-200 rounded-lg font-medium hover:bg-slate-500 transition-colors flex items-center gap-2">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> ล้างค่า
+                        </button>
+                        
+                        <?php 
+                        $currentStatus = $request['request_status'] ?? 'draft';
+                        if ($currentStatus === 'confirmed' || $currentStatus === 'approved' || $currentStatus === 'pending'): 
+                        ?>
+                            <div class="flex items-center gap-3">
+                                <span class="text-green-400 text-sm font-medium flex items-center gap-1">
+                                    <i data-lucide="check" class="w-4 h-4"></i> ยืนยันแล้ว
+                                </span>
+                                <?php if (\App\Core\Auth::hasRole('admin') || true): ?>
+                                   <a href="<?= \App\Core\View::url('/requests/' . $requestId . '/revoke') ?>" 
+                                      class="px-5 py-2.5 bg-amber-600/20 text-amber-400 rounded-lg font-medium hover:bg-amber-600/30 transition-colors flex items-center gap-2">
+                                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> ยกเลิกการยืนยัน
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+                            <button type="submit" class="btn-save px-6 py-2.5 bg-sky-600 text-white rounded-lg font-medium shadow-lg hover:bg-sky-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i> บันทึก
+                            </button>
+
+                            <button type="button" class="btn-confirm-selection px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-emerald-900/30 hover:bg-emerald-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> ยืนยัน
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
             <?php endforeach; ?>
 
-            <!-- Grand Total Footer -->
-            <div class="bg-slate-700/60 px-6 py-4 border-t border-slate-600">
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-bold text-slate-200">รวมทั้งสิ้น (Total)</span>
-                    <div class="flex items-center gap-8 text-sm">
-                        <div class="text-center">
-                            <div class="text-slate-400 text-xs">วงเงินทั้งหมด</div>
-                            <div class="text-2xl font-bold text-amber-400" id="grand-total">0.00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Footer -->
-            <div class="px-6 py-4 bg-slate-800/30 border-t border-slate-700 flex justify-between gap-3">
-                <a href="<?= \App\Core\View::url('/requests') ?>" 
-                   class="px-5 py-2.5 bg-slate-700 text-slate-200 rounded-lg font-medium border border-slate-600 hover:bg-slate-600 transition-colors flex items-center gap-2">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับหน้าหลัก
-                </a>
-                
-                <div class="flex gap-3">
-                    <button type="button" id="clearFormBtn"
-                       class="px-5 py-2.5 bg-slate-600 text-slate-200 rounded-lg font-medium border border-slate-500 hover:bg-slate-500 transition-colors flex items-center gap-2">
-                        <i data-lucide="eraser" class="w-4 h-4"></i> ล้างข้อมูล
-                    </button>
-                    <button type="submit" class="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium shadow-lg shadow-primary-900/30 hover:bg-primary-500 transition-colors flex items-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> บันทึกคำขอ
-                    </button>
-                </div>
-            </div>
+            <!-- Action Footer Removed (Moved inside tabs) -->
+            <!-- Hidden JSON input for large forms -->
+            <input type="hidden" name="items_json" id="items_json">
         </form>
     </div>
 </div>
@@ -396,6 +432,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('mainForm');
     
     // Tab Switching
+    const tabStyles = {
+        'blue': 'border-b-[3px] border-blue-400 text-blue-300 bg-gradient-to-t from-blue-900/10 to-transparent',
+        'emerald': 'border-b-[3px] border-emerald-400 text-emerald-300 bg-gradient-to-t from-emerald-900/10 to-transparent',
+        'purple': 'border-b-[3px] border-purple-400 text-purple-300 bg-gradient-to-t from-purple-900/10 to-transparent',
+        'amber': 'border-b-[3px] border-amber-400 text-amber-300 bg-gradient-to-t from-amber-900/10 to-transparent',
+        'rose': 'border-b-[3px] border-rose-400 text-rose-300 bg-gradient-to-t from-rose-900/10 to-transparent',
+        'inactive': 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+    };
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -407,31 +452,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Update tab buttons
+            // 1. Reset ALL tabs to inactive state
             document.querySelectorAll('.tab-btn').forEach(b => {
-                b.className = b.className.replace(/border-b-\[3px\] border-\w+-\d+ text-\w+-\d+ bg-gradient.*?transparent/g, '');
-                if (!b.className.includes('text-slate-400')) {
-                    b.className += ' text-slate-400 hover:bg-slate-800/50 hover:text-slate-200';
-                }
+                b.className = 'tab-btn flex-1 min-w-max px-6 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ' + tabStyles.inactive;
             });
             
-            // Hide all tab contents
+            // 2. Hide ALL contents
             document.querySelectorAll('.tab-content').forEach(c => {
                 c.classList.add('hidden');
-                c.style.display = 'none'; // Ensure display none
+                c.style.display = 'none'; 
             });
             
-            // Show active button style
-            this.className = this.className.replace('text-slate-400 hover:bg-slate-800/50 hover:text-slate-200', '');
-            const color = this.querySelector('i').dataset.lucide === 'users' ? 'blue' :
-                         this.querySelector('i').dataset.lucide === 'briefcase' ? 'emerald' :
-                         this.querySelector('i').dataset.lucide === 'building' ? 'purple' :
-                         this.querySelector('i').dataset.lucide === 'heart-handshake' ? 'amber' : 'rose';
-            this.className += ` border-b-[3px] border-${color}-400 text-${color}-300 bg-gradient-to-t from-${color}-900/10 to-transparent`;
+            // 3. Set Current Tab Active
+            const color = this.dataset.color || 'blue'; // Use robust data attribute
+            const activeStyle = tabStyles[color];
             
-            // Show target content
+            this.className = 'tab-btn flex-1 min-w-max px-6 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ' + activeStyle;
+            
+            // 4. Show Target Content
             targetContent.classList.remove('hidden');
-            targetContent.style.display = 'block'; // Force display block
+            targetContent.style.display = 'block';
+
+            // 5. Auto-save: Prepare JSON before switching tabs (prevents data loss)
+            if (typeof prepareJSON === 'function') {
+                prepareJSON();
+            }
+
+            // 6. Update Totals to ensure bottom footer reflects active tab
+            updateTabTotals();
         });
     });
     
@@ -439,26 +487,63 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatNumber(num) {
         return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
-
+    
+    // Format input value with commas (for display)
+    function formatInputWithCommas(value) {
+        if (value === null || value === undefined || value === '') return '';
+        // Convert to string, strip commas
+        let strVal = String(value).replace(/,/g, '');
+        const num = parseFloat(strVal);
+        if (isNaN(num)) return '';
+        // Always 2 decimal places
+        return num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+    
+    // Get numeric value from input (removes commas)
     function getVal(el) {
-        return parseFloat(el?.value || 0);
+        if (!el) return 0;
+        let strVal = String(el.value).replace(/,/g, '');
+        // Validation: Prevent negative numbers
+        return Math.max(0, parseFloat(strVal) || 0);
+    }
+    
+    // Format input on blur
+    function formatOnBlur(input) {
+        if (!input || input.disabled) return;
+        
+        const originalVal = input.value.trim();
+        if (originalVal === '') return; // Leave empty as empty
+        
+        const numVal = getVal(input);
+        
+        // Safety Clean: If getVal returns 0, ONLY format if original input was actually "0" or "0.00"
+        // This prevents "abc" or formatting errors from becoming "0.00"
+        if (numVal === 0) {
+             if (originalVal === '0' || originalVal === '0.00') {
+                 input.value = '0.00';
+             }
+             // Else: leave it alone (e.g. user typed text or had error)
+             return;
+        }
+        
+        // Normal case: > 0 or < 0
+        input.value = formatInputWithCommas(numVal);
     }
 
     function updateRow(tr) {
         if (!tr) return;
         
+        // Parse current values
         const qty = getVal(tr.querySelector('.inp-quantity'));
         const unitPrice = getVal(tr.querySelector('.inp-unit-price'));
         const amountInput = tr.querySelector('.inp-amount');
         
+        // Auto-calculate only if valid inputs exist for BOTH
         if (amountInput && !amountInput.disabled) {
-            // Only auto-calculate if unit_price is provided and Qty > 0
-            if (unitPrice > 0 && qty > 0) {
-                // Auto-calculate: Quantity × Unit Price
+            if (qty > 0 && unitPrice > 0) {
                 const calculated = qty * unitPrice;
-                amountInput.value = calculated > 0 ? calculated.toFixed(2) : '';
+                amountInput.value = formatInputWithCommas(calculated);
             }
-            // If unit_price is empty/0, preserve user's manual amount input (Direct Mode)
         }
     }
 
@@ -503,18 +588,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update parent row displays
         const parentAmountInput = parentRow.querySelector('.inp-amount');
         if (parentAmountInput) {
-            parentAmountInput.value = sumAmount.toFixed(2);
+            // FIX: Use formatNumber to include commas
+            parentAmountInput.value = formatNumber(sumAmount);
         }
         
         // Update parent qty input
         const parentQtyInput = parentRow.querySelector('.inp-parent-qty');
         if (parentQtyInput) {
-            parentQtyInput.value = Math.round(sumQty);
+            // FIX: Use toLocaleString for commas in quantity
+            parentQtyInput.value = sumQty.toLocaleString('en-US');
         }
         
         // Update parent price input
         const parentPriceInput = parentRow.querySelector('.inp-parent-price');
         if (parentPriceInput) {
+            // Already uses formatNumber, good
             parentPriceInput.value = formatNumber(sumPrice);
         }
     }
@@ -540,26 +628,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateTabTotals() {
-        // Update each tab summary
-        let grandTotal = 0;
+        let activeTabTotal = 0;
         
         document.querySelectorAll('.tab-summary').forEach(summary => {
             const tabId = summary.dataset.tab;
-            let total = 0;
+            let currentTabTotal = 0;
+            let currentTabQty = 0;
             
-            document.querySelectorAll(`tr[data-category="${tabId}"]:not(.parent-row)`).forEach(row => {
-                total += getVal(row.querySelector('.inp-amount'));
-            });
+            const container = document.getElementById(`content-${tabId}`);
+            if (container) {
+                // Selector: Sum ALL leaf item amounts and quantities in this tab
+                const leafRows = container.querySelectorAll('tr.item-row:not(.parent-row)');
+                
+                leafRows.forEach(row => {
+                    const amtInput = row.querySelector('.inp-amount');
+                    const qtyInput = row.querySelector('.inp-quantity');
+                    if (amtInput) currentTabTotal += getVal(amtInput);
+                    if (qtyInput) currentTabQty += getVal(qtyInput);
+                });
+
+                // Update tfoot fields for each tab
+                const fQty = document.getElementById(`footer-qty-${tabId}`);
+                const fAmount = document.getElementById(`footer-amount-${tabId}`);
+                if (fQty) fQty.textContent = currentTabQty.toLocaleString('en-US');
+                if (fAmount) fAmount.textContent = formatNumber(currentTabTotal);
+
+                // Check if this tab is currently visible
+                if (container.offsetParent !== null || !container.classList.contains('hidden')) {
+                    activeTabTotal = currentTabTotal;
+                }
+            }
             
-            summary.textContent = formatNumber(total);
-            grandTotal += total;
+            summary.textContent = formatNumber(currentTabTotal);
             
             // Update badge
             const badge = document.querySelector(`.tab-total-badge[data-tab="${tabId}"]`);
-            if (badge) badge.textContent = formatNumber(total);
+            if (badge) badge.textContent = formatNumber(currentTabTotal);
         });
         
-        document.getElementById('grand-total').textContent = formatNumber(grandTotal);
+        // Update any remaining total displays if they exist
+        const grandTotalEl = document.getElementById('grand-total');
+
+        if (grandTotalEl) grandTotalEl.textContent = formatNumber(activeTabTotal);
+        
+        // Update badge
+        document.querySelectorAll('.tab-total-badge').forEach(badge => {
+            const tId = badge.dataset.tab;
+            const summary = document.querySelector(`.tab-summary[data-tab="${tId}"]`);
+            if (summary) badge.textContent = summary.textContent;
+        });
     }
 
     // Input change handlers
@@ -574,57 +691,174 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateTabTotals();
             }
         });
-    }
-
-    // Clear Form Button Handler
-    const clearBtn = document.getElementById('clearFormBtn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function() {
-            if (confirm('ต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?')) {
-                // Clear all input fields
-                document.querySelectorAll('.inp-quantity, .inp-unit-price, .inp-amount:not(:disabled)').forEach(input => {
-                    input.value = '';
-                });
-                
-                // Clear parent amounts
-                document.querySelectorAll('.inp-amount:disabled').forEach(input => {
-                    input.value = '';
-                });
-                
-                // Reset parent inputs
-                document.querySelectorAll('.inp-parent-qty, .inp-parent-price').forEach(input => {
-                    input.value = '0';
-                });
-                
-                // Update all totals
-                updateAllParentTotals();
-                updateTabTotals();
+        
+        // Format numbers with commas on blur
+        form.addEventListener('blur', function(e) {
+            // Re-enabled .inp-amount now that it is type="text"
+            if (e.target.matches('.inp-quantity, .inp-unit-price, .inp-amount')) {
+                formatOnBlur(e.target);
             }
+        }, true); // Use capture phase for blur
+        
+        // Handle Form Submit preventing max_input_vars limit
+        // Handle Form Submit preventing max_input_vars limit
+        const prepareJSON = function(e) {
+            try {
+                const items = {};
+                let count = 0;
+                document.querySelectorAll('tr.item-row').forEach(row => {
+                    const id = row.dataset.id;
+                    const qtyInput = row.querySelector('.inp-quantity');
+                    const priceInput = row.querySelector('.inp-unit-price');
+                    const amountInput = row.querySelector('.inp-amount');
+                    const noteInput = row.querySelector('input[name*="[note]"]');
+                    
+                    if (amountInput && !amountInput.disabled) {
+                       // Strip commas before sending to server
+                       items[id] = {
+                           quantity: qtyInput ? String(qtyInput.value).replace(/,/g, '') : 0,
+                           unit_price: priceInput ? String(priceInput.value).replace(/,/g, '') : 0,
+                           amount: String(amountInput.value).replace(/,/g, ''),
+                           note: noteInput ? noteInput.value : ''
+                       };
+                       count++;
+                    }
+                });
+                
+                const hidden = document.getElementById('items_json');
+                if (hidden) {
+                    const json = JSON.stringify(items);
+                    hidden.value = json;
+                    // Removed alerts to prevent race conditions during form submission
+                } else {
+                    console.error("Critical Error: items_json input missing!");
+                    e.preventDefault();
+                }
+            } catch (err) {
+                alert("JS Error: " + err.message);
+                e.preventDefault();
+            }
+        };
+
+        form.addEventListener('submit', prepareJSON);
+        
+        // Also attach to all Save Buttons (multiple instances in tabs)
+        document.querySelectorAll('.btn-save').forEach(btn => {
+            btn.addEventListener('click', prepareJSON);
         });
     }
+
+    // Clear Form Button Handler (Using Custom Modal)
+    document.querySelectorAll('.btn-clear-form').forEach(clearBtn => {
+        clearBtn.addEventListener('click', function() {
+            // Robustly find active tab
+            const activeTabContent = Array.from(document.querySelectorAll('.tab-content')).find(el => el.offsetParent !== null || !el.classList.contains('hidden'));
+            const tabName = activeTabContent ? (activeTabContent.querySelector('.text-lg')?.textContent?.trim() || 'ปัจจุบัน') : 'ปัจจุบัน';
+            
+            // Get Tab Total
+            const tabTotal = activeTabContent ? (activeTabContent.querySelector('.tab-summary')?.textContent || '0.00') : '0.00';
+
+            // Use Custom Modal for Clear confirmation
+            if (typeof Modal !== 'undefined') {
+                Modal.show({
+                    title: `ล้างค่า "${tabName}"?`,
+                    message: 'ข้อมูลในแท็บนี้จะถูกลบออก (ยังไม่บันทึก)',
+                    total: tabTotal,
+                    variant: 'warning',
+                    buttonText: 'ล้างค่า',
+                    onConfirm: function() {
+                        if (activeTabContent) {
+                            activeTabContent.querySelectorAll('.inp-quantity, .inp-unit-price, .inp-amount:not(:disabled)').forEach(input => {
+                                input.value = '';
+                                input.dispatchEvent(new Event('input', { bubbles: true }));
+                            });
+                            updateTabTotals(); 
+                        }
+                    }
+                });
+            } else {
+                // Fallback to native confirm
+                if (confirm('ต้องการล้างค่าในแท็บปัจจุบันใช่หรือไม่?')) {
+                     const activeTabContent = document.querySelector('.tab-content:not(.hidden)');
+                     if (activeTabContent) {
+                         activeTabContent.querySelectorAll('.inp-quantity, .inp-unit-price, .inp-amount:not(:disabled)').forEach(input => {
+                             input.value = '';
+                             input.dispatchEvent(new Event('input', { bubbles: true }));
+                         });
+                         updateTabTotals(); 
+                     }
+                }
+            }
+        });
+    });
+
+    // Confirm Selection Modal Handler (Using Custom Modal)
+    document.querySelectorAll('.btn-confirm-selection').forEach(confirmBtn => {
+        confirmBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get active tab total
+            const activeTabContent = Array.from(document.querySelectorAll('.tab-content')).find(el => el.offsetParent !== null || !el.classList.contains('hidden'));
+            const grandTotal = activeTabContent ? (activeTabContent.querySelector('.tab-summary')?.textContent || '0.00') : '0.00';
+            
+            // Show Custom Modal
+            if (typeof Modal !== 'undefined') {
+                Modal.show({
+                    title: 'ยืนยันการเลือกรายการนี้?',
+                    message: 'รายการที่ยืนยันแล้วจะถูกล็อค ห้ามแก้ไขจนกว่าจะยกเลิกการยืนยัน',
+                    total: grandTotal,
+                    variant: 'confirm',
+                    buttonText: 'ยืนยันการเลือก',
+                    onConfirm: function() {
+                        // Create and submit a form to the confirm route
+                        const f = document.createElement('form');
+                        f.method = 'POST';
+                        f.action = '<?= \App\Core\View::url("/requests/" . $requestId . "/confirm") ?>';
+                        
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = 'csrf_token';
+                        csrfInput.value = '<?= $_SESSION["csrf_token"] ?? "" ?>';
+                        
+                        f.appendChild(csrfInput);
+                        document.body.appendChild(f);
+                        f.submit();
+                    }
+                });
+            } else {
+                // Fallback if modal.js not loaded
+                if(confirm('ยืนยันการเลือกรายการนี้? (Total: ' + grandTotal + ')')) {
+                     const f = document.createElement('form');
+                        f.method = 'POST';
+                        f.action = '<?= \App\Core\View::url("/requests/" . $requestId . "/confirm") ?>';
+                        document.body.appendChild(f);
+                        f.submit();
+                }
+            }
+        });
+    });
 
     // Collapse/Expand Logic
-    document.querySelectorAll('.toggle-children').forEach(btn => {
-        btn.dataset.expanded = 'false';
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.toggle-children');
+        if (!btn) return;
         
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const targetId = this.dataset.target;
-            const isExpanded = this.dataset.expanded === 'true';
-            const newState = !isExpanded;
-            
-            this.dataset.expanded = newState;
-            
-            const icon = this.querySelector('svg') || this.querySelector('i');
-            if (icon) {
-                icon.style.transition = 'transform 0.2s ease-in-out';
-                icon.style.transform = newState ? 'rotate(0deg)' : 'rotate(-90deg)';
-            }
-            
-            toggleChildRows(targetId, newState);
-        });
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const targetId = btn.dataset.target;
+        const isExpanded = btn.dataset.expanded === 'true';
+        const newState = !isExpanded;
+        
+        btn.dataset.expanded = newState;
+        
+        const icon = btn.querySelector('svg') || btn.querySelector('i');
+        if (icon) {
+            icon.style.transition = 'transform 0.2s ease-in-out';
+            icon.style.transform = newState ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+        
+        toggleChildRows(targetId, newState);
     });
 
     function toggleChildRows(parentId, show) {
@@ -649,17 +883,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Prevent mouse wheel from changing number input values
+    document.addEventListener('wheel', function(e) {
+        const activeEl = document.activeElement;
+        // Check for number type OR text inputs with numeric classes
+        if (activeEl && (
+            activeEl.type === 'number' || 
+            activeEl.classList.contains('inp-quantity') ||
+            activeEl.classList.contains('inp-unit-price') ||
+            activeEl.classList.contains('inp-amount')
+        )) {
+            e.preventDefault();
+            activeEl.blur();
+        }
+    }, { passive: false });
+
     // Initialize Icons and Calculation on Load
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
         
         setTimeout(() => {
             document.querySelectorAll('.toggle-children').forEach(btn => {
-                const svg = btn.querySelector('svg');
+                // Initialize state based on HTML or force false
+                if (!btn.dataset.expanded) btn.dataset.expanded = 'false';
+
+                const svg = btn.querySelector('svg') || btn.querySelector('i');
                 if (svg) {
                     svg.style.transition = 'transform 0.2s ease-in-out';
                     if (btn.dataset.expanded === 'false') {
                         svg.style.transform = 'rotate(-90deg)';
+                    } else {
+                        svg.style.transform = 'rotate(0deg)';
                     }
                 }
             });
@@ -667,6 +921,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initial Calculation to populate totals from loaded values
             updateAllParentTotals();
             updateTabTotals();
+            
+            // Format existing values with commas on page load
+            document.querySelectorAll('.inp-quantity, .inp-unit-price, .inp-amount').forEach(input => {
+                formatOnBlur(input);
+            });
         }, 50);
     }
 });
