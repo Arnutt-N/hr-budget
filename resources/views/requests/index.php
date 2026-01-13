@@ -1,5 +1,5 @@
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
         <div>
             <p class="text-dark-muted text-sm">รายการคำของบประมาณแผนงานบุคลากรภาครัฐ</p>
         </div>
@@ -17,6 +17,107 @@
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">สร้างคำขอ</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Card 1: คำของบประมาณ (Total) -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-4 group relative">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-dark-muted text-sm">คำของบประมาณ</p>
+                    <p class="text-xl font-bold text-amber-400 mt-1"><?= number_format($summaryStats['total_request'], 2) ?></p>
+                </div>
+                <div class="p-2 rounded-lg bg-amber-500/10">
+                    <i data-lucide="coins" class="w-5 h-5 text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: งบบุคลากร (Personnel) -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-4 group relative cursor-help">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-dark-muted text-sm">งบบุคลากร</p>
+                    <p class="text-xl font-bold text-blue-400 mt-1"><?= number_format($summaryStats['personnel']['total'], 2) ?></p>
+                </div>
+                <div class="p-2 rounded-lg bg-blue-500/10">
+                    <i data-lucide="users" class="w-5 h-5 text-blue-400"></i>
+                </div>
+            </div>
+
+            <!-- Tooltip -->
+            <div class="absolute top-full left-0 mt-2 w-full invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 px-2 pointer-events-none">
+                <div class="bg-[#1e1e2d] border border-gray-700 rounded-lg shadow-xl p-3 text-xs w-full">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-400 truncate pr-2">เงินเดือนและค่าจ้างประจำ</span>
+                        <span class="text-white"><?= number_format($summaryStats['personnel']['salary'], 2) ?></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400 truncate pr-2">ค่าตอบแทนพนักงานราชการ</span>
+                        <span class="text-white"><?= number_format($summaryStats['personnel']['compensation'], 2) ?></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: งบดำเนินงาน (Operating) -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-4 group relative cursor-help">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-dark-muted text-sm">งบดำเนินงาน</p>
+                    <p class="text-xl font-bold text-emerald-400 mt-1"><?= number_format($summaryStats['operating']['total'], 2) ?></p>
+                </div>
+                <div class="p-2 rounded-lg bg-emerald-500/10">
+                    <i data-lucide="briefcase" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+            </div>
+
+            <!-- Tooltip -->
+            <div class="absolute top-full left-0 mt-2 w-full invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 px-2 pointer-events-none">
+                <div class="bg-[#1e1e2d] border border-gray-700 rounded-lg shadow-xl p-3 text-xs w-full">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-400 truncate pr-2">ค่าตอบแทนใช้สอยและวัสดุ</span>
+                        <span class="text-white"><?= number_format($summaryStats['operating']['remune_mat'], 2) ?></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400 truncate pr-2">ค่าสาธารณูปโภค</span>
+                        <span class="text-white"><?= number_format($summaryStats['operating']['utility'], 2) ?></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: งบอื่นๆ (Other) -->
+        <div class="bg-dark-card border border-dark-border rounded-lg p-4 group relative cursor-help">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-dark-muted text-sm">งบอื่นๆ</p>
+                    <p class="text-xl font-bold text-purple-400 mt-1"><?= number_format($summaryStats['other']['total'], 2) ?></p>
+                </div>
+                <div class="p-2 rounded-lg bg-purple-500/10">
+                    <i data-lucide="layers" class="w-5 h-5 text-purple-400"></i>
+                </div>
+            </div>
+
+            <!-- Tooltip -->
+            <div class="absolute top-full left-0 mt-2 w-full invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 px-2 pointer-events-none">
+                <div class="bg-[#1e1e2d] border border-gray-700 rounded-lg shadow-xl p-3 text-xs w-full">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-400 truncate pr-2">งบลงทุน</span>
+                        <span class="text-white"><?= number_format($summaryStats['other']['investment'], 2) ?></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-gray-400 truncate pr-2">งบเงินอุดหนุน</span>
+                        <span class="text-white"><?= number_format($summaryStats['other']['subsidy'], 2) ?></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-gray-400 truncate pr-2">งบรายจ่ายอื่น</span>
+                        <span class="text-white"><?= number_format($summaryStats['other']['other_exp'], 2) ?></span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -63,13 +164,19 @@
                             </td>
                             <td style="text-align:center" class="py-4 align-middle">
                                 <?php 
-                                    $isSaved = ($req['total_amount'] > 0);
-                                    $statusClass = $isSaved ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400';
-                                    $statusText = $isSaved ? 'บันทึกแล้ว' : 'ยังไม่ได้บันทึก';
+                                    $status = $req['request_status'] ?? 'draft';
+                                    $statusConfig = [
+                                        'draft' => ['class' => 'bg-amber-500/10 text-amber-400', 'text' => 'ยังไม่ได้บันทึก', 'icon' => 'clock'],
+                                        'saved' => ['class' => 'bg-blue-500/10 text-blue-400', 'text' => 'บันทึกแล้ว', 'icon' => 'save'],
+                                        'confirmed' => ['class' => 'bg-green-500/10 text-green-400', 'text' => '✓ รายการที่เลือก', 'icon' => 'check-circle'],
+                                        'pending' => ['class' => 'bg-amber-500/10 text-amber-400', 'text' => 'รอดำเนินการ', 'icon' => 'clock'],
+                                        'approved' => ['class' => 'bg-emerald-500/10 text-emerald-400', 'text' => 'อนุมัติแล้ว', 'icon' => 'badge-check']
+                                    ];
+                                    $cfg = $statusConfig[$status] ?? $statusConfig['draft'];
                                 ?>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium <?= $statusClass ?>">
-                                    <i data-lucide="<?= $isSaved ? 'check-circle' : 'clock' ?>" class="w-3 h-3"></i>
-                                    <?= $statusText ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium <?= $cfg['class'] ?>">
+                                    <i data-lucide="<?= $cfg['icon'] ?>" class="w-3 h-3"></i>
+                                    <?= $cfg['text'] ?>
                                 </span>
                             </td>
                             <td style="text-align:center" class="w-32 py-4 align-middle">
@@ -77,7 +184,7 @@
                                     <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-sky-400 transition-colors" title="เรียกดู">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
-                                    <a href="<?= \App\Core\View::url('/requests/' . $req['id']) ?>" class="w-8 h-8 flex items-center justify-center text-amber-500 hover:text-amber-400 transition-colors" title="แก้ไข">
+                                    <a href="<?= \App\Core\View::url('/requests/' . $req['id'] . '/edit') ?>" class="w-8 h-8 flex items-center justify-center text-amber-500 hover:text-amber-400 transition-colors" title="แก้ไข">
                                         <i data-lucide="square-pen" class="w-4 h-4"></i>
                                     </a>
                                     <?php if (\App\Core\Auth::hasRole('admin')): ?>

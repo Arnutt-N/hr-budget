@@ -53,13 +53,123 @@ class BudgetRequestController
             'totalRecords' => $total
         ];
 
+        // Calculate Summary Stats
+        $stats = [
+            'total_request' => 0,
+            'personnel' => [
+                'total' => 0, 
+                'salary' => 0,      // เงินเดือนและค่าจ้างประจำ
+                'compensation' => 0 // ค่าตอบแทนพนักงานราชการ
+            ],
+            'operating' => [
+                'total' => 0,
+                'remune_mat' => 0, // ค่าตอบแทนใช้สอยและวัสดุ
+                'utility' => 0     // ค่าสาธารณูปโภค
+            ],
+            'other' => [
+                'total' => 0,
+                'investment' => 0, // งบลงทุน
+                'subsidy' => 0,    // งบเงินอุดหนุน
+                'other_exp' => 0   // งบรายจ่ายอื่น
+            ]
+        ];
+
+        // Fetch all items from relevant requests to calculate stats
+        // Note: Ideally this should be a refined SQL query for performance, but for now we iterate
+        // Condition: Request must be "confirmed" (total_amount > 0 for now as per agreement)
+        $requestIds = array_column(array_filter($requests, function($r) {
+            return $r['total_amount'] > 0;
+        }), 'id');
+
+        if (!empty($requestIds)) {
+            $db = \App\Core\Database::getInstance();
+            $idsPlaceholders = implode(',', array_fill(0, count($requestIds), '?'));
+            
+            $sql = "SELECT bri.quantity, bri.unit_price, bci.name, bc.name as category_name, bc.id as category_id
+                    FROM budget_request_items bri
+                    JOIN budget_category_items bci ON bri.category_item_id = bci.id
+                    JOIN budget_categories bc ON bci.budget_category_id = bc.id -- This join might need adjustment based on real schema
+                    WHERE bri.budget_request_id IN ($idsPlaceholders)";
+            
+            // Re-evaluating based on actual schema: 
+            // We need to map Items -> Category Items -> Groups/Types.
+            // Current models: BudgetCategoryItem (id, name, parent_id, budget_category_id)
+            // But we found Real Expense Types via `expense_types` table in previous step.
+            // AND we found `budget_category_items` uses `budget_category_id` = 21 (likely a single category for all? or simplified)
+            
+            // CORRECT APPROACH based on Project Knowledge:
+            // The mapping between `budget_category_items` and `expense_items` might be missing or implicit.
+            // Let's rely on string matching for the Groups based on the Python script output?
+            // "เงินเดือนและค่าจ้างประจำ"
+            // "ค่าตอบแทนพนักงานราชการ"
+            // "ค่าตอบแทนใช้สอยและวัสดุ"
+            // "ค่าครุภัณฑ์ ที่ดินและสิ่งก่อสร้าง"
+
+            // Let's fetch item names and sum amounts.
+            // bri.unit_price holds the Total Amount as per update() method logic.
+            
+            $sqlItems = "SELECT bri.unit_price as amount, bci.name as item_name
+                         FROM budget_request_items bri
+                         JOIN budget_category_items bci ON bri.category_item_id = bci.id
+                         WHERE bri.budget_request_id IN ($idsPlaceholders)";
+            
+            $stmt = $db->prepare($sqlItems);
+            $stmt->execute($requestIds);
+            $allItems = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            foreach ($allItems as $item) {
+                $amount = (float)$item['amount'];
+                $name = $item['item_name'];
+                
+                $stats['total_request'] += $amount;
+
+                // Simple keyword matching based on Hierarchy Analysis
+                // TYPE 1: งบบุคลากร
+                if (strpos($name, 'เงินเดือน') !== false || strpos($name, 'ค่าจ้างประจำ') !== false) {
+                    $stats['personnel']['salary'] += $amount;
+                    $stats['personnel']['total'] += $amount;
+                } elseif (strpos($name, 'ค่าตอบแทนพนักงานราชการ') !== false) {
+                    $stats['personnel']['compensation'] += $amount;
+                    $stats['personnel']['total'] += $amount;
+                }
+                // TYPE 2: งบดำเนินงาน
+                elseif (strpos($name, 'ค่าตอบแทน') !== false || strpos($name, 'ค่าใช้สอย') !== false || strpos($name, 'วัสดุ') !== false) {
+                    $stats['operating']['remune_mat'] += $amount;
+                    $stats['operating']['total'] += $amount;
+                } elseif (strpos($name, 'ค่าสาธารณูปโภค') !== false) {
+                    $stats['operating']['utility'] += $amount;
+                    $stats['operating']['total'] += $amount;
+                }
+                // TYPE 3: งบลงทุน
+                elseif (strpos($name, 'ครุภัณฑ์') !== false || strpos($name, 'ที่ดิน') !== false || strpos($name, 'สิ่งก่อสร้าง') !== false) {
+                    $stats['other']['investment'] += $amount;
+                    $stats['other']['total'] += $amount;
+                }
+                // TYPE 5: งบเงินอุดหนุน
+                elseif (strpos($name, 'อุดหนุน') !== false) {
+                    $stats['other']['subsidy'] += $amount;
+                    $stats['other']['total'] += $amount;
+                }
+                // TYPE 4: งบรายจ่ายอื่น (Everything else not captured above)
+                else {
+                    // Fallback for strict Type 1 & 2 matching above. 
+                    // If it's none of the above, put in 'other_exp'
+                    // NOTE: This logic is fuzzy. In production, we need real foreign keys to expense_types.
+                    // For now, this visualizes the UI requirement.
+                    $stats['other']['other_exp'] += $amount;
+                    $stats['other']['total'] += $amount;
+                }
+            }
+        }
+
         View::render('requests/index', [
             'requests' => $requests,
+            'summaryStats' => $stats, // Pass the new stats
             'fiscalYear' => $fiscalYear,
             'fiscalYears' => FiscalYear::all(),
-            'organizations' => \App\Models\Organization::all(), // Add this for the modal
+            'organizations' => \App\Models\Organization::all(),
             'pagination' => $pagination,
-            'currentPage' => 'requests', // Fix: add missing currentPage variable
+            'currentPage' => 'requests',
             'title' => 'คำของบประมาณ'
         ], 'main');
     }
@@ -149,8 +259,27 @@ class BudgetRequestController
     {
         Auth::require();
         
-        $items = $_POST['items'] ?? [];
-        
+        $items = [];
+        if (isset($_POST['items_json'])) {
+            $json = $_POST['items_json'];
+            error_log("Update ID $id: Received items_json (Len: " . strlen($json) . ")");
+            $decoded = json_decode($json, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("JSON Decode Error: " . json_last_error_msg());
+            }
+            $items = $decoded ?? [];
+            error_log("Parsed Items Count: " . count($items));
+            // Debug: write received JSON and POST data to storage for inspection
+            $logPath = __DIR__ . '/../../storage/debug_save.txt';
+            $logData = "---\n" . date('Y-m-d H:i:s') . "\n";
+            if (isset($json)) {
+                $logData .= "items_json length: " . strlen($json) . "\n";
+                $logData .= "items_json content: " . $json . "\n";
+            }
+            $logData .= "Decoded items count: " . count($items) . "\n";
+            $logData .= "POST dump: " . print_r($_POST, true) . "\n";
+            file_put_contents($logPath, $logData, FILE_APPEND);
+        }
         // 1. Update Request Details (if changed in form? currently mostly items)
         // Recalculate Total
         $totalAmount = 0;
@@ -161,7 +290,7 @@ class BudgetRequestController
         
         BudgetRequest::update($id, [
             'total_amount' => $totalAmount,
-            // 'request_status' => 'draft' // Remains draft until submitted
+            'request_status' => 'saved' // Change from draft to saved after saving
         ]);
 
         // 2. Upsert Items
@@ -173,33 +302,21 @@ class BudgetRequestController
             
             // Upsert only valid data (or if deleting?)
             // If currently 0 and previously existed, should we delete?
-            // upsert method handles insert/update. 
-            // If data is 0, we might want to keep it as 0 or delete it. 
             // Let's assume we update as 0.
             
             // Get item name just in case new insert
-            $catItem = \App\Models\BudgetCategoryItem::find($categoryItemId);
-            
-            BudgetRequestItem::upsert($id, $categoryItemId, [
-                'item_name' => $catItem['name'] ?? 'Item',
-                'quantity' => $quantity,
-                'unit_price' => $unitPrice, 
-                // Note: database field `unit_price` usage in `store()` was `amount`. 
-                // But typically `unit_price` should be unit price.
-                // However, `store()` mapped `unit_price` => `$amount`.
-                // Let's check `budget_request_items` table schema if possible? 
-                // Assuming standard schema: `quantity`, `unit_price`, `total_amount`?
-                // The `store` method had: 'unit_price' => $amount. That looks like a bug or misuse in previous code.
-                // I will assume I should use correct fields if they exist.
-                // If the table only has `unit_price` and not `total_amount` for the item, then store the Amount in unit_price?
-                // Let's stick to storing the *Calculated Amount* in `unit_price` column if there is no `amount` column, 
-                // BUT wait, `store()` code: 'unit_price' => $amount. 
-                // I will follow that pattern to be safe, OR check schema. 
-                // Let's assume `unit_price` column holds the 'Value (Baht)'.
-                'unit_price' => $amount, 
-                'remark' => $note
-            ]);
-        }
+        // CHANGED: Use ExpenseItem because form now renders ExpenseItems
+        $catItem = \App\Models\ExpenseItem::find($categoryItemId);
+        $itemName = $catItem['name_th'] ?? 'Item';
+        
+        BudgetRequestItem::upsert($id, $categoryItemId, [
+            'item_name' => $itemName,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice, // Only the actual per-unit price
+            'amount' => $amount,        // Direct amount input
+            'remark' => $note
+        ]);
+    }    
         
         // Redirect back to edit (stay on form) OR list?
         // Usually Save -> Stay or List.
@@ -220,7 +337,7 @@ class BudgetRequestController
     }
 
     /**
-     * Show request detail
+     * Show request detail (Read-Only View using form.php)
      */
     public static function show(int $id)
     {
@@ -232,20 +349,30 @@ class BudgetRequestController
             return;
         }
         
-        // Redirect drafts to edit page
-        if ($request['request_status'] === 'draft') {
-            Router::redirect("/requests/{$id}/edit");
-            return;
+        // Use the same logic as edit(), but with readonly flag
+        $organization = \App\Models\Organization::find($request['org_id']);
+        
+        // Get level 1 categories (งบบุคลากร, งบดำเนินงาน, etc.) as tabs
+        $budgetTree = \App\Models\BudgetCategory::getTopLevelCategories();
+        
+        // Fetch saved items and map by category_item_id
+        $rawItems = BudgetRequestItem::getByRequestId($id);
+        $savedItems = [];
+        foreach ($rawItems as $itm) {
+            $savedItems[$itm['category_item_id']] = $itm;
         }
-        
-        $items = BudgetRequestItem::getTree($id);
-        $logs = BudgetRequestApproval::getByRequestId($id);
-        
-        View::render('requests/show', [
+
+        View::render('requests/form', [
+            'action' => 'view',  // Important: 'view' action triggers readonly mode
+            'readonly' => true,  // Explicit readonly flag
+            'requestId' => $id,
             'request' => $request,
-            'items' => $items,
-            'logs' => $logs,
-            'budgetCategories' => \App\Models\BudgetCategory::getForSelect(),
+            'fiscalYear' => $request['fiscal_year'],
+            'orgId' => $request['org_id'],
+            'organization' => $organization,
+            'requestTitle' => $request['request_title'],
+            'budgetTree' => $budgetTree,
+            'savedItems' => $savedItems,
             'currentPage' => 'requests',
             'title' => 'รายละเอียดคำขอ'
         ], 'main');

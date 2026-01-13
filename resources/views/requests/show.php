@@ -79,67 +79,43 @@
         </div>
     </header>
 
-    <?php if ($request['request_status'] === 'draft'): ?>
-        <!-- Form Content Area -->
-        <div id="loadingIndicator" class="hidden py-20 text-center">
-            <i data-lucide="loader-2" class="animate-spin w-10 h-10 text-indigo-500 mb-4 mx-auto"></i>
-            <p class="text-slate-400">กำลังโหลดข้อมูล...</p>
-        </div>
+    <!-- Read-Only View Content -->
+    <div id="loadingIndicator" class="hidden py-20 text-center">
+        <i data-lucide="loader-2" class="animate-spin w-10 h-10 text-indigo-500 mb-4 mx-auto"></i>
+        <p class="text-slate-400">กำลังโหลดข้อมูล...</p>
+    </div>
 
-        <!-- Dynamic Content Container -->
-        <div id="itemsContainer" class="space-y-16 animate-fade-in">
-            <!-- Items injected here by JS -->
-        </div>
+    <!-- Dynamic Content Container (Read-Only) -->
+    <div id="itemsContainer" class="space-y-16 animate-fade-in">
+        <!-- Items injected here by JS -->
+    </div>
 
-        <!-- Static Footer (End of Form) -->
-        <div class="mt-12 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <div class="p-4 rounded-xl bg-indigo-500/10 text-indigo-400 hidden sm:block">
-                        <i data-lucide="banknote" class="w-8 h-8"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 uppercase tracking-wider mb-1">งบประมาณรวมทั้งสิ้น (Total Budget)</p>
-                        <p class="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight flex items-baseline gap-2">
-                            <span id="grandTotal"><?= \App\Core\View::currency($request['total_amount']) ?></span>
-                            <span class="text-lg text-slate-500 font-sans font-normal">THB</span>
-                        </p>
-                    </div>
+    <!-- Footer (Read-Only - No Edit Buttons) -->
+    <div class="mt-12 p-6 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-sm">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="p-4 rounded-xl bg-indigo-500/10 text-indigo-400 hidden sm:block">
+                    <i data-lucide="banknote" class="w-8 h-8"></i>
                 </div>
-                
-                <div class="flex gap-4 w-full md:w-auto items-center flex-col sm:flex-row">
-                    <div id="saveIndicator" class="hidden px-4 text-sm text-emerald-400 flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-4 h-4"></i> บันทึกแล้ว
-                    </div>
-
-                    <div class="flex gap-3 w-full sm:w-auto">
-                        <a href="<?= \App\Core\View::url('/requests') ?>" 
-                            class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 font-medium hover:bg-slate-700 hover:text-white transition-all active:scale-95">
-                            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                            <span>ยกเลิก</span>
-                        </a>
-                        <button onclick="window.location.href='<?= \App\Core\View::url('/requests') ?>'"
-                            class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 transition-all active:scale-95">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            <span>บันทึก</span>
-                        </button>
-                    </div>
+                <div>
+                    <p class="text-sm text-slate-500 uppercase tracking-wider mb-1">งบประมาณรวมทั้งสิ้น (Total Budget)</p>
+                    <p class="text-3xl md:text-4xl font-bold text-white font-mono tracking-tight flex items-baseline gap-2">
+                        <span id="grandTotal"><?= \App\Core\View::currency($request['total_amount']) ?></span>
+                        <span class="text-lg text-slate-500 font-sans font-normal">THB</span>
+                    </p>
                 </div>
             </div>
-        </div>
-
-    <?php else: ?>
-        <div class="text-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800 border-dashed">
-            <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
-                <i data-lucide="lock" class="w-8 h-8"></i>
+            
+            <!-- Only Back Button -->
+            <div class="flex gap-3 w-full sm:w-auto">
+                <a href="<?= \App\Core\View::url('/requests') ?>" 
+                    class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 font-medium hover:bg-slate-700 hover:text-white transition-all active:scale-95">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>กลับหน้าหลัก</span>
+                </a>
             </div>
-            <h3 class="text-lg font-medium text-white mb-2">คำขอนี้ไม่ได้อยู่ในสถานะร่าง</h3>
-            <p class="text-slate-400 mb-6">ไม่สามารถแก้ไขข้อมูลได้</p>
-            <a href="<?= \App\Core\View::url('/requests') ?>" class="btn btn-secondary">
-                <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> กลับไปรายการ
-            </a>
         </div>
-    <?php endif; ?>
+    </div>
 </div>
 
 <script>
@@ -182,7 +158,7 @@ const formatCurrency = (amount) => {
             const promises = categories.map(cat => 
                 fetch(`<?= \App\Core\View::url('') ?>/requests/${requestId}/items/category?category_id=${cat.id}`)
                     .then(res => res.json())
-                    .then(items => ({ category: cat, items: items }))
+                    .then(data => ({ category: cat, items: data.items || [] }))
             );
 
             const results = await Promise.all(promises);
