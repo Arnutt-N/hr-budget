@@ -159,6 +159,19 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Modal Animations */
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes modalScaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes modalFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes modalScaleOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+        
+        .modal-overlay.hidden { display: none; }
+        .modal-overlay.show .modal-backdrop { animation: modalFadeIn 0.2s ease-out forwards; }
+        .modal-overlay.show .modal-card { animation: modalScaleIn 0.2s ease-out forwards; }
+        .modal-overlay.hide .modal-backdrop { animation: modalFadeOut 0.2s ease-in forwards; }
+        .modal-overlay.hide .modal-card { animation: modalScaleOut 0.2s ease-in forwards; }
+        .modal-overlay { position: fixed; inset: 0; z-index: 9999; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex">
@@ -310,6 +323,57 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
     
+    <!-- Custom Modal Component -->
+    <div id="customModal" class="modal-overlay hidden">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity modal-backdrop"></div>
+        
+        <!-- Modal Card -->
+        <div class="fixed inset-0 overflow-y-auto z-50">
+            <div class="flex min-h-full items-center justify-center p-4">
+                <div class="modal-card relative bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/50 max-w-md w-full transform transition-all p-0 overflow-hidden">
+                    
+                    <!-- Header -->
+                    <div class="flex items-start gap-4 p-6 pb-4">
+                        <div class="flex-shrink-0">
+                            <div id="modal-icon-container" class="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                <div id="modal-icon"><i data-lucide="check-circle" class="w-6 h-6 text-blue-400"></i></div>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="modal-title" class="text-lg font-semibold text-slate-100">ยืนยันรายการ?</h3>
+                            <p id="modal-message" class="text-sm text-slate-400 mt-1">กรุณาตรวจสอบข้อมูลก่อนยืนยัน</p>
+                        </div>
+                        <button type="button" class="modal-close text-slate-400 hover:text-slate-200 transition-colors">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="px-6 py-4">
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/30">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">วงเงินรวมทั้งสิ้น:</span>
+                                <span class="text-2xl font-bold text-amber-400" id="modal-total">0.00</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-1 text-right">บาท</div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="flex gap-3 px-6 py-4 bg-slate-900/30 border-t border-white/5">
+                        <button type="button" class="modal-cancel-btn flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-medium transition-colors border border-slate-600">
+                            ยกเลิก
+                        </button>
+                        <button type="button" class="modal-confirm-btn flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-blue-900/30">
+                            ยืนยัน
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Flash Messages -->
     <?php if (isset($_SESSION['flash_success'])): ?>
         <div id="flash-success" data-message="<?= htmlspecialchars($_SESSION['flash_success']) ?>"></div>
@@ -322,6 +386,8 @@
     <?php endif; ?>
 
     <script src="<?= BASE_URL ?>/js/thai-datepicker.js"></script>
+    <!-- Custom Modal Script -->
+    <script src="<?= BASE_URL ?>/js/modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize Lucide Icons
