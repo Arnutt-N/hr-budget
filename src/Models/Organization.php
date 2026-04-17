@@ -115,6 +115,7 @@ class Organization
             'parent_id', 'code', 'name_th', 'abbreviation', 
             'budget_allocated', 'level', 'sort_order', 'is_active',
             'org_type', 'province_code', 'region', 
+            'provincial_group', 'provincial_zone', 'inspection_zone', 'custom_zone',
             'contact_phone', 'contact_email', 'address'
         ];
         
@@ -128,6 +129,12 @@ class Organization
     public static function delete(int $id): bool
     {
         return Database::delete('organizations', 'id = ?', [$id]) > 0;
+    }
+
+    public static function countChildren(int $id): int
+    {
+        $result = Database::query("SELECT COUNT(*) as count FROM organizations WHERE parent_id = ?", [$id]);
+        return (int) ($result[0]['count'] ?? 0);
     }
     
     public static function getForSelect(): array
@@ -168,5 +175,80 @@ class Organization
             self::REGION_PROVINCIAL => 'จังหวัด',
             self::REGION_CENTRAL_IN_REGION => 'ส่วนกลางที่ตั้งอยู่ในภูมิภาค'
         ];
+    }
+
+    /**
+     * Get all ministries (for dropdown)
+     */
+    public static function getMinistries(bool $activeOnly = true): array
+    {
+        return self::getByType(self::TYPE_MINISTRY, $activeOnly);
+    }
+
+    /**
+     * Get all departments (for dropdown)
+     */
+    public static function getDepartments(bool $activeOnly = true): array
+    {
+        return self::getByType(self::TYPE_DEPARTMENT, $activeOnly);
+    }
+
+    /**
+     * Search organizations with multiple filters
+     */
+    public static function search(array $filters = []): array
+    {
+        $sql = "SELECT * FROM organizations";
+        $where = [];
+        $params = [];
+
+        // Filter by region
+        if (!empty($filters['region'])) {
+            $where[] = "region = ?";
+            $params[] = $filters['region'];
+        }
+
+        // Search by text (name or code)
+        if (!empty($filters['search'])) {
+            $where[] = "(name_th LIKE ? OR code LIKE ? OR abbreviation LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        // Filter by ministry (parent hierarchy search - simplified)
+        if (!empty($filters['ministry_id'])) {
+            // Find all descendants of this ministry
+            $where[] = "(id = ? OR parent_id = ? OR id IN (
+                SELECT o2.id FROM organizations o2
+                LEFT JOIN organizations p1 ON o2.parent_id = p1.id
+                LEFT JOIN organizations p2 ON p1.parent_id = p2.id
+                WHERE p1.id = ? OR p2.id = ?
+            ))";
+            $params[] = $filters['ministry_id'];
+            $params[] = $filters['ministry_id'];
+            $params[] = $filters['ministry_id'];
+            $params[] = $filters['ministry_id'];
+        }
+
+        // Filter by department (parent hierarchy search - simplified)
+        if (!empty($filters['department_id'])) {
+            $where[] = "(id = ? OR parent_id = ? OR id IN (
+                SELECT o2.id FROM organizations o2
+                WHERE o2.parent_id = ?
+            ))";
+            $params[] = $filters['department_id'];
+            $params[] = $filters['department_id'];
+            $params[] = $filters['department_id'];
+        }
+
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(' AND ', $where);
+        }
+
+        $sql .= " ORDER BY level ASC, sort_order ASC, code ASC";
+
+        return Database::query($sql, $params);
     }
 }

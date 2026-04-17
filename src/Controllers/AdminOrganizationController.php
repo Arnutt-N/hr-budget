@@ -24,25 +24,34 @@ class AdminOrganizationController
     {
         $user = $this->checkAdmin();
         
-        // Handle filters
-        $type = $_GET['type'] ?? '';
-        $region = $_GET['region'] ?? '';
+        // Get dropdown options
+        $ministries = Organization::getMinistries(false);
+        $departments = Organization::getDepartments(false);
+        $regionLabels = Organization::getRegionLabels();
         
-        if (!empty($type)) {
-            $organizations = Organization::getByType($type, false);
-            // No flattening needed if filtered, just list them
-        } elseif (!empty($region)) {
-            $organizations = Organization::getByRegion($region, false);
+        // Build filter array from GET params
+        $filters = [];
+        if (!empty($_GET['ministry_id'])) $filters['ministry_id'] = $_GET['ministry_id'];
+        if (!empty($_GET['department_id'])) $filters['department_id'] = $_GET['department_id'];
+        if (!empty($_GET['region'])) $filters['region'] = $_GET['region'];
+        if (!empty($_GET['search'])) $filters['search'] = trim($_GET['search']);
+        
+        // Get organizations using search
+        if (!empty($filters)) {
+            $organizations = Organization::search($filters);
         } else {
-            // Default tree view
-            $tree = Organization::getTree(false);
-            $organizations = $this->flattenTree($tree);
+            // Default: show all
+            $organizations = Organization::all(false);
         }
 
         View::render('admin/organizations/index', [
             'title' => 'จัดการโครงสร้างหน่วยงาน',
             'currentPage' => 'admin-organizations',
             'organizations' => $organizations,
+            'ministries' => $ministries,
+            'departments' => $departments,
+            'regionLabels' => $regionLabels,
+            'filters' => $filters,
             'auth' => $user,
         ], 'main');
     }
@@ -53,6 +62,7 @@ class AdminOrganizationController
         foreach ($nodes as $node) {
             $node['depth'] = $depth;
             $children = $node['children'] ?? [];
+            $node['has_children'] = !empty($children); // Flag for UI
             unset($node['children']);
             $result[] = $node;
             if (!empty($children)) {
@@ -66,6 +76,10 @@ class AdminOrganizationController
     {
         $user = $this->checkAdmin();
         $parents = Organization::getForSelect();
+        
+        // Detect AJAX request for Modal
+        $isAjax = !empty($_GET['ajax']);
+        $layout = $isAjax ? '' : 'main';
 
         View::render('admin/organizations/form', [
             'title' => 'เพิ่มหน่วยงานใหม่',
@@ -74,7 +88,7 @@ class AdminOrganizationController
             'organization' => null,
             'parents' => $parents,
             'auth' => $user,
-        ], 'main');
+        ], $layout);
     }
 
     public function store()
@@ -104,6 +118,10 @@ class AdminOrganizationController
                 'org_type' => $data['org_type'] ?? 'division',
                 'region' => $data['region'] ?? 'central',
                 'province_code' => !empty($data['province_code']) ? trim($data['province_code']) : null,
+                'provincial_group' => trim($data['provincial_group'] ?? ''),
+                'provincial_zone' => trim($data['provincial_zone'] ?? ''),
+                'inspection_zone' => trim($data['inspection_zone'] ?? ''),
+                'custom_zone' => trim($data['custom_zone'] ?? ''),
                 'contact_phone' => trim($data['contact_phone'] ?? ''),
                 'contact_email' => trim($data['contact_email'] ?? ''),
                 'address' => trim($data['address'] ?? ''),
@@ -118,18 +136,54 @@ class AdminOrganizationController
         }
     }
 
+    public function show(int $id)
+    {
+        $user = $this->checkAdmin();
+        $org = Organization::find($id);
+        
+        if (!$org) {
+            if (!empty($_GET['ajax'])) {
+                echo '<div class="p-4 text-red-500">ไม่พบข้อมูลหน่วยงาน</div>';
+                return;
+            }
+            $_SESSION['flash_error'] = 'ไม่พบหน่วยงาน';
+            Router::redirect('/admin/organizations');
+            return;
+        }
+
+        $parent = $org['parent_id'] ? Organization::find($org['parent_id']) : null;
+
+        // Detect AJAX request for Modal
+        $isAjax = !empty($_GET['ajax']);
+        $layout = $isAjax ? '' : 'main';
+
+        View::render('admin/organizations/show', [
+            'organization' => $org,
+            'parent' => $parent,
+            'auth' => $user,
+        ], $layout);
+    }
+
     public function edit(int $id)
     {
         $user = $this->checkAdmin();
         $org = Organization::find($id);
         
         if (!$org) {
+            if (!empty($_GET['ajax'])) {
+                echo '<div class="p-4 text-red-500">ไม่พบข้อมูลหน่วยงาน</div>';
+                return;
+            }
             $_SESSION['flash_error'] = 'ไม่พบหน่วยงาน';
             Router::redirect('/admin/organizations');
             return;
         }
 
         $parents = Organization::getForSelect();
+
+        // Detect AJAX request for Modal
+        $isAjax = !empty($_GET['ajax']);
+        $layout = $isAjax ? '' : 'main';
 
         View::render('admin/organizations/form', [
             'title' => 'แก้ไขหน่วยงาน',
@@ -138,7 +192,7 @@ class AdminOrganizationController
             'organization' => $org,
             'parents' => $parents,
             'auth' => $user,
-        ], 'main');
+        ], $layout);
     }
 
     public function update(int $id)
@@ -175,6 +229,10 @@ class AdminOrganizationController
                 'org_type' => $data['org_type'] ?? 'division',
                 'region' => $data['region'] ?? 'central',
                 'province_code' => !empty($data['province_code']) ? trim($data['province_code']) : null,
+                'provincial_group' => trim($data['provincial_group'] ?? ''),
+                'provincial_zone' => trim($data['provincial_zone'] ?? ''),
+                'inspection_zone' => trim($data['inspection_zone'] ?? ''),
+                'custom_zone' => trim($data['custom_zone'] ?? ''),
                 'contact_phone' => trim($data['contact_phone'] ?? ''),
                 'contact_email' => trim($data['contact_email'] ?? ''),
                 'address' => trim($data['address'] ?? ''),
@@ -191,6 +249,14 @@ class AdminOrganizationController
     public function destroy(int $id)
     {
         $this->checkAdmin();
+        
+        // Safety check: Cannot delete if has children
+        if (Organization::countChildren($id) > 0) {
+            $_SESSION['flash_error'] = 'ไม่สามารถลบหน่วยงานนี้ได้เนื่องจากมีหน่วยงานย่อยภายใต้สังกัด';
+            Router::redirect('/admin/organizations');
+            return;
+        }
+        
         Organization::delete($id);
         $_SESSION['flash_success'] = 'ลบหน่วยงานสำเร็จ';
         Router::redirect('/admin/organizations');
