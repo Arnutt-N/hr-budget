@@ -41,8 +41,9 @@ async function onSubmit(): Promise<void> {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
         <input
+          id="email"
           v-model.trim="email"
           type="email"
           autocomplete="email"
@@ -52,8 +53,9 @@ async function onSubmit(): Promise<void> {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
         <input
+          id="password"
           v-model="password"
           type="password"
           autocomplete="current-password"
