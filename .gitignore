@@ -67,6 +67,30 @@ archives/data/*.sql
 /public/inspect_*.php
 /public/analyze_*.php
 
+# Web-accessible one-shot admin/debug/test scripts in public/
+# (these should never be deployed; use CLI for migrations and admin tasks)
+/public/audit_*.php
+/public/check_*.php
+/public/check-*.php
+/public/db_check.php
+/public/db-*.php
+/public/do_*.php
+/public/fix_*.php
+/public/migrate.php
+/public/run-migration.php
+/public/run_migration_*.php
+/public/run_add_*.php
+/public/run_backup.php
+/public/restore_*.php
+/public/setup.php
+/public/soft_delete_*.php
+/public/test_*.php
+/public/test-*.php
+/public/test.txt
+/public/verify_*.php
+/public/phpinfo.php
+/public/reset_opcache.php
+
 # Keys & Certificates (Security Critical)
 *.pem
 *.key
