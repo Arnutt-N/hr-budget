@@ -203,8 +203,8 @@ git push origin --tags  # Push tag ทั้งหมดที่มี
 
 **คำสั่งแนะนำ:**
 ```cmd
-# บันทึก Git Log ล่าสุดลงในไฟล์ประวัติ
-git log -1 --stat >> project-log-md\YYYY-MM-DD_git-action-log.md
+# บันทึก Git Log ล่าสุดลงในไฟล์ประวัติ (Consolidated Log)
+git log -1 --stat >> project-log-md\git-action-log.md
 ```
 
 ## 7. 🔄 Common Operations
