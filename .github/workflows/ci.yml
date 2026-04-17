@@ -205,6 +205,28 @@ jobs:
           done
           mysql -h127.0.0.1 -P3306 -uroot -proot hr_budget < database/hr_budget_only.sql
 
+      - name: Materialize config/database.php from env
+        run: |
+          cat > config/database.php <<'PHP'
+          <?php
+          return [
+              'driver'   => 'mysql',
+              'host'     => $_ENV['DB_HOST'] ?? 'localhost',
+              'port'     => $_ENV['DB_PORT'] ?? '3306',
+              'database' => $_ENV['DB_DATABASE'] ?? 'hr_budget',
+              'username' => $_ENV['DB_USERNAME'] ?? 'root',
+              'password' => $_ENV['DB_PASSWORD'] ?? '',
+              'charset'  => 'utf8mb4',
+              'collation' => 'utf8mb4_unicode_ci',
+              'options'  => [
+                  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                  PDO::ATTR_EMULATE_PREPARES => false,
+                  PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+              ]
+          ];
+          PHP
+
       - name: Seed test user
         run: |
           HASH=$(php -r "echo password_hash('pass1234', PASSWORD_DEFAULT);")
@@ -217,18 +239,27 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Write .env for backend
+        # public/index.php uses Dotenv::safeLoad() which reads .env into $_ENV.
+        # Workflow-level `env:` only populates getenv() reliably on some PHP
+        # configurations, so materialize a .env file the dotenv loader can consume.
+        run: |
+          cat > .env <<'ENV'
+          APP_ENV=testing
+          APP_DEBUG=true
+          APP_URL=http://127.0.0.1:18080
+          APP_TIMEZONE=Asia/Bangkok
+          DB_HOST=127.0.0.1
+          DB_PORT=3306
+          DB_DATABASE=hr_budget
+          DB_USERNAME=root
+          DB_PASSWORD=root
+          JWT_SECRET=ci-test-secret-min-32-chars-01234567-abcdef
+          JWT_TTL=3600
+          CORS_ORIGINS=http://127.0.0.1:5174,http://localhost:5174
+          ENV
+
       - name: Start PHP backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: hr_budget
-          DB_USERNAME: root
-          DB_PASSWORD: root
-          JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'ci-test-secret-min-32-chars-01234567' }}
-          JWT_TTL: "3600"
-          CORS_ORIGINS: http://localhost:5174
-          APP_ENV: testing
-          APP_URL: http://localhost:18080
         run: |
           php -S 127.0.0.1:18080 -t public/ public/index.php > /tmp/php.log 2>&1 &
           echo $! > /tmp/php.pid
