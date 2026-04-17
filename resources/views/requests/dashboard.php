@@ -18,7 +18,7 @@
             </form>
             
             <a href="<?= \App\Core\View::url('/requests/create') ?>" class="btn btn-primary">
-                <i data-lucide="plus" class="w-4 h-4"></i> สร้างคำขอใหม่
+                <i data-lucide="circle-plus" class="w-4 h-4"></i> สร้างคำขอใหม่
             </a>
         </div>
     </div>

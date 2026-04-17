@@ -794,8 +794,12 @@ class BudgetController
         $recordId = (int) $id;
         
         // Get raw POST data for budget items
-        // Expected format: items[expense_item_id][field] = value
-        $items = $_POST['items'] ?? [];
+        // Check for JSON encoded items (to bypass max_input_vars limit)
+        if (!empty($_POST['items_json'])) {
+            $items = json_decode($_POST['items_json'], true) ?? [];
+        } else {
+            $items = $_POST['items'] ?? [];
+        }
         
         if (empty($items)) {
             // No items to save

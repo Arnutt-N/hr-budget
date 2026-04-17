@@ -179,7 +179,7 @@
                                 <i data-lucide="folder-open" class="w-12 h-12 mx-auto mb-2 text-dark-muted"></i>
                                 <p>ยังไม่มีข้อมูลงบประมาณ</p>
                                 <a href="<?= \App\Core\View::url('/budgets/create?year=' . $fiscalYear) ?>" class="btn btn-primary mt-4">
-                                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i> เพิ่มงบประมาณ
+                                    <i data-lucide="circle-plus" class="w-4 h-4 mr-1"></i> เพิ่มงบประมาณ
                                 </a>
                             </td>
                         </tr>

@@ -74,11 +74,16 @@ class BudgetRequestController
             ]
         ];
 
-        // Fetch all items from relevant requests to calculate stats
-        // Note: Ideally this should be a refined SQL query for performance, but for now we iterate
-        // Condition: Request must be "confirmed" (total_amount > 0 for now as per agreement)
-        $requestIds = array_column(array_filter($requests, function($r) {
-            return $r['total_amount'] > 0;
+        // ========================================================================
+        // SUMMARY STATS CALCULATION (for Summary Cards)
+        // ========================================================================
+        $isApprovalEnabled = \App\Models\ApprovalSetting::isEnabled('budget_request_approval');
+        
+        $targetStatus = $isApprovalEnabled ? 'approved' : 'confirmed';
+
+        // Filter requests based on configured target status
+        $requestIds = array_column(array_filter($requests, function($r) use ($targetStatus) {
+            return $r['request_status'] === $targetStatus;
         }), 'id');
 
         if (!empty($requestIds)) {
@@ -381,17 +386,35 @@ class BudgetRequestController
     /**
      * Submit request -> pending
      */
+    /**
+     * Submit request -> pending
+     */
     public static function submit(int $id)
     {
         Auth::require();
         
         $request = BudgetRequest::find($id);
         if ($request['created_by'] != Auth::id() && !Auth::hasRole('admin')) {
-             // Only owner or admin can submit
+             Router::redirect("/requests/{$id}");
+             return;
         }
         
         BudgetRequest::updateStatus($id, 'pending');
         BudgetRequestApproval::log($id, 'submitted', Auth::id(), 'Request submitted for approval');
+        
+        // Notify Approvers
+        if (\App\Models\ApprovalSetting::isEnabled('budget_request_approval')) {
+            $approvers = \App\Models\Approver::getByOrg($request['org_id']);
+            foreach ($approvers as $approver) {
+                \App\Models\Notification::send(
+                    $approver['user_id'],
+                    'approval_request',
+                    'มีคำของบประมาณรออนุมัติ',
+                    "คำขอ \"{$request['request_title']}\" จากหน่วยงานของคุณรอการอนุมัติ",
+                    "/requests/{$id}"
+                );
+            }
+        }
         
         Router::redirect("/requests/{$id}");
     }
@@ -403,14 +426,36 @@ class BudgetRequestController
     {
         Auth::require();
         
-        // Check permission: only admin/approver
-        if (!Auth::hasRole('admin') && !Auth::hasRole('editor')) {
-             Router::redirect("/requests/{$id}");
-             return;
+        $request = BudgetRequest::find($id);
+        
+        // Check permission if approval is enabled
+        if (\App\Models\ApprovalSetting::isEnabled('budget_request_approval')) {
+            // Super Admin or Assigned Approver for this Org
+            $isApprover = \App\Models\Approver::isApprover(Auth::id(), $request['org_id']);
+            if (!Auth::hasRole('super_admin') && !$isApprover) {
+                $_SESSION['flash_error'] = 'คุณไม่มีสิทธิ์อนุมัติคำขอนี้';
+                Router::redirect("/requests/{$id}");
+                return;
+            }
+        } else {
+            // Fallback to old role check
+            if (!Auth::hasRole('admin') && !Auth::hasRole('editor')) {
+                Router::redirect("/requests/{$id}");
+                return;
+            }
         }
         
         BudgetRequest::updateStatus($id, 'approved');
         BudgetRequestApproval::log($id, 'approved', Auth::id(), 'Request approved');
+        
+        // Notify Requester
+        \App\Models\Notification::send(
+            $request['created_by'],
+            'approved',
+            'คำขอของคุณได้รับการอนุมัติแล้ว',
+            "คำขอ \"{$request['request_title']}\" ได้รับการอนุมัติเรียบร้อยแล้ว",
+            "/requests/{$id}"
+        );
         
         Router::redirect("/requests/{$id}");
     }
@@ -422,14 +467,34 @@ class BudgetRequestController
     {
         Auth::require();
         
-        if (!Auth::hasRole('admin') && !Auth::hasRole('editor')) {
-             Router::redirect("/requests/{$id}");
-             return;
+        $request = BudgetRequest::find($id);
+        
+        // Check permission (same as approve)
+        if (\App\Models\ApprovalSetting::isEnabled('budget_request_approval')) {
+            $isApprover = \App\Models\Approver::isApprover(Auth::id(), $request['org_id']);
+            if (!Auth::hasRole('super_admin') && !$isApprover) {
+                Router::redirect("/requests/{$id}");
+                return;
+            }
+        } else {
+            if (!Auth::hasRole('admin') && !Auth::hasRole('editor')) {
+                Router::redirect("/requests/{$id}");
+                return;
+            }
         }
         
         $reason = $_POST['reason'] ?? null;
         BudgetRequest::updateStatus($id, 'rejected', $reason);
         BudgetRequestApproval::log($id, 'rejected', Auth::id(), 'Request rejected: ' . $reason);
+        
+        // Notify Requester
+        \App\Models\Notification::send(
+            $request['created_by'],
+            'rejected',
+            'คำขอของคุณถูกปฏิเสธ',
+            "คำขอ \"{$request['request_title']}\" ถูกปฏิเสธเหตุผล: {$reason}",
+            "/requests/{$id}"
+        );
         
         Router::redirect("/requests/{$id}");
     }

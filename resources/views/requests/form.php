@@ -256,14 +256,14 @@ input[type="number"] {
 
                 <!-- Data Table -->
                 <div class="overflow-x-auto rounded-lg border border-slate-700">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm table-fixed">
                         <thead>
                             <tr class="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/50">
-                                <th class="px-4 py-3 text-left w-[40%]">รายการ</th>
-                                <th class="px-4 py-3 text-center w-[12%]">จำนวน (คน)</th>
+                                <th class="px-4 py-3 text-left w-[35%]">รายการ</th>
+                                <th class="px-4 py-3 text-right w-[10%]">จำนวน (คน)</th>
                                 <th class="px-4 py-3 text-right w-[15%]">ราคาต่อหน่วย</th>
                                 <th class="px-4 py-3 text-right w-[15%] <?= $iconClass ?>">วงเงิน (บาท)</th>
-                                <th class="px-4 py-3 text-left w-[18%]">หมายเหตุ</th>
+                                <th class="px-4 py-3 text-left w-[25%]">หมายเหตุ</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-700/30">
@@ -286,10 +286,10 @@ input[type="number"] {
                                     $unitPriceVal = $savedItem['unit_price'] ?? 0;
                                     $amountVal = $savedItem['amount'] ?? 0; // New: use separate amount column
                                     
-                                    // Display values directly from DB
-                                    $displayQty = $qtyVal > 0 ? $qtyVal : '';
-                                    $displayUnitPrice = $unitPriceVal > 0 ? $unitPriceVal : '';
-                                    $displayAmount = $amountVal > 0 ? $amountVal : '';
+                                    // Display values directly from DB (Default to 0.00 or 0 as requested)
+                                    $displayQty = $qtyVal > 0 ? $qtyVal : '0';
+                                    $displayUnitPrice = $unitPriceVal > 0 ? $unitPriceVal : '0.00';
+                                    $displayAmount = $amountVal > 0 ? $amountVal : '0.00';
                                     $noteVal = $savedItem['remark'] ?? '';
 
                                     $paddingLeft = ($level * 16) + 16 . 'px';
@@ -319,34 +319,30 @@ input[type="number"] {
                                         <?= htmlspecialchars($item['name'] ?? $item['name_th'] ?? '') ?>
                                     </div>
                                 </td>
-                                <td class="p-1 text-center">
+                                <td class="px-4 py-2 text-right">
                                     <?php if (!$hasChildren): ?>
                                         <input type="text" inputmode="numeric" 
-                                               class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-center text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-quantity"
-                                               name="items[<?= $itemId ?>][quantity]" value="<?= $displayQty ?>" placeholder="0">
+                                               class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-quantity"
+                                               name="items[<?= $itemId ?>][quantity]" value="<?= $displayQty ?>" placeholder="0.00">
                                     <?php else: ?>
-                                        <input type="text" disabled readonly
-                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-center text-slate-300 text-sm disabled:opacity-100 disabled:cursor-not-allowed inp-parent-qty"
-                                               value="" placeholder="-">
+                                        <div class="text-right font-bold text-slate-300 inp-parent-qty pr-2">0.00</div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="p-1">
+                                <td class="px-4 py-2">
                                     <?php if (!$hasChildren): ?>
                                         <input type="text" inputmode="decimal" 
                                                class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-unit-price"
                                                name="items[<?= $itemId ?>][unit_price]" value="<?= $displayUnitPrice ?>" placeholder="0.00">
                                     <?php else: ?>
-                                        <input type="text" disabled readonly
-                                               class="w-full px-2 py-1 bg-slate-700/30 border border-transparent rounded text-right text-slate-300 text-sm disabled:opacity-100 disabled:cursor-not-allowed inp-parent-price"
-                                               value="" placeholder="-">
+                                        <div class="text-right font-bold text-slate-300 inp-parent-price pr-2">0.00</div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="p-1">
+                                <td class="px-4 py-2">
                                     <input type="text" inputmode="decimal" <?= $hasChildren ? 'disabled' : '' ?>
-                                           class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right font-medium text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-amount <?= $hasChildren ? 'text-amber-400 disabled:opacity-100 disabled:cursor-not-allowed' : 'text-orange-400' ?>"
+                                           class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-right font-medium text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all inp-amount <?= $hasChildren ? 'text-amber-400 font-bold bg-transparent border-0' : 'text-orange-400' ?>"
                                            name="items[<?= $itemId ?>][amount]" value="<?= $displayAmount ?>" placeholder="0.00">
                                 </td>
-                                <td class="p-1">
+                                <td class="px-4 py-2">
                                     <?php if (!$hasChildren): ?>
                                         <input type="text"
                                                class="w-full px-2 py-1 bg-slate-700/50 border border-transparent hover:border-slate-600 focus:border-primary-500 rounded text-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-primary-500/50 transition-all"
@@ -367,9 +363,9 @@ input[type="number"] {
                         <tfoot>
                             <tr class="bg-slate-900/80 border-t-2 border-slate-600">
                                 <td class="px-4 py-3 text-center font-bold text-slate-200">รวมทั้งสิ้น (Total)</td>
-                                <td class="px-4 py-3 text-center font-bold text-amber-400" id="footer-qty-<?= $catId ?>">0</td>
+                                <td class="pl-4 pr-6 py-3 text-right font-bold text-amber-400" id="footer-qty-<?= $catId ?>">0.00</td>
                                 <td class="px-4 py-3"></td>
-                                <td class="px-4 py-3 text-right font-bold text-orange-400" id="footer-amount-<?= $catId ?>">0.00</td>
+                                <td class="pl-4 pr-6 py-3 text-right font-bold text-orange-400" id="footer-amount-<?= $catId ?>">0.00</td>
                                 <td class="px-4 py-3"></td>
                             </tr>
                         </tfoot>
@@ -391,16 +387,39 @@ input[type="number"] {
                         
                         <?php 
                         $currentStatus = $request['request_status'] ?? 'draft';
-                        if ($currentStatus === 'confirmed' || $currentStatus === 'approved' || $currentStatus === 'pending'): 
+                        $approvalEnabled = \App\Models\ApprovalSetting::isEnabled('budget_request_approval');
+                        
+                        if ($currentStatus === 'pending'):
                         ?>
+                            <span class="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-full text-sm font-medium flex items-center gap-2 border border-amber-500/20">
+                                <i data-lucide="clock" class="w-4 h-4"></i> รอการอนุมัติ
+                            </span>
+                        <?php elseif ($currentStatus === 'approved'): ?>
+                            <span class="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-full text-sm font-medium flex items-center gap-2 border border-emerald-500/20">
+                                <i data-lucide="check-circle-2" class="w-4 h-4"></i> อนุมัติแล้ว
+                            </span>
+                        <?php elseif ($currentStatus === 'rejected'): ?>
+                            <span class="px-4 py-2 bg-rose-500/10 text-rose-400 rounded-full text-sm font-medium flex items-center gap-2 border border-rose-500/20">
+                                <i data-lucide="x-circle" class="w-4 h-4"></i> ถูกปฏิเสธ
+                            </span>
+                        <?php elseif ($currentStatus === 'confirmed'): ?>
                             <div class="flex items-center gap-3">
-                                <span class="text-green-400 text-sm font-medium flex items-center gap-1">
-                                    <i data-lucide="check" class="w-4 h-4"></i> ยืนยันแล้ว
+                                <span class="text-emerald-400 text-sm font-medium flex items-center gap-1">
+                                    <i data-lucide="check" class="w-4 h-4"></i> ยืนยันข้อมูลแล้ว
                                 </span>
+                                
+                                <?php if ($approvalEnabled): ?>
+                                    <form action="<?= \App\Core\View::url('/requests/' . $requestId . '/submit') ?>" method="POST" onsubmit="return confirm('ยืนยันส่งขออนุมัติ? เมื่อส่งแล้วจะไม่สามารถแก้ไขข้อมูลได้');">
+                                        <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20">
+                                            <i data-lucide="send" class="w-4 h-4"></i> ส่งขออนุมัติ
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+
                                 <?php if (\App\Core\Auth::hasRole('admin') || true): ?>
                                    <a href="<?= \App\Core\View::url('/requests/' . $requestId . '/revoke') ?>" 
-                                      class="px-5 py-2.5 bg-amber-600/20 text-amber-400 rounded-lg font-medium hover:bg-amber-600/30 transition-colors flex items-center gap-2">
-                                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i> ยกเลิกการยืนยัน
+                                      class="px-5 py-2.5 bg-slate-700/50 text-slate-400 rounded-lg font-medium hover:bg-slate-700 hover:text-white transition-colors flex items-center gap-2" title="แก้ไขข้อมูล">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i> แก้ไข
                                 </a>
                                 <?php endif; ?>
                             </div>
@@ -589,21 +608,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const parentAmountInput = parentRow.querySelector('.inp-amount');
         if (parentAmountInput) {
             // FIX: Use formatNumber to include commas
-            parentAmountInput.value = formatNumber(sumAmount);
+            if (parentAmountInput.tagName === 'DIV') parentAmountInput.textContent = formatNumber(sumAmount);
+            else parentAmountInput.value = formatNumber(sumAmount);
         }
         
-        // Update parent qty input
+        // Update parent qty input (ENABLED SUMMATION)
         const parentQtyInput = parentRow.querySelector('.inp-parent-qty');
         if (parentQtyInput) {
-            // FIX: Use toLocaleString for commas in quantity
-            parentQtyInput.value = sumQty.toLocaleString('en-US');
+             // FIX: Use toLocaleString for commas in quantity, or formatNumber for 2 decimals if user wants 0.00
+             // User requested "0.00" style generally, so let's use formatNumber to be safe and consistent
+             if (parentQtyInput.tagName === 'DIV') parentQtyInput.textContent = formatNumber(sumQty);
+             else parentQtyInput.value = formatNumber(sumQty);
         }
         
         // Update parent price input
         const parentPriceInput = parentRow.querySelector('.inp-parent-price');
         if (parentPriceInput) {
-            // Already uses formatNumber, good
-            parentPriceInput.value = formatNumber(sumPrice);
+             // For Price, we usually don't sum unit prices. User asked for "0.00" generally.
+             // We will display 0.00 for parent prices to be safe/clean.
+             if (parentPriceInput.tagName === 'DIV') parentPriceInput.textContent = '0.00';
+             else parentPriceInput.value = '0.00';
         }
     }
     
@@ -650,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update tfoot fields for each tab
                 const fQty = document.getElementById(`footer-qty-${tabId}`);
                 const fAmount = document.getElementById(`footer-amount-${tabId}`);
-                if (fQty) fQty.textContent = currentTabQty.toLocaleString('en-US');
+                if (fQty) fQty.textContent = formatNumber(currentTabQty);
                 if (fAmount) fAmount.textContent = formatNumber(currentTabTotal);
 
                 // Check if this tab is currently visible
@@ -835,6 +859,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         f.submit();
                 }
             }
+
         });
     });
 
@@ -929,4 +954,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 50);
     }
 });
+
+
 </script>

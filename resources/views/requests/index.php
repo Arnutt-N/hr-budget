@@ -4,16 +4,36 @@
             <p class="text-dark-muted text-sm">รายการคำของบประมาณแผนงานบุคลากรภาครัฐ</p>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-dark-muted text-sm">ปีงบประมาณ พ.ศ.</span>
-            <select onchange="window.location.href='?year=' + this.value" class="input py-2 px-3 text-sm rounded-lg border border-slate-700 bg-slate-800 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none cursor-pointer">
-                <?php foreach ($fiscalYears as $year): ?>
-                <option value="<?= $year['year'] ?>" <?= $year['year'] == $fiscalYear ? 'selected' : '' ?>>
-                    <?= $year['year'] ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
+            <span class="text-sm font-medium text-slate-400">ปีงบประมาณ พ.ศ.</span>
             
-            <button type="button" id="btnCreateRequest" class="btn btn-primary">
+            <div class="relative group">
+                <select onchange="window.location.href='?year=' + this.value" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer bg-slate-800 text-white text-center z-10 peer">
+                    <?php foreach ($fiscalYears as $year): ?>
+                    <option value="<?= $year['year'] ?>" <?= $year['year'] == $fiscalYear ? 'selected' : '' ?> class="bg-slate-800 text-slate-200 py-2 text-center">
+                        <?= $year['year'] ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <div class="flex items-center justify-between bg-slate-800/50 hover:bg-slate-800 border border-white/5 hover:border-white/10 peer-focus:border-blue-500 peer-focus:ring-4 peer-focus:ring-blue-500/20 px-3 py-2.5 rounded-lg transition-all min-w-[120px] relative">
+                    <!-- Icon Left -->
+                    <div class="absolute left-3 flex items-center pointer-events-none">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors"></i>
+                    </div>
+                    
+                    <!-- Center Text -->
+                    <div class="w-full text-center pl-4 pr-3">
+                        <span class="text-sm font-bold text-blue-400 tracking-wide"><?= $fiscalYear ?></span>
+                    </div>
+
+                    <!-- Chevron Right -->
+                    <div class="absolute right-2.5 flex items-center pointer-events-none">
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 group-hover:text-blue-400 transition-colors opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" id="btnCreateRequest" class="btn btn-primary py-2.5 border border-transparent">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
                 <span class="hidden sm:inline">สร้างคำขอ</span>
             </button>
