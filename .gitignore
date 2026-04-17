@@ -57,6 +57,16 @@ archives/data/*.sql
 *.tmp
 *.temp
 
+# Crash dumps & one-shot debug scratchpads
+*.stackdump
+/storage/debug_*.txt
+/check_db.php
+/count_items.php
+/inspect_*.php
+/public/debug_*.php
+/public/inspect_*.php
+/public/analyze_*.php
+
 # Keys & Certificates (Security Critical)
 *.pem
 *.key
