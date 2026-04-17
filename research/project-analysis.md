@@ -83,7 +83,7 @@
 
 ```
 hr_budget/
-├── .agent/workflows/        # AI workflows
+├── .agents/workflows/        # AI workflows
 ├── assets/                  # Static assets (built)
 │   ├── css/
 │   ├── js/

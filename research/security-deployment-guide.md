@@ -45,7 +45,7 @@
 | `tests/` | Unit tests | 🟡 กลาง |
 | `test-results/` | ผลลัพธ์การ test | 🟡 กลาง |
 | `playwright-report/` | Browser test reports | 🟡 กลาง |
-| `.agent/` | Agent workflows | 🟡 กลาง |
+| `.agents/` | Agent workflows | 🟡 กลาง |
 | `PRPs/` | Planning documents | 🟡 กลาง |
 | `research/` | Research documents | 🟡 กลาง |
 | `project-log-md/` | Project logs | 🟡 กลาง |
