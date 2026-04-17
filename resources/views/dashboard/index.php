@@ -5,16 +5,36 @@
             <p class="text-dark-muted text-sm mt-1">สรุปภาพรวมงบประมาณประจำปี</p>
         </div>
         
-        <!-- Fiscal Year Selector -->
-        <div class="flex items-center gap-2">
-            <label class="text-sm text-dark-muted">ปีงบประมาณ พ.ศ.</label>
-            <select id="fiscal-year-select" class="input w-24 font-semibold text-center" style="text-align-last: center;" onchange="changeFiscalYear(this.value)">
-                <?php foreach ($fiscalYears as $fy): ?>
-                <option value="<?= $fy['value'] ?>" <?= $fy['value'] == $fiscalYear ? 'selected' : '' ?>>
-                    <?= $fy['value'] ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
+        <!-- Fiscal Year Selector (Modern Pill Design) -->
+        <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-slate-400">ปีงบประมาณ พ.ศ.</span>
+            
+            <div class="relative group">
+                <select onchange="changeFiscalYear(this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer bg-slate-800 text-white text-center z-10 peer">
+                    <?php foreach ($fiscalYears as $fy): ?>
+                    <option value="<?= $fy['value'] ?>" <?= $fy['value'] == $fiscalYear ? 'selected' : '' ?> class="bg-slate-800 text-slate-200 py-2 text-center">
+                        <?= $fy['value'] ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <div class="flex items-center justify-between bg-slate-800/50 hover:bg-slate-800 border border-white/5 hover:border-white/10 peer-focus:border-blue-500 peer-focus:ring-4 peer-focus:ring-blue-500/20 px-3 py-2.5 rounded-lg transition-all min-w-[120px] relative">
+                    <!-- Icon Left -->
+                    <div class="absolute left-3 flex items-center pointer-events-none">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors"></i>
+                    </div>
+                    
+                    <!-- Center Text -->
+                    <div class="w-full text-center pl-4 pr-3">
+                        <span class="text-sm font-bold text-blue-400 tracking-wide"><?= $fiscalYear ?></span>
+                    </div>
+
+                    <!-- Chevron Right -->
+                    <div class="absolute right-2.5 flex items-center pointer-events-none">
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-slate-500 group-hover:text-blue-400 transition-colors opacity-75"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

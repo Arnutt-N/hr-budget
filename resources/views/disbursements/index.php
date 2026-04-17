@@ -7,7 +7,7 @@
         </div>
         <a href="/budgets/disbursements/create" 
            class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500 transition-colors shadow-lg shadow-primary-900/20">
-            <i data-lucide="plus" class="w-4 h-4"></i>
+            <i data-lucide="circle-plus" class="w-4 h-4"></i>
             สร้างรายการใหม่
         </a>
     </div>

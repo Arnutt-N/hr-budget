@@ -38,3 +38,16 @@ Date:   Tue Jan 13 01:57:14 2026 +0700
  src/Models/BudgetCategoryItem.php                  | 188 ++++----
  src/Models/ExpenseGroup.php                        |  21 +-
  4 files changed, 662 insertions(+), 240 deletions(-)
+commit 92608432581f4c807de901972059726f4f7abddd
+Author: Arnutt Noitumyae <arnutt.n@gmail.com>
+Date:   Tue Jan 13 07:49:49 2026 +0700
+
+    feat(requests): update views, controller and modal logic
+
+ project-log-md/git-action-log.md            |  40 ++++++
+ public/js/modal.js                          | 156 +++++++++++++++++++++
+ resources/views/layouts/main.php            |  66 +++++++++
+ resources/views/requests/index.php          | 123 ++++++++++++++--
+ resources/views/requests/show.php           |  90 +++++-------
+ src/Controllers/BudgetRequestController.php | 209 ++++++++++++++++++++++------
+ 6 files changed, 578 insertions(+), 106 deletions(-)

@@ -1,7 +1,7 @@
 # Budget Request Form - Technical Summary
-**Date:** 2026-01-13 01:44  
+**Date:** 2026-01-13 21:15 (Latest Update)
 **File:** `resources/views/requests/form.php`  
-**Status:** ✅ Production Ready
+**Status:** ✅ Production Ready (Aligned & Formatted)
 
 ---
 
@@ -129,18 +129,32 @@ document.getElementById('items_json').value = JSON.stringify(data);
 
 ---
 
-## 8. UX Enhancements (2026-01-13)
+## 8. UX & UI Enhancements (Latest)
 
-| Enhancement | Description |
-|-------------|-------------|
-| **Cursor Disabled** | Parent row inputs show `not-allowed` cursor |
-| **Auto-save on Tab Change** | `prepareJSON()` before switching |
-| **Scroll Prevention** | Wheel event blocked on numeric inputs |
-| **Negative Validation** | `Math.max(0, value)` in getVal() |
+| Feature | Description | Implementation |
+|---------|-------------|----------------|
+| **Zero Values** | Show `0.00` or `0` instead of empty | Placeholder & Default Value |
+| **Quantity Sum** | ✅ Enabled (Child → Parent) | Sums upward, displays as `0.00` |
+| **Footer Format** | Always 2 decimals (e.g. `228.00`) | `formatNumber()` in JS |
+| **Right Align** | Quantity & Amount Columns | `text-right` class |
+| **Visual Alignment** | **Pixel-Perfect Vertical Line** | • Inputs: `px-2` internal padding<br>• Footer: `pr-6` (compensates input)<br>• Parents: `pr-2` (compensates input) |
+| **Cursor Disabled** | Parent row inputs show `not-allowed` | `cursor: not-allowed` on parent inputs |
+| **Auto-save** | `prepareJSON()` before switching | `prepareJSON()` called before tab change |
+| **Scroll Prevent** | Wheel event blocked | Wheel event listener on numeric inputs |
 
 ---
 
-## 9. CSS Classes Reference
+## 9. Table Layout Specifications (Fixed)
+
+To maintain strict alignment, the table uses `table-fixed` with specific widths:
+
+| Column | Width | Alignment |
+|--------|-------|-----------|
+| **รายการ** | **35%** | Left |
+| **จำนวน (คน)** | **10%** | **Right** |
+| **ราคาต่อหน่วย** | **15%** | Right |
+| **วงเงิน (บาท)** | **15%** | Right |
+| **หมายเหตุ** | **25%** | Left |
 
 | Class | Purpose |
 |-------|---------|

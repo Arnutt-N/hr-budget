@@ -9,7 +9,7 @@
             <p class="text-dark-muted text-sm mt-1">รายการเบิกจ่ายงบประมาณประจำปี</p>
         </div>
         <a href="<?= \App\Core\View::url('/budgets/tracking?year=' . $fiscalYear) ?>" class="btn btn-primary">
-            <i data-lucide="plus" class="w-4 h-4"></i>
+            <i data-lucide="circle-plus" class="w-4 h-4"></i>
             <span class="hidden sm:inline">บันทึกข้อมูล</span>
         </a>
     </div>
