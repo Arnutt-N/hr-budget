@@ -12,6 +12,7 @@ use App\Controllers\BudgetController;
 use App\Controllers\BudgetRequestController;
 use App\Controllers\BudgetExecutionController;
 use App\Controllers\DisbursementController;
+use App\Controllers\AdminApprovalController;
 
 // Authentication Routes
 Router::get('/login', [AuthController::class, 'showLogin']);
@@ -86,6 +87,7 @@ Router::post('/admin/organizations/store', [\App\Controllers\AdminOrganizationCo
 Router::get('/admin/organizations/{id}/edit', [\App\Controllers\AdminOrganizationController::class, 'edit']);
 Router::post('/admin/organizations/{id}/update', [\App\Controllers\AdminOrganizationController::class, 'update']);
 Router::post('/admin/organizations/{id}/delete', [\App\Controllers\AdminOrganizationController::class, 'destroy']);
+Router::get('/admin/organizations/{id}', [\App\Controllers\AdminOrganizationController::class, 'show']);
 
 Router::get('/admin/target-types', [\App\Controllers\AdminTargetTypeController::class, 'index']);
 Router::get('/admin/target-types/create', [\App\Controllers\AdminTargetTypeController::class, 'create']);
@@ -109,6 +111,24 @@ Router::post('/budgets/targets/store', [\App\Controllers\BudgetTargetController:
 Router::get('/budgets/targets/{id}/edit', [\App\Controllers\BudgetTargetController::class, 'edit']);
 Router::post('/budgets/targets/{id}/update', [\App\Controllers\BudgetTargetController::class, 'update']);
 Router::post('/budgets/targets/{id}/delete', [\App\Controllers\BudgetTargetController::class, 'destroy']);
+
+// Admin Approval Settings
+Router::get('/admin/approvals', [AdminApprovalController::class, 'index']);
+Router::post('/admin/approvals/toggle', [AdminApprovalController::class, 'toggle']);
+Router::post('/admin/approvals/add', [AdminApprovalController::class, 'addApprover']);
+Router::post('/admin/approvals/{id}/remove', [AdminApprovalController::class, 'removeApprover']);
+
+// Admin Fiscal Years
+Router::get('/admin/fiscal-years', [\App\Controllers\AdminFiscalYearController::class, 'index']);
+Router::get('/admin/fiscal-years/create', [\App\Controllers\AdminFiscalYearController::class, 'create']);
+Router::post('/admin/fiscal-years/store', [\App\Controllers\AdminFiscalYearController::class, 'store']);
+Router::get('/admin/fiscal-years/{id}/edit', [\App\Controllers\AdminFiscalYearController::class, 'edit']);
+Router::post('/admin/fiscal-years/{id}/update', [\App\Controllers\AdminFiscalYearController::class, 'update']);
+Router::post('/admin/fiscal-years/{id}/delete', [\App\Controllers\AdminFiscalYearController::class, 'destroy']);
+Router::post('/admin/fiscal-years/{id}/set-current', [\App\Controllers\AdminFiscalYearController::class, 'setCurrent']);
+Router::post('/admin/fiscal-years/{id}/toggle-closed', [\App\Controllers\AdminFiscalYearController::class, 'toggleClosed']);
+
+
 
 Router::get('/budgets/tracking/tab', [BudgetController::class, 'getTrackingTab']);
 

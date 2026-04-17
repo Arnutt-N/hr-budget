@@ -59,6 +59,7 @@
         .badge-blue { background-color: rgba(14, 165, 233, 0.1); color: #38bdf8; }
         .badge-green { background-color: rgba(34, 197, 94, 0.1); color: #4ade80; }
         .badge-orange { background-color: rgba(251, 146, 60, 0.1); color: #fb923c; }
+        .badge-amber { background-color: rgba(251, 191, 36, 0.1); color: #fbbf24; }
         .badge-red { background-color: rgba(239, 68, 68, 0.1); color: #f87171; }
         .table { width: 100%; }
         .table th, .table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #334155; }
@@ -254,6 +255,12 @@
                     <span class="ml-3 nav-text">ประเภทเป้าหมาย</span>
                 </a>
                 
+                <!-- Fiscal Years -->
+                <a href="<?= \App\Core\View::url('/admin/fiscal-years') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-fiscal-years' ? 'active' : '' ?>">
+                    <i data-lucide="calendar-range" class="nav-icon"></i>
+                    <span class="ml-3 nav-text">ปีงบประมาณ</span>
+                </a>
+                
                 <a href="<?= \App\Core\View::url('/files') ?>" class="nav-link <?= ($currentPage ?? '') === 'files' ? 'active' : '' ?>">
                     <i data-lucide="folder-open" class="nav-icon"></i>
                     <span class="ml-3 nav-text">จัดการไฟล์</span>
@@ -295,10 +302,96 @@
             </div>
             
             <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative">
+                    <?php 
+                    $unreadCount = \App\Models\Notification::countUnread(); 
+                    $recentNotifs = \App\Models\Notification::getUnread(5);
+                    ?>
+                    <button id="notif-btn" type="button" class="relative p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800 focus:outline-none">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <?php if ($unreadCount > 0): ?>
+                            <span class="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-dark-card animate-pulse"></span>
+                        <?php endif; ?>
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div id="notif-dropdown" class="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50 hidden transform origin-top-right transition-all duration-200 opacity-0 scale-95">
+                        <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+                            <h3 class="font-semibold text-white">การแจ้งเตือน</h3>
+                            <?php if ($unreadCount > 0): ?>
+                                <span class="text-xs px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full"><?= $unreadCount ?> ใหม่</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="max-h-80 overflow-y-auto">
+                            <?php if (empty($recentNotifs)): ?>
+                                <div class="p-6 text-center text-slate-500 text-sm">
+                                    <i data-lucide="bell-off" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                                    ไม่มีการแจ้งเตือนใหม่
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($recentNotifs as $notif): ?>
+                                    <a href="<?= htmlspecialchars($notif['link'] ?? '#') ?>" class="block p-4 border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors">
+                                        <div class="flex gap-3">
+                                            <div class="mt-1">
+                                                <?php if ($notif['type'] == 'approved'): ?>
+                                                    <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+                                                <?php elseif ($notif['type'] == 'rejected'): ?>
+                                                    <i data-lucide="x-circle" class="w-5 h-5 text-rose-400"></i>
+                                                <?php else: ?>
+                                                    <i data-lucide="info" class="w-5 h-5 text-blue-400"></i>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-slate-200"><?= htmlspecialchars($notif['title']) ?></div>
+                                                <p class="text-xs text-slate-400 mt-1 line-clamp-2"><?= htmlspecialchars($notif['message']) ?></p>
+                                                <span class="text-[10px] text-slate-500 mt-2 block"><?= date('d/m/Y H:i', strtotime($notif['created_at'])) ?></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                        <div class="p-2 bg-slate-800 border-t border-slate-700 text-center">
+                            <button class="text-xs text-blue-400 hover:text-blue-300 w-full py-1">ดูทั้งหมด</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <script>
+                    const notifBtn = document.getElementById('notif-btn');
+                    const notifDropdown = document.getElementById('notif-dropdown');
+                    
+                    notifBtn.addEventListener('click', () => {
+                        const isHidden = notifDropdown.classList.contains('hidden');
+                        if (isHidden) {
+                            notifDropdown.classList.remove('hidden');
+                            setTimeout(() => {
+                                notifDropdown.classList.remove('opacity-0', 'scale-95');
+                            }, 10);
+                        } else {
+                            notifDropdown.classList.add('opacity-0', 'scale-95');
+                            setTimeout(() => {
+                                notifDropdown.classList.add('hidden');
+                            }, 200);
+                        }
+                    });
+
+                    // Close when click outside
+                    document.addEventListener('click', (e) => {
+                        if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+                            notifDropdown.classList.add('opacity-0', 'scale-95');
+                            setTimeout(() => {
+                                notifDropdown.classList.add('hidden');
+                            }, 200);
+                        }
+                    });
+                </script>
+
                 <!-- Fiscal Year Badge -->
                 <span class="badge badge-blue">
                     <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
-                    ปี <?= $fiscalYear ?? 2568 ?>
+                    ปี <?= \App\Models\FiscalYear::currentYear() ?>
                 </span>
                 
                 <!-- User Info -->
