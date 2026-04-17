@@ -51,6 +51,7 @@ build/
 *.bak
 *.backup
 *.sql
+!database/*.sql
 *.dump
 archives/
 archives/backup/*.zip
