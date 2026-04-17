@@ -6,7 +6,7 @@
 
 ```
 hr_budget/
-├── .agent/workflows/    # AI workflows สำหรับการทำงานร่วมกับ AI
+├── .agents/workflows/    # AI workflows สำหรับการทำงานร่วมกับ AI
 ├── archives/            # ไฟล์เก่าที่ไม่ใช้งานแล้ว
 │   ├── backup/          # สำรองไฟล์สำคัญ
 │   ├── data/            # ข้อมูลเก่า

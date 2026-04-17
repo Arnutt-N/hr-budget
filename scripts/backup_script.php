@@ -4,7 +4,7 @@ $source = __DIR__;
 $dest = __DIR__ . '/archives/backup/hr_budget_ui_refine_tracking_list_20260105';
 
 // Excludes
-$excludes = ['.', '..', 'node_modules', 'vendor', '.git', 'archives', '.gemini', '.agent', 'logs', 'playwright-report', 'test-results'];
+$excludes = ['.', '..', 'node_modules', 'vendor', '.git', 'archives', '.gemini', '.agents', 'logs', 'playwright-report', 'test-results'];
 $excludeExtensions = ['log', 'tmp', 'bak'];
 
 function recursiveCopy($src, $dst, $excludes, $excludeExtensions) {
