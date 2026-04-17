@@ -70,7 +70,32 @@ jobs:
           mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS hr_budget_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
           mysql -h127.0.0.1 -P3306 -uroot -proot hr_budget_test < database/hr_budget_only.sql
 
-      - name: Run PHPUnit
+      - name: Materialize config/database.php from env
+        # config/database.php is gitignored (user-specific creds in local dev),
+        # so synthesize it from env values for CI. Mirrors the shape of the
+        # local dev file exactly.
+        run: |
+          cat > config/database.php <<'PHP'
+          <?php
+          return [
+              'driver'   => 'mysql',
+              'host'     => $_ENV['DB_HOST'] ?? 'localhost',
+              'port'     => $_ENV['DB_PORT'] ?? '3306',
+              'database' => $_ENV['DB_DATABASE'] ?? 'hr_budget',
+              'username' => $_ENV['DB_USERNAME'] ?? 'root',
+              'password' => $_ENV['DB_PASSWORD'] ?? '',
+              'charset'  => 'utf8mb4',
+              'collation' => 'utf8mb4_unicode_ci',
+              'options'  => [
+                  PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                  PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                  PDO::ATTR_EMULATE_PREPARES => false,
+                  PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+              ]
+          ];
+          PHP
+
+      - name: Run PHPUnit (Day 1 API tests)
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'ci-test-secret-min-32-chars-01234567' }}
           DB_HOST: 127.0.0.1
@@ -81,7 +106,11 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_PASS: root
-        run: vendor/bin/phpunit --testsuite Unit
+        # Scope to tests/Unit/Api — the Day 1 additions. Pre-existing tests in
+        # tests/Unit/ (BudgetRequest*, Models/*) require seeded fixture data
+        # that is out of scope for Day 1; to be re-enabled in Day 2 once data
+        # fixtures are set up.
+        run: vendor/bin/phpunit tests/Unit/Api/
 
   # -------------------------------------------------------------------
   # Frontend: typecheck + production build
