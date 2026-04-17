@@ -13,19 +13,31 @@ class Folder
 {
     /**
      * Get root folders for a fiscal year
+     * @param int $fiscalYear Fiscal year to filter
+     * @param int|null $userOrgId User's organization ID (null = admin sees all)
+     * @param bool $isAdmin Whether user is admin
      */
-    public static function getRootFolders(int $fiscalYear): array
+    public static function getRootFolders(int $fiscalYear, ?int $userOrgId = null, bool $isAdmin = false): array
     {
-        return Database::query(
-            "SELECT f.*, u.name as created_by_name,
+        $sql = "SELECT f.*, u.name as created_by_name, o.name_th as organization_name,
                     (SELECT COUNT(*) FROM folders WHERE parent_id = f.id) as subfolder_count,
                     (SELECT COUNT(*) FROM files WHERE folder_id = f.id) as file_count
              FROM folders f 
              LEFT JOIN users u ON f.created_by = u.id 
-             WHERE f.fiscal_year = ? AND f.parent_id IS NULL
-             ORDER BY f.is_system DESC, f.name ASC",
-            [$fiscalYear]
-        );
+             LEFT JOIN organizations o ON f.organization_id = o.id
+             WHERE f.fiscal_year = ? AND f.parent_id IS NULL";
+        
+        $params = [$fiscalYear];
+        
+        // Non-admin users see only: Central folder (org_id IS NULL) + their own org
+        if (!$isAdmin && $userOrgId !== null) {
+            $sql .= " AND (f.organization_id IS NULL OR f.organization_id = ?)";
+            $params[] = $userOrgId;
+        }
+        
+        $sql .= " ORDER BY f.organization_id IS NULL DESC, f.is_system DESC, f.name ASC";
+        
+        return Database::query($sql, $params);
     }
 
     /**
@@ -47,13 +59,24 @@ class Folder
 
     /**
      * Get folder tree as nested array
+     * @param int $fiscalYear Fiscal year to filter
+     * @param int|null $userOrgId User's organization ID (null = admin sees all)
+     * @param bool $isAdmin Whether user is admin
      */
-    public static function getTree(int $fiscalYear): array
+    public static function getTree(int $fiscalYear, ?int $userOrgId = null, bool $isAdmin = false): array
     {
-        $all = Database::query(
-            "SELECT * FROM folders WHERE fiscal_year = ? ORDER BY is_system DESC, name ASC",
-            [$fiscalYear]
-        );
+        $sql = "SELECT * FROM folders WHERE fiscal_year = ?";
+        $params = [$fiscalYear];
+        
+        // Non-admin users see only: Central folder (org_id IS NULL) + their own org
+        if (!$isAdmin && $userOrgId !== null) {
+            $sql .= " AND (organization_id IS NULL OR organization_id = ?)";
+            $params[] = $userOrgId;
+        }
+        
+        $sql .= " ORDER BY organization_id IS NULL DESC, is_system DESC, name ASC";
+        
+        $all = Database::query($sql, $params);
         return self::buildTree($all);
     }
 
@@ -105,6 +128,7 @@ class Folder
         return Database::insert('folders', [
             'name' => $data['name'],
             'fiscal_year' => $data['fiscal_year'] ?? null,
+            'organization_id' => $data['organization_id'] ?? null,
             'budget_category_id' => $data['budget_category_id'] ?? null,
             'parent_id' => $data['parent_id'] ?? null,
             'folder_path' => $path,
@@ -192,35 +216,70 @@ class Folder
     }
 
     /**
-     * Initialize folder structure for a fiscal year based on budget categories (Level 0 only)
-     * Creates folders for top-level categories like งบบุคลากร, งบดำเนินงาน, etc.
+     * Initialize folder structure for a fiscal year based on Organizations
+     * Creates: 1 Central folder + 1 folder per organization
      */
     public static function initializeForYear(int $fiscalYear, int $createdBy): int
     {
         $created = 0;
         
-        // Get top-level categories (Level 0: งบบุคลากร, งบดำเนินงาน, etc.)
-        $categories = \App\Models\BudgetCategory::getTopLevelCategories();
-
-        foreach ($categories as $cat) {
+        // 1. Create Central folder (organization_id = NULL)
+        $existingCentral = Database::queryOne(
+            "SELECT id FROM folders WHERE fiscal_year = ? AND organization_id IS NULL AND parent_id IS NULL AND name = ?",
+            [$fiscalYear, 'ส่วนกลาง']
+        );
+        
+        if (!$existingCentral) {
+            self::create([
+                'name' => 'ส่วนกลาง',
+                'fiscal_year' => $fiscalYear,
+                'organization_id' => null,
+                'is_system' => 1,
+                'description' => 'โฟลเดอร์ส่วนกลาง สำหรับเอกสารที่ทุกหน่วยงานเข้าถึงได้',
+                'created_by' => $createdBy
+            ]);
+            $created++;
+        }
+        
+        // 2. Create folder for each organization
+        $organizations = \App\Models\Organization::all();
+        
+        foreach ($organizations as $org) {
             // Check if already exists
             $existing = Database::queryOne(
-                "SELECT id FROM folders WHERE fiscal_year = ? AND budget_category_id = ? AND parent_id IS NULL",
-                [$fiscalYear, $cat['id']]
+                "SELECT id FROM folders WHERE fiscal_year = ? AND organization_id = ? AND parent_id IS NULL",
+                [$fiscalYear, $org['id']]
             );
-
+            
             if (!$existing) {
                 self::create([
-                    'name' => $cat['name_th'],
+                    'name' => $org['name'],
                     'fiscal_year' => $fiscalYear,
-                    'budget_category_id' => $cat['id'],
+                    'organization_id' => $org['id'],
                     'is_system' => 1,
                     'created_by' => $createdBy
                 ]);
                 $created++;
             }
         }
-
+        
         return $created;
+    }
+    
+    /**
+     * Get folders by organization
+     */
+    public static function getByOrganization(int $orgId, int $fiscalYear): array
+    {
+        return Database::query(
+            "SELECT f.*, u.name as created_by_name,
+                    (SELECT COUNT(*) FROM folders WHERE parent_id = f.id) as subfolder_count,
+                    (SELECT COUNT(*) FROM files WHERE folder_id = f.id) as file_count
+             FROM folders f 
+             LEFT JOIN users u ON f.created_by = u.id 
+             WHERE f.organization_id = ? AND f.fiscal_year = ?
+             ORDER BY f.parent_id IS NULL DESC, f.name ASC",
+            [$orgId, $fiscalYear]
+        );
     }
 }

@@ -40,7 +40,7 @@ class File
     /**
      * Upload a file
      */
-    public static function upload(array $file, ?int $folderId, int $uploadedBy, ?string $description = null): int|string
+    public static function upload(array $file, ?int $folderId, int $uploadedBy, ?string $description = null)
     {
         // 1. Validate file
         if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -97,9 +97,19 @@ class File
         // 5. Save to database
         // Store path with forward slashes for web consistency
         $webPath = str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
+        
+        // Get organization_id from folder
+        $organizationId = null;
+        if ($folderId) {
+            $folder = Folder::find($folderId);
+            if ($folder) {
+                $organizationId = $folder['organization_id'];
+            }
+        }
 
         return Database::insert('files', [
             'folder_id' => $folderId,
+            'organization_id' => $organizationId,
             'original_name' => $file['name'],
             'stored_name' => $storedName,
             'file_path' => $webPath . '/' . $storedName,
@@ -163,5 +173,28 @@ class File
             return round($bytes / 1024, 2) . ' KB';
         }
         return $bytes . ' bytes';
+    }
+    
+    /**
+     * Get files by organization
+     */
+    public static function getByOrganization(int $orgId, ?int $fiscalYear = null): array
+    {
+        $sql = "SELECT f.*, u.name as uploaded_by_name, fld.name as folder_name
+                FROM files f 
+                LEFT JOIN users u ON f.uploaded_by = u.id 
+                LEFT JOIN folders fld ON f.folder_id = fld.id
+                WHERE f.organization_id = ?";
+        
+        $params = [$orgId];
+        
+        if ($fiscalYear) {
+            $sql .= " AND fld.fiscal_year = ?";
+            $params[] = $fiscalYear;
+        }
+        
+        $sql .= " ORDER BY f.created_at DESC";
+        
+        return Database::query($sql, $params);
     }
 }

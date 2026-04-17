@@ -26,6 +26,11 @@ class FileController
         $fiscalYear = (int)($_GET['year'] ?? FiscalYear::currentYear());
         $folderId = isset($_GET['folder']) ? (int)$_GET['folder'] : null;
         
+        // Get user info for org filtering
+        $user = Auth::user();
+        $userOrgId = $user['organization_id'] ?? null;
+        $isAdmin = Auth::hasRole('admin');
+        
         // Get available years
         $availableYears = Folder::getAvailableYears();
         if (empty($availableYears)) {
@@ -38,17 +43,55 @@ class FileController
         $currentFolder = $folderId ? Folder::find($folderId) : null;
         $breadcrumb = $folderId ? Folder::getBreadcrumb($folderId) : [];
         
+        // Access control: Only validate when a folder is selected
+        if ($currentFolder) {
+            [$hasAccess, $accessError] = \App\Helpers\FileValidator::canAccessFolder($currentFolder, $userOrgId, $isAdmin);
+            if (!$hasAccess) {
+                $_SESSION['error'] = $accessError;
+                http_response_code(403);
+                Router::redirect('/files?year=' . $fiscalYear);
+                return;
+            }
+        }
+        
         // Get folders and files
         if ($folderId) {
             $folders = Folder::getSubfolders($folderId);
             $files = File::getByFolder($folderId);
         } else {
-            $folders = Folder::getRootFolders($fiscalYear);
+            // Apply org filtering for root folders
+            $folders = Folder::getRootFolders($fiscalYear, $userOrgId, $isAdmin);
             $files = [];
         }
+
+        // Get organizations for Admin dropdown (Cascading: Department -> Division)
+        $departments = [];
+        $divisions = [];
         
-        // Folder tree for sidebar
-        $folderTree = Folder::getTree($fiscalYear);
+        if ($isAdmin) {
+            $allOrgs = \App\Models\Organization::all();
+            foreach ($allOrgs as $org) {
+                if ($org['level'] == 1) {
+                    $departments[] = $org;
+                } else {
+                    $divisions[] = $org;
+                }
+            }
+        }
+        
+        // Folder tree for sidebar (filtered by org)
+        $folderTree = Folder::getTree($fiscalYear, $userOrgId, $isAdmin);
+        
+        // Determine if user can upload/create
+        $canUpload = false;
+        if ($isAdmin) {
+            // Admin can always create/upload
+            $canUpload = true;
+        } elseif ($currentFolder) {
+            // User can upload to their own org or Central folder (if allowed)
+            $folderOrgId = $currentFolder['organization_id'];
+            $canUpload = ($folderOrgId !== null && $folderOrgId == $userOrgId);
+        }
         
         View::render('files/index', [
             'fiscalYear' => $fiscalYear,
@@ -58,7 +101,12 @@ class FileController
             'currentFolder' => $currentFolder,
             'breadcrumb' => $breadcrumb,
             'files' => $files,
+            'canUpload' => $canUpload,
+            'isAdmin' => $isAdmin,
+            'userOrgId' => $userOrgId,
             'currentPage' => 'files',
+            'departments' => $departments,
+            'divisions' => $divisions,
             'title' => 'คลังเอกสาร'
         ], 'main');
     }
@@ -155,12 +203,23 @@ class FileController
         
         $parentId = isset($_POST['parent_id']) && $_POST['parent_id'] !== '' ? (int)$_POST['parent_id'] : null;
         $fiscalYear = (int)($_POST['fiscal_year'] ?? FiscalYear::currentYear());
+        $organizationId = null;
         
-        // If parent folder, inherit fiscal year from it
+        // If parent folder, inherit fiscal year and organization_id from it
         if ($parentId) {
             $parent = Folder::find($parentId);
             if ($parent) {
                 $fiscalYear = $parent['fiscal_year'];
+                $organizationId = $parent['organization_id'];
+            }
+        } else {
+            // Root folder creation
+            if (Auth::hasRole('admin')) {
+                // Admin can specify organization (from cascading dropdown)
+                $organizationId = !empty($_POST['organization_id']) ? (int)$_POST['organization_id'] : null;
+            } else {
+                // Regular users create in their own org
+                $organizationId = Auth::user()['organization_id'];
             }
         }
         
@@ -168,6 +227,7 @@ class FileController
             'name' => $_POST['name'],
             'parent_id' => $parentId,
             'fiscal_year' => $fiscalYear,
+            'organization_id' => $organizationId,
             'description' => $_POST['description'] ?? null,
             'is_system' => 0,
             'created_by' => Auth::id()
