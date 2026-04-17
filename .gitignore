@@ -3,6 +3,10 @@
 /vendor/
 /python/venv/
 composer.phar
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env.local
+/frontend/.env.*.local
 
 # Environment & Secrets
 .env

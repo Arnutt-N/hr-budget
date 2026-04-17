@@ -35,6 +35,13 @@ if (($_ENV['APP_DEBUG'] ?? false) === 'true') {
     ini_set('display_errors', 1);
 }
 
+// Apply CORS middleware for /api/* requests (must run BEFORE Auth::init
+// because Auth starts a session and sends Set-Cookie which complicates preflight).
+$__requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '';
+if (str_contains($__requestPath, '/api/')) {
+    \App\Api\Middleware\CorsMiddleware::apply();
+}
+
 // Initialize authentication
 \App\Core\Auth::init();
 
