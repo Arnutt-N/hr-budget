@@ -39,6 +39,31 @@ const routes: RouteRecordRaw[] = [
         name: 'requests',
         component: () => import('@/pages/RequestListPage.vue'),
       },
+      // Admin pages
+      {
+        path: 'fiscal-years',
+        name: 'fiscal-years',
+        component: () => import('@/pages/FiscalYearListPage.vue'),
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'organizations',
+        name: 'organizations',
+        component: () => import('@/pages/OrganizationListPage.vue'),
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'categories',
+        name: 'categories',
+        component: () => import('@/pages/CategoryListPage.vue'),
+        meta: { requiresAdmin: true },
+      },
+      {
+        path: 'users',
+        name: 'users',
+        component: () => import('@/pages/UserListPage.vue'),
+        meta: { requiresAdmin: true },
+      },
     ],
   },
   {
@@ -61,6 +86,10 @@ router.beforeEach((to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
   if (to.name === 'login' && auth.isAuthenticated) {
+    return { name: 'dashboard' }
+  }
+
+  if (to.meta.requiresAdmin && auth.user?.role !== 'admin') {
     return { name: 'dashboard' }
   }
 })
