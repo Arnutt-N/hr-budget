@@ -12,6 +12,19 @@ use App\Controllers\BudgetController;
 use App\Controllers\BudgetRequestController;
 use App\Controllers\BudgetExecutionController;
 use App\Controllers\DisbursementController;
+use App\Api\Controllers\AuthController as ApiAuthController;
+use App\Api\Responses\ApiResponse;
+
+// ====== REST API v1 Routes ======
+Router::get('/api/v1/health', function () {
+    ApiResponse::ok([
+        'version' => '0.1.0',
+        'time'    => date('c'),
+        'env'     => $_ENV['APP_ENV'] ?? 'unknown',
+    ]);
+});
+Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);
+Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
 
 // Authentication Routes
 Router::get('/login', [AuthController::class, 'showLogin']);

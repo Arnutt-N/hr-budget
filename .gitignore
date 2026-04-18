@@ -3,6 +3,10 @@
 /vendor/
 /python/venv/
 composer.phar
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env.local
+/frontend/.env.*.local
 
 # Environment & Secrets
 .env
@@ -47,6 +51,7 @@ build/
 *.bak
 *.backup
 *.sql
+!database/*.sql
 *.dump
 archives/
 archives/backup/*.zip

@@ -23,8 +23,11 @@ export default defineConfig({
   ],
   
   use: {
-    // Base URL for tests
-    baseURL: process.env.BASE_URL || 'http://localhost/hr_budget/public',
+    // Base URL for tests:
+    //   - BASE_URL env overrides (set in CI to http://127.0.0.1:5174)
+    //   - Default to Vue SPA dev server (Day 1+ flow)
+    //   - Legacy MVC tests can override per-test via page.goto('http://hr_budget.test/public/...')
+    baseURL: process.env.BASE_URL || 'http://localhost:5174',
     
     // Collect trace when retrying the failed test
     trace: 'retain-on-failure',
