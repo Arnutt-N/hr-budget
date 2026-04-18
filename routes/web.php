@@ -14,6 +14,10 @@ use App\Controllers\BudgetExecutionController;
 use App\Controllers\DisbursementController;
 use App\Api\Controllers\AuthController as ApiAuthController;
 use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
+use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
+use App\Api\Controllers\OrganizationController as ApiOrganizationController;
+use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
+use App\Api\Controllers\UserController as ApiUserController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -26,6 +30,42 @@ Router::get('/api/v1/health', function () {
 });
 Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);
 Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
+
+// Fiscal Year CRUD
+Router::get('/api/v1/fiscal-years', [ApiFiscalYearController::class, 'list']);
+Router::post('/api/v1/fiscal-years', [ApiFiscalYearController::class, 'create']);
+Router::get('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'show']);
+Router::put('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'update']);
+Router::delete('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'delete']);
+Router::post('/api/v1/fiscal-years/{id}/set-current', [ApiFiscalYearController::class, 'setCurrent']);
+
+// Organization CRUD
+Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
+Router::post('/api/v1/organizations', [ApiOrganizationController::class, 'create']);
+Router::get('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'show']);
+Router::put('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'update']);
+Router::delete('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'delete']);
+
+// Budget Category CRUD
+Router::get('/api/v1/categories', [ApiBudgetCategoryController::class, 'list']);
+Router::get('/api/v1/categories/tree', [ApiBudgetCategoryController::class, 'tree']);
+Router::post('/api/v1/categories', [ApiBudgetCategoryController::class, 'create']);
+Router::get('/api/v1/categories/{id}', [ApiBudgetCategoryController::class, 'show']);
+Router::put('/api/v1/categories/{id}', [ApiBudgetCategoryController::class, 'update']);
+Router::delete('/api/v1/categories/{id}', [ApiBudgetCategoryController::class, 'delete']);
+// Category Items
+Router::get('/api/v1/categories/{id}/items', [ApiBudgetCategoryController::class, 'listItems']);
+Router::post('/api/v1/categories/{id}/items', [ApiBudgetCategoryController::class, 'createItem']);
+Router::put('/api/v1/categories/{categoryId}/items/{itemId}', [ApiBudgetCategoryController::class, 'updateItem']);
+Router::delete('/api/v1/categories/{categoryId}/items/{itemId}', [ApiBudgetCategoryController::class, 'deleteItem']);
+Router::post('/api/v1/categories/{categoryId}/items/{itemId}/restore', [ApiBudgetCategoryController::class, 'restoreItem']);
+
+// User Management CRUD (admin-only)
+Router::get('/api/v1/users', [ApiUserController::class, 'list']);
+Router::post('/api/v1/users', [ApiUserController::class, 'create']);
+Router::get('/api/v1/users/{id}', [ApiUserController::class, 'show']);
+Router::put('/api/v1/users/{id}', [ApiUserController::class, 'update']);
+Router::delete('/api/v1/users/{id}', [ApiUserController::class, 'delete']);
 
 // Budget Request CRUD + Approval
 Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);

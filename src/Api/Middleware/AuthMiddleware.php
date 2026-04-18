@@ -70,6 +70,8 @@ final class AuthMiddleware
             ApiResponse::unauthorized('User is inactive');
         }
 
+        unset($user['password']);
+
         self::$user = $user;
         return $user;
     }
