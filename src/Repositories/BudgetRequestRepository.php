@@ -130,6 +130,16 @@ class BudgetRequestRepository
             $params[] = "%" . $filters['search'] . "%";
         }
 
+        if (isset($filters['date_from'])) {
+            $sql .= " AND br.created_at >= ?";
+            $params[] = $filters['date_from'] . ' 00:00:00';
+        }
+
+        if (isset($filters['date_to'])) {
+            $sql .= " AND br.created_at <= ?";
+            $params[] = $filters['date_to'] . ' 23:59:59';
+        }
+
         return $params;
     }
 }
