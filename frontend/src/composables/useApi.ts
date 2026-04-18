@@ -10,10 +10,11 @@ import type { ApiResponse } from '@/types/api'
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},
+  isFormData = false,
 ): Promise<ApiResponse<T>> {
   const auth = useAuthStore()
   const headers = new Headers(options.headers)
-  if (!headers.has('Content-Type')) {
+  if (!isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
   if (auth.token) {

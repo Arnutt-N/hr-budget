@@ -262,7 +262,8 @@
 |---|-----|-------|-------------|--------|
 | 1 | Day 1 | Foundation + Frontend bootstrap | API scaffold, JWT auth, Vue+Pinia+Router, 1 health endpoint, server-check.php | **complete** | [Plan](../plans/completed/day-1-foundation-frontend-bootstrap.plan.md) · [Report](../reports/day-1-foundation-frontend-bootstrap-report.md) |
 | 2 | Day 2 | Core CRUD | Budget Request list/create/view/edit + single-level approval + basic audit log | **complete** | [Plan](../plans/completed/day-2-budget-request-core-crud.plan.md) · [Report](../reports/day-2-budget-request-core-crud-report.md) |
-| 3 | Day 3 | Master data + UX | Fiscal year, Budget codes, User mgmt, File upload, Notifications, Filter/search | pending |
+| 3a | Day 3 | Master data CRUD | Fiscal year, Budget codes, User mgmt — CRUD + pickers | **complete** | [Plan](../plans/day-3-master-data-admin-crud.plan.md) · [Report](../reports/day-3-master-data-admin-crud-report.md) |
+| 3b | Day 3 | File upload + Notifications + Filters | File upload API/UI, Notification bell, Filter/search enhancements | **complete** | [Plan](../plans/day-3-remaining-file-upload-notifications-filters.plan.md) · [Report](../reports/day-3-remaining-file-upload-notifications-filters-report.md) |
 | 4 | Day 4 | Polish + Deploy | Multi-level approval, Password reset, Dashboard, Excel export, Audit UI, deploy topzlab | pending |
 
 ### Day-by-Day Plan

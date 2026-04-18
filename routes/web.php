@@ -18,6 +18,8 @@ use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
+use App\Api\Controllers\NotificationController as ApiNotificationController;
+use App\Api\Controllers\FileController as ApiFileController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -76,6 +78,18 @@ Router::delete('/api/v1/requests/{id}', [ApiBudgetRequestController::class, 'del
 Router::post('/api/v1/requests/{id}/submit', [ApiBudgetRequestController::class, 'submit']);
 Router::post('/api/v1/requests/{id}/approve', [ApiBudgetRequestController::class, 'approve']);
 Router::post('/api/v1/requests/{id}/reject', [ApiBudgetRequestController::class, 'reject']);
+
+// Notifications — static routes before parameterized
+Router::get('/api/v1/notifications', [ApiNotificationController::class, 'list']);
+Router::get('/api/v1/notifications/unread-count', [ApiNotificationController::class, 'unreadCount']);
+Router::post('/api/v1/notifications/read-all', [ApiNotificationController::class, 'markAllRead']);
+Router::post('/api/v1/notifications/{id}/read', [ApiNotificationController::class, 'markRead']);
+
+// File Attachments
+Router::post('/api/v1/requests/{id}/files', [ApiFileController::class, 'upload']);
+Router::get('/api/v1/requests/{id}/files', [ApiFileController::class, 'list']);
+Router::get('/api/v1/files/{id}/download', [ApiFileController::class, 'download']);
+Router::delete('/api/v1/files/{id}', [ApiFileController::class, 'delete']);
 
 // Authentication Routes
 Router::get('/login', [AuthController::class, 'showLogin']);

@@ -21,6 +21,7 @@ final class BudgetRequestService
         private readonly BudgetRequestRepository $requestRepo = new BudgetRequestRepository(),
         private readonly BudgetRequestItemRepository $itemRepo = new BudgetRequestItemRepository(),
         private readonly BudgetRequestApprovalRepository $approvalRepo = new BudgetRequestApprovalRepository(),
+        private readonly NotificationService $notificationService = new NotificationService(),
     ) {}
 
     /**
@@ -229,6 +230,8 @@ final class BudgetRequestService
 
             $this->approvalRepo->log($id, 'submitted', $userId);
             Database::commit();
+
+            $this->dispatchSubmitNotifications($id, $request, $userId);
             return true;
         } catch (\Throwable $e) {
             Database::rollback();
@@ -268,11 +271,13 @@ final class BudgetRequestService
 
             $this->approvalRepo->log($id, 'approved', $userId, $dto->note);
             Database::commit();
-            return true;
         } catch (\Throwable $e) {
             Database::rollback();
             return false;
         }
+
+        $this->dispatchStatusNotification((int) $request['created_by'], 'approved', 'คำขอได้รับการอนุมัติ', $request['request_title'], "/requests/{$id}");
+        return true;
     }
 
     /**
@@ -308,10 +313,43 @@ final class BudgetRequestService
 
             $this->approvalRepo->log($id, 'rejected', $userId, $dto->note);
             Database::commit();
-            return true;
         } catch (\Throwable $e) {
             Database::rollback();
             return false;
+        }
+
+        $reason = $dto->note ? " — {$dto->note}" : '';
+        $this->dispatchStatusNotification((int) $request['created_by'], 'rejected', 'คำขอถูกปฏิเสธ', $request['request_title'] . $reason, "/requests/{$id}");
+        return true;
+    }
+
+    private function dispatchSubmitNotifications(int $requestId, array $request, int $userId): void
+    {
+        try {
+            $approvers = Database::query(
+                "SELECT user_id FROM approvers WHERE org_id = ? AND is_active = 1",
+                [(int) $request['org_id']]
+            );
+            foreach ($approvers as $approver) {
+                $this->notificationService->notify(
+                    (int) $approver['user_id'],
+                    'approval_request',
+                    'มีคำของบประมาณรออนุมัติ',
+                    $request['request_title'],
+                    "/requests/{$requestId}"
+                );
+            }
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestService::dispatchSubmitNotifications] {$e->getMessage()}");
+        }
+    }
+
+    private function dispatchStatusNotification(int $userId, string $type, string $title, string $message, string $link): void
+    {
+        try {
+            $this->notificationService->notify($userId, $type, $title, $message, $link);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestService::dispatchStatusNotification] {$e->getMessage()}");
         }
     }
 }

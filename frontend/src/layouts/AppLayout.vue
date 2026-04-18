@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -39,6 +40,7 @@ async function onLogout(): Promise<void> {
           </template>
         </nav>
         <div class="flex items-center gap-4 text-sm">
+          <NotificationBell />
           <span class="text-gray-700">{{ auth.user?.name || 'Loading...' }}</span>
           <button
             class="text-red-600 hover:text-red-800 font-medium"
