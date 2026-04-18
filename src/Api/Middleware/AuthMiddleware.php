@@ -38,32 +38,52 @@ final class AuthMiddleware
             ?? '';
 
         if (!str_starts_with($header, 'Bearer ')) {
+            self::logDenied('missing_bearer');
             ApiResponse::unauthorized('Missing Bearer token');
         }
 
         $token = substr($header, 7);
         $payload = Jwt::verify($token);
         if ($payload === null) {
+            // Jwt::verify already logged the specific exception server-side.
             ApiResponse::unauthorized('Invalid or expired token');
         }
 
         $userId = (int) ($payload['sub'] ?? 0);
         if ($userId <= 0) {
+            self::logDenied('invalid_subject', ['sub' => $payload['sub'] ?? null]);
             ApiResponse::unauthorized('Invalid token subject');
         }
 
         $user = User::find($userId);
         if ($user === null) {
+            // Valid signed token but user is gone (deleted / DB desync).
+            // This is worth surfacing because it suggests tokens outliving
+            // their user records — indicates operational issue.
+            self::logDenied('user_not_found', ['user_id' => $userId]);
             ApiResponse::unauthorized('User not found');
         }
 
         // Respect is_active if the column exists
         if (array_key_exists('is_active', $user) && !$user['is_active']) {
+            self::logDenied('user_inactive', ['user_id' => $userId]);
             ApiResponse::unauthorized('User is inactive');
         }
 
         self::$user = $user;
         return $user;
+    }
+
+    /**
+     * Audit-log a denied request. Goes to PHP error log only; never exposed.
+     * @param array<string,mixed> $context
+     */
+    private static function logDenied(string $reason, array $context = []): void
+    {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '?';
+        $path = $_SERVER['REQUEST_URI'] ?? '?';
+        $extra = $context === [] ? '' : ' ' . json_encode($context, JSON_UNESCAPED_SLASHES);
+        error_log("[auth] api_denied reason={$reason} path={$path} ip={$ip}{$extra}");
     }
 
     /** @return array<string,mixed>|null */
