@@ -25,6 +25,8 @@ final class CreateBudgetRequestDto
 
         if ($this->requestTitle === '') {
             $errors['request_title'] = 'กรุณาระบุชื่อคำขอ';
+        } elseif (mb_strlen($this->requestTitle) > 255) {
+            $errors['request_title'] = 'ชื่อคำขอต้องไม่เกิน 255 ตัวอักษร';
         }
 
         if ($this->fiscalYear < 2400 || $this->fiscalYear > 2700) {

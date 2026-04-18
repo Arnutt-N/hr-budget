@@ -76,6 +76,34 @@ class BudgetRequestRepository
     }
 
     /**
+     * Atomic status transition: UPDATE only if current status matches expected.
+     * Returns true if exactly 1 row was affected (transition succeeded).
+     */
+    public function updateWhereStatus(int $id, string $expectedStatus, array $data): bool
+    {
+        $allowed = ['request_status', 'total_amount', 'submitted_at', 'approved_at',
+            'rejected_at', 'rejected_reason'];
+
+        $updateData = [];
+        foreach ($allowed as $field) {
+            if (array_key_exists($field, $data)) {
+                $updateData[$field] = $data[$field];
+            }
+        }
+
+        if (empty($updateData)) {
+            return false;
+        }
+
+        return Database::update(
+            'budget_requests',
+            $updateData,
+            'id = ? AND request_status = ?',
+            [$id, $expectedStatus],
+        ) > 0;
+    }
+
+    /**
      * @param-out string $sql
      */
     private function applyFilters(string &$sql, array $filters): array

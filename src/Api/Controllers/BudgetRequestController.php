@@ -45,26 +45,31 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $dto = CreateBudgetRequestDto::fromRequest();
-        $errors = $dto->validate();
-        if (!empty($errors)) {
-            ApiResponse::validationFailed($errors);
-            return;
+        try {
+            $dto = CreateBudgetRequestDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
+                return;
+            }
+
+            $id = $this->service->create((int) $user['id'], $dto);
+            if ($id === null) {
+                ApiResponse::error('ไม่สามารถสร้างคำขอได้', 500);
+                return;
+            }
+
+            $request = $this->service->findById(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                $id
+            );
+
+            ApiResponse::created($request);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::create] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        $id = $this->service->create((int) $user['id'], $dto);
-        if ($id === null) {
-            ApiResponse::error('ไม่สามารถสร้างคำขอได้', 500);
-            return;
-        }
-
-        $request = $this->service->findById(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            $id
-        );
-
-        ApiResponse::created($request);
     }
 
     public function show(string $id): void
@@ -91,32 +96,37 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $dto = UpdateBudgetRequestDto::fromRequest();
-        $errors = $dto->validate();
-        if (!empty($errors)) {
-            ApiResponse::validationFailed($errors);
-            return;
+        try {
+            $dto = UpdateBudgetRequestDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
+                return;
+            }
+
+            $ok = $this->service->update(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id,
+                $dto
+            );
+
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถแก้ไขคำขอได้ อาจเป็นเพราะสถานะไม่อนุญาต', 422);
+                return;
+            }
+
+            $request = $this->service->findById(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id
+            );
+
+            ApiResponse::ok($request);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::update] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        $ok = $this->service->update(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id,
-            $dto
-        );
-
-        if (!$ok) {
-            ApiResponse::error('ไม่สามารถแก้ไขคำขอได้ อาจเป็นเพราะสถานะไม่อนุญาต', 422);
-            return;
-        }
-
-        $request = $this->service->findById(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id
-        );
-
-        ApiResponse::ok($request);
     }
 
     public function delete(string $id): void
@@ -124,18 +134,23 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $ok = $this->service->delete(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id
-        );
+        try {
+            $ok = $this->service->delete(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id
+            );
 
-        if (!$ok) {
-            ApiResponse::error('ไม่สามารถลบคำขอได้', 422);
-            return;
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถลบคำขอได้', 422);
+                return;
+            }
+
+            ApiResponse::noContent();
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::delete] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        ApiResponse::noContent();
     }
 
     public function submit(string $id): void
@@ -143,19 +158,24 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $ok = $this->service->submit((int) $user['id'], (int) $id);
-        if (!$ok) {
-            ApiResponse::error('ไม่สามารถส่งอนุมัติได้ อาจเป็นเพราะสถานะไม่อนุญาต', 422);
-            return;
+        try {
+            $ok = $this->service->submit((int) $user['id'], (int) $id);
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถส่งอนุมัติได้ อาจเป็นเพราะสถานะไม่อนุญาต', 422);
+                return;
+            }
+
+            $request = $this->service->findById(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id
+            );
+
+            ApiResponse::ok($request);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::submit] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        $request = $this->service->findById(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id
-        );
-
-        ApiResponse::ok($request);
     }
 
     public function approve(string $id): void
@@ -163,26 +183,31 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $dto = ApprovalActionDto::fromRequest();
-        $errors = $dto->validate('approve');
-        if (!empty($errors)) {
-            ApiResponse::validationFailed($errors);
-            return;
+        try {
+            $dto = ApprovalActionDto::fromRequest();
+            $errors = $dto->validate('approve');
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
+                return;
+            }
+
+            $ok = $this->service->approve((int) $user['id'], $user['role'] ?? 'staff', (int) $id, $dto);
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถอนุมัติได้ ตรวจสอบสิทธิ์หรือสถานะคำขอ', 422);
+                return;
+            }
+
+            $request = $this->service->findById(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id
+            );
+
+            ApiResponse::ok($request);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::approve] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        $ok = $this->service->approve((int) $user['id'], (int) $id, $dto);
-        if (!$ok) {
-            ApiResponse::error('ไม่สามารถอนุมัติได้ อาจเป็นเพราะสถานะไม่ใช่รออนุมัติ', 422);
-            return;
-        }
-
-        $request = $this->service->findById(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id
-        );
-
-        ApiResponse::ok($request);
     }
 
     public function reject(string $id): void
@@ -190,25 +215,30 @@ final class BudgetRequestController
         CorsMiddleware::apply();
         $user = AuthMiddleware::require();
 
-        $dto = ApprovalActionDto::fromRequest();
-        $errors = $dto->validate('reject');
-        if (!empty($errors)) {
-            ApiResponse::validationFailed($errors);
-            return;
+        try {
+            $dto = ApprovalActionDto::fromRequest();
+            $errors = $dto->validate('reject');
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
+                return;
+            }
+
+            $ok = $this->service->reject((int) $user['id'], $user['role'] ?? 'staff', (int) $id, $dto);
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถปฏิเสธได้ ตรวจสอบสิทธิ์หรือสถานะคำขอ', 422);
+                return;
+            }
+
+            $request = $this->service->findById(
+                (int) $user['id'],
+                $user['role'] ?? 'staff',
+                (int) $id
+            );
+
+            ApiResponse::ok($request);
+        } catch (\Throwable $e) {
+            error_log("[BudgetRequestController::reject] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
-
-        $ok = $this->service->reject((int) $user['id'], (int) $id, $dto);
-        if (!$ok) {
-            ApiResponse::error('ไม่สามารถปฏิเสธได้ อาจเป็นเพราะสถานะไม่ใช่รออนุมัติ', 422);
-            return;
-        }
-
-        $request = $this->service->findById(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            (int) $id
-        );
-
-        ApiResponse::ok($request);
     }
 }

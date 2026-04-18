@@ -13,9 +13,10 @@ use App\Dtos\UpdateBudgetRequestDto;
 use App\Repositories\BudgetRequestRepository;
 use App\Repositories\BudgetRequestItemRepository;
 use App\Repositories\BudgetRequestApprovalRepository;
+use App\Core\Database;
 
 /**
- * Lightweight stubs for final repository classes.
+ * Lightweight stubs for repository classes.
  * These record calls so we can assert behavior.
  */
 class StubRequestRepo extends BudgetRequestRepository
@@ -26,14 +27,23 @@ class StubRequestRepo extends BudgetRequestRepository
     public ?array $lastUpdateData = null;
     public bool $deleteCalled = false;
     private ?array $findByIdReturn;
+    private bool $updateWhereStatusResult = true;
 
     public function __construct(?array $findByIdReturn = []) {
         $this->findByIdReturn = $findByIdReturn;
     }
 
+    public function setUpdateWhereStatusResult(bool $result): void {
+        $this->updateWhereStatusResult = $result;
+    }
+
     public function findById(int $id): ?array { $this->lastFindById = ['id' => $id]; return $this->findByIdReturn; }
     public function insert(array $data): int { $this->insertCalledWith = $data; return $this->insertResult ?? 1; }
     public function update(int $id, array $data): bool { $this->lastUpdateData = ['id' => $id, 'data' => $data]; return true; }
+    public function updateWhereStatus(int $id, string $expectedStatus, array $data): bool {
+        $this->lastUpdateData = ['id' => $id, 'expected_status' => $expectedStatus, 'data' => $data];
+        return $this->updateWhereStatusResult;
+    }
     public function delete(int $id): bool { $this->deleteCalled = true; return true; }
     public function findAll(array $filters, int $limit, int $offset): array { return []; }
     public function count(array $filters): int { return 0; }
@@ -42,11 +52,12 @@ class StubRequestRepo extends BudgetRequestRepository
 class StubItemRepo extends BudgetRequestItemRepository
 {
     public array $insertedItems = [];
-    public bool $replaceCalled = false;
+    public bool $replaceUnsafeCalled = false;
 
     public function findByRequestId(int $requestId): array { return []; }
     public function insert(array $data): int { $this->insertedItems[] = $data; return 1; }
-    public function replaceItems(int $requestId, array $itemRows): void { $this->replaceCalled = true; }
+    public function replaceItems(int $requestId, array $itemRows): void { }
+    public function replaceItemsUnsafe(int $requestId, array $itemRows): void { $this->replaceUnsafeCalled = true; }
     public function deleteByRequestId(int $requestId): bool { return true; }
     public function delete(int $id): bool { return true; }
 }
@@ -64,6 +75,16 @@ class StubApprovalRepo extends BudgetRequestApprovalRepository
 
 class BudgetRequestServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        Database::setInstance(new \PDO('sqlite::memory:'));
+    }
+
+    protected function tearDown(): void
+    {
+        Database::resetInstance();
+    }
+
     private function makeService(?array $requestRow = []): array {
         $reqRepo = new StubRequestRepo($requestRow);
         $itemRepo = new StubItemRepo();
@@ -136,6 +157,7 @@ class BudgetRequestServiceTest extends TestCase
 
         $this->assertTrue($service->submit(5, 1));
         $this->assertSame('pending', $reqRepo->lastUpdateData['data']['request_status']);
+        $this->assertSame('draft', $reqRepo->lastUpdateData['expected_status']);
         $this->assertArrayHasKey('submitted_at', $reqRepo->lastUpdateData['data']);
         $this->assertSame('submitted', $approvalRepo->logs[0]['action']);
     }
@@ -162,8 +184,9 @@ class BudgetRequestServiceTest extends TestCase
         [$service, $reqRepo, , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
         $dto = new ApprovalActionDto('LG');
 
-        $this->assertTrue($service->approve(3, 1, $dto));
+        $this->assertTrue($service->approve(3, 'admin', 1, $dto));
         $this->assertSame('approved', $reqRepo->lastUpdateData['data']['request_status']);
+        $this->assertSame('pending', $reqRepo->lastUpdateData['expected_status']);
         $this->assertSame('approved', $approvalRepo->logs[0]['action']);
     }
 
@@ -171,7 +194,22 @@ class BudgetRequestServiceTest extends TestCase
     public function approve_fails_for_draft(): void
     {
         [$service] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'draft']);
-        $this->assertFalse($service->approve(3, 1, new ApprovalActionDto()));
+        $this->assertFalse($service->approve(3, 'admin', 1, new ApprovalActionDto()));
+    }
+
+    /** @test */
+    public function approve_fails_for_non_admin(): void
+    {
+        [$service] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
+        $this->assertFalse($service->approve(3, 'staff', 1, new ApprovalActionDto()));
+    }
+
+    /** @test */
+    public function approve_succeeds_for_admin_self_approval(): void
+    {
+        [$service, , , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 3, 'request_status' => 'pending']);
+        $this->assertTrue($service->approve(3, 'admin', 1, new ApprovalActionDto('OK')));
+        $this->assertSame('approved', $approvalRepo->logs[0]['action']);
     }
 
     // --- REJECT ---
@@ -182,9 +220,16 @@ class BudgetRequestServiceTest extends TestCase
         [$service, $reqRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
         $dto = new ApprovalActionDto('Incomplete docs');
 
-        $this->assertTrue($service->reject(3, 1, $dto));
+        $this->assertTrue($service->reject(3, 'admin', 1, $dto));
         $this->assertSame('rejected', $reqRepo->lastUpdateData['data']['request_status']);
         $this->assertSame('Incomplete docs', $reqRepo->lastUpdateData['data']['rejected_reason']);
+    }
+
+    /** @test */
+    public function reject_fails_for_non_admin(): void
+    {
+        [$service] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
+        $this->assertFalse($service->reject(3, 'staff', 1, new ApprovalActionDto('reason')));
     }
 
     // --- UPDATE ---
