@@ -271,13 +271,13 @@ final class BudgetRequestService
 
             $this->approvalRepo->log($id, 'approved', $userId, $dto->note);
             Database::commit();
-
-            $this->dispatchStatusNotification((int) $request['created_by'], 'approved', 'คำขอได้รับการอนุมัติ', $request['request_title'], "/requests/{$id}");
-            return true;
         } catch (\Throwable $e) {
             Database::rollback();
             return false;
         }
+
+        $this->dispatchStatusNotification((int) $request['created_by'], 'approved', 'คำขอได้รับการอนุมัติ', $request['request_title'], "/requests/{$id}");
+        return true;
     }
 
     /**
@@ -313,14 +313,14 @@ final class BudgetRequestService
 
             $this->approvalRepo->log($id, 'rejected', $userId, $dto->note);
             Database::commit();
-
-            $reason = $dto->note ? " — {$dto->note}" : '';
-            $this->dispatchStatusNotification((int) $request['created_by'], 'rejected', 'คำขอถูกปฏิเสธ', $request['request_title'] . $reason, "/requests/{$id}");
-            return true;
         } catch (\Throwable $e) {
             Database::rollback();
             return false;
         }
+
+        $reason = $dto->note ? " — {$dto->note}" : '';
+        $this->dispatchStatusNotification((int) $request['created_by'], 'rejected', 'คำขอถูกปฏิเสธ', $request['request_title'] . $reason, "/requests/{$id}");
+        return true;
     }
 
     private function dispatchSubmitNotifications(int $requestId, array $request, int $userId): void
