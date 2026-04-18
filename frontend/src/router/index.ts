@@ -19,6 +19,26 @@ const routes: RouteRecordRaw[] = [
         name: 'dashboard',
         component: () => import('@/pages/DashboardPage.vue'),
       },
+      {
+        path: 'requests/create',
+        name: 'request-create',
+        component: () => import('@/pages/RequestCreatePage.vue'),
+      },
+      {
+        path: 'requests/:id/edit',
+        name: 'request-edit',
+        component: () => import('@/pages/RequestEditPage.vue'),
+      },
+      {
+        path: 'requests/:id',
+        name: 'request-detail',
+        component: () => import('@/pages/RequestDetailPage.vue'),
+      },
+      {
+        path: 'requests',
+        name: 'requests',
+        component: () => import('@/pages/RequestListPage.vue'),
+      },
     ],
   },
   {

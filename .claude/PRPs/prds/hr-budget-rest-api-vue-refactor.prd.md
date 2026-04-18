@@ -261,7 +261,7 @@
 | # | Day | Phase | Deliverable | Status |
 |---|-----|-------|-------------|--------|
 | 1 | Day 1 | Foundation + Frontend bootstrap | API scaffold, JWT auth, Vue+Pinia+Router, 1 health endpoint, server-check.php | **complete** | [Plan](../plans/completed/day-1-foundation-frontend-bootstrap.plan.md) · [Report](../reports/day-1-foundation-frontend-bootstrap-report.md) |
-| 2 | Day 2 | Core CRUD | Budget Request list/create/view/edit + single-level approval + basic audit log | pending |
+| 2 | Day 2 | Core CRUD | Budget Request list/create/view/edit + single-level approval + basic audit log | **complete** | [Plan](../plans/completed/day-2-budget-request-core-crud.plan.md) · [Report](../reports/day-2-budget-request-core-crud-report.md) |
 | 3 | Day 3 | Master data + UX | Fiscal year, Budget codes, User mgmt, File upload, Notifications, Filter/search | pending |
 | 4 | Day 4 | Polish + Deploy | Multi-level approval, Password reset, Dashboard, Excel export, Audit UI, deploy topzlab | pending |
 
