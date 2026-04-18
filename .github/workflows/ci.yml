@@ -53,6 +53,9 @@ jobs:
       - name: Install Composer deps
         run: composer install --prefer-dist --no-progress --no-interaction
 
+      - name: Regenerate autoloader
+        run: composer dump-autoload --optimize
+
       - name: Wait for MySQL
         run: |
           for i in $(seq 1 30); do
@@ -184,6 +187,9 @@ jobs:
 
       - name: Composer install
         run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Regenerate autoloader
+        run: composer dump-autoload --optimize
 
       - name: NPM install (frontend)
         run: cd frontend && npm ci --ignore-optional
