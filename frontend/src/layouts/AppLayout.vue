@@ -30,6 +30,13 @@ async function onLogout(): Promise<void> {
         <nav class="flex items-center gap-4 text-sm">
           <RouterLink to="/dashboard" class="text-gray-600 hover:text-gray-900">แดชบอร์ด</RouterLink>
           <RouterLink to="/requests" class="text-gray-600 hover:text-gray-900">คำของบประมาณ</RouterLink>
+          <template v-if="auth.user?.role === 'admin'">
+            <span class="text-gray-300">|</span>
+            <RouterLink to="/fiscal-years" class="text-gray-600 hover:text-gray-900">ปีงบประมาณ</RouterLink>
+            <RouterLink to="/organizations" class="text-gray-600 hover:text-gray-900">หน่วยงาน</RouterLink>
+            <RouterLink to="/categories" class="text-gray-600 hover:text-gray-900">หมวดงบประมาณ</RouterLink>
+            <RouterLink to="/users" class="text-gray-600 hover:text-gray-900">จัดการผู้ใช้</RouterLink>
+          </template>
         </nav>
         <div class="flex items-center gap-4 text-sm">
           <span class="text-gray-700">{{ auth.user?.name || 'Loading...' }}</span>
