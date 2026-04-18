@@ -139,7 +139,7 @@ final class FiscalYearService
 
         Database::beginTransaction();
         try {
-            Database::queryOne("SELECT id FROM fiscal_years WHERE id = ? FOR UPDATE", [$id]);
+            $this->repo->findById($id);
             $this->repo->clearCurrent();
             $this->repo->setCurrent($id);
             Database::commit();
