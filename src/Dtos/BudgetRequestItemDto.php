@@ -28,6 +28,8 @@ final class BudgetRequestItemDto
 
         if ($this->itemName === '') {
             $errors['item_name'] = 'กรุณาระบุชื่อรายการ';
+        } elseif (mb_strlen($this->itemName) > 255) {
+            $errors['item_name'] = 'ชื่อรายการต้องไม่เกิน 255 ตัวอักษร';
         }
 
         if (!is_numeric($this->quantity) || bccomp($this->quantity, '0', 2) < 0) {
@@ -36,6 +38,10 @@ final class BudgetRequestItemDto
 
         if (!is_numeric($this->unitPrice) || bccomp($this->unitPrice, '0', 2) < 0) {
             $errors['unit_price'] = 'ราคาหน่วยต้องเป็นตัวเลขที่ไม่ติดลบ';
+        }
+
+        if ($this->remark !== null && mb_strlen($this->remark) > 1000) {
+            $errors['remark'] = 'หมายเหตุต้องไม่เกิน 1,000 ตัวอักษร';
         }
 
         return $errors;

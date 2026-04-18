@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\Database;
 use App\Dtos\ApprovalActionDto;
 use App\Dtos\BudgetRequestListQueryDto;
 use App\Dtos\CreateBudgetRequestDto;
@@ -50,7 +51,7 @@ final class BudgetRequestService
     }
 
     /**
-     * Create a new budget request with items.
+     * Create a new budget request with items (atomic).
      */
     public function create(int $userId, CreateBudgetRequestDto $dto): ?int
     {
@@ -62,23 +63,29 @@ final class BudgetRequestService
             $totalAmount = bcadd($totalAmount, $item->amount(), 2);
         }
 
-        $requestId = $this->requestRepo->insert([
-            'fiscal_year' => $dto->fiscalYear,
-            'request_title' => $dto->requestTitle,
-            'request_status' => 'draft',
-            'total_amount' => $totalAmount,
-            'created_by' => $userId,
-            'org_id' => $dto->orgId,
-        ]);
+        Database::beginTransaction();
+        try {
+            $requestId = $this->requestRepo->insert([
+                'fiscal_year' => $dto->fiscalYear,
+                'request_title' => $dto->requestTitle,
+                'request_status' => 'draft',
+                'total_amount' => $totalAmount,
+                'created_by' => $userId,
+                'org_id' => $dto->orgId,
+            ]);
 
-        foreach ($itemRows as $row) {
-            $row['budget_request_id'] = $requestId;
-            $this->itemRepo->insert($row);
+            foreach ($itemRows as $row) {
+                $row['budget_request_id'] = $requestId;
+                $this->itemRepo->insert($row);
+            }
+
+            $this->approvalRepo->log($requestId, 'created', $userId);
+            Database::commit();
+            return $requestId;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            return null;
         }
-
-        $this->approvalRepo->log($requestId, 'created', $userId);
-
-        return $requestId;
     }
 
     /**
@@ -141,13 +148,20 @@ final class BudgetRequestService
         }
 
         if (!empty($updateData) || $dto->items !== null) {
-            $this->requestRepo->update($id, $updateData);
+            Database::beginTransaction();
+            try {
+                $this->requestRepo->update($id, $updateData);
 
-            if ($dto->items !== null) {
-                $this->itemRepo->replaceItems($id, $itemRows);
+                if ($dto->items !== null) {
+                    $this->itemRepo->replaceItemsUnsafe($id, $itemRows);
+                }
+
+                $this->approvalRepo->log($id, 'modified', $userId);
+                Database::commit();
+            } catch (\Throwable $e) {
+                Database::rollback();
+                return false;
             }
-
-            $this->approvalRepo->log($id, 'modified', $userId);
         }
 
         return true;
@@ -171,14 +185,20 @@ final class BudgetRequestService
             return false;
         }
 
-        $this->approvalRepo->log($id, 'deleted', $userId);
-        $this->requestRepo->delete($id);
-
-        return true;
+        Database::beginTransaction();
+        try {
+            $this->requestRepo->delete($id);
+            $this->approvalRepo->log($id, 'deleted', $userId);
+            Database::commit();
+            return true;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            return false;
+        }
     }
 
     /**
-     * Submit a draft/saved request for approval.
+     * Submit a draft/saved request for approval (atomic).
      */
     public function submit(int $userId, int $id): bool
     {
@@ -195,20 +215,31 @@ final class BudgetRequestService
             return false;
         }
 
-        $this->requestRepo->update($id, [
-            'request_status' => 'pending',
-            'submitted_at' => date('Y-m-d H:i:s'),
-        ]);
+        Database::beginTransaction();
+        try {
+            $updated = $this->requestRepo->updateWhereStatus($id, $request['request_status'], [
+                'request_status' => 'pending',
+                'submitted_at' => date('Y-m-d H:i:s'),
+            ]);
 
-        $this->approvalRepo->log($id, 'submitted', $userId);
+            if (!$updated) {
+                Database::rollback();
+                return false;
+            }
 
-        return true;
+            $this->approvalRepo->log($id, 'submitted', $userId);
+            Database::commit();
+            return true;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            return false;
+        }
     }
 
     /**
-     * Approve a pending request.
+     * Approve a pending request (atomic, admin-only).
      */
-    public function approve(int $userId, int $id, ApprovalActionDto $dto): bool
+    public function approve(int $userId, string $role, int $id, ApprovalActionDto $dto): bool
     {
         $request = $this->requestRepo->findById($id);
         if ($request === null) {
@@ -219,20 +250,35 @@ final class BudgetRequestService
             return false;
         }
 
-        $this->requestRepo->update($id, [
-            'request_status' => 'approved',
-            'approved_at' => date('Y-m-d H:i:s'),
-        ]);
+        if ($role !== 'admin') {
+            return false;
+        }
 
-        $this->approvalRepo->log($id, 'approved', $userId, $dto->note);
+        Database::beginTransaction();
+        try {
+            $updated = $this->requestRepo->updateWhereStatus($id, 'pending', [
+                'request_status' => 'approved',
+                'approved_at' => date('Y-m-d H:i:s'),
+            ]);
 
-        return true;
+            if (!$updated) {
+                Database::rollback();
+                return false;
+            }
+
+            $this->approvalRepo->log($id, 'approved', $userId, $dto->note);
+            Database::commit();
+            return true;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            return false;
+        }
     }
 
     /**
-     * Reject a pending request.
+     * Reject a pending request (atomic, admin-only).
      */
-    public function reject(int $userId, int $id, ApprovalActionDto $dto): bool
+    public function reject(int $userId, string $role, int $id, ApprovalActionDto $dto): bool
     {
         $request = $this->requestRepo->findById($id);
         if ($request === null) {
@@ -243,14 +289,29 @@ final class BudgetRequestService
             return false;
         }
 
-        $this->requestRepo->update($id, [
-            'request_status' => 'rejected',
-            'rejected_at' => date('Y-m-d H:i:s'),
-            'rejected_reason' => $dto->note,
-        ]);
+        if ($role !== 'admin') {
+            return false;
+        }
 
-        $this->approvalRepo->log($id, 'rejected', $userId, $dto->note);
+        Database::beginTransaction();
+        try {
+            $updated = $this->requestRepo->updateWhereStatus($id, 'pending', [
+                'request_status' => 'rejected',
+                'rejected_at' => date('Y-m-d H:i:s'),
+                'rejected_reason' => $dto->note,
+            ]);
 
-        return true;
+            if (!$updated) {
+                Database::rollback();
+                return false;
+            }
+
+            $this->approvalRepo->log($id, 'rejected', $userId, $dto->note);
+            Database::commit();
+            return true;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            return false;
+        }
     }
 }

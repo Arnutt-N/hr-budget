@@ -27,6 +27,22 @@ class Database
     }
 
     /**
+     * Override the singleton instance (for testing).
+     */
+    public static function setInstance(PDO $pdo): void
+    {
+        self::$instance = $pdo;
+    }
+
+    /**
+     * Reset the singleton (for testing teardown).
+     */
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
      * Get raw PDO instance (alias for getInstance)
      * Added for compatibility with tests
      */
@@ -144,11 +160,14 @@ class Database
     }
 
     /**
-     * Begin transaction
+     * Begin transaction (no-op if already in a transaction).
      */
     public static function beginTransaction(): void
     {
-        self::getInstance()->beginTransaction();
+        $pdo = self::getInstance();
+        if (!$pdo->inTransaction()) {
+            $pdo->beginTransaction();
+        }
     }
 
     /**

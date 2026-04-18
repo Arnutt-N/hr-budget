@@ -38,6 +38,10 @@ final class ApprovalActionDto
             $errors['note'] = 'กรุณาระบุเหตุผลการปฏิเสธ';
         }
 
+        if ($this->note !== null && mb_strlen($this->note) > 2000) {
+            $errors['note'] = 'หมายเหตุต้องไม่เกิน 2,000 ตัวอักษร';
+        }
+
         return $errors;
     }
 }

@@ -51,4 +51,19 @@ class BudgetRequestItemRepository
             throw $e;
         }
     }
+
+    /**
+     * Delete all items and insert new ones WITHOUT managing transactions.
+     * Caller is responsible for transaction boundaries.
+     *
+     * @param array<array<string,mixed>> $itemRows
+     */
+    public function replaceItemsUnsafe(int $requestId, array $itemRows): void
+    {
+        $this->deleteByRequestId($requestId);
+        foreach ($itemRows as $row) {
+            $row['budget_request_id'] = $requestId;
+            Database::insert('budget_request_items', $row);
+        }
+    }
 }

@@ -22,25 +22,30 @@ const canSave = computed(() =>
 )
 
 async function saveDraft() {
-  const result = await doCreate(false)
+  const result = await doCreate()
   if (result?.id) {
     router.push(`/requests/${result.id}`)
   }
 }
 
 async function saveAndSubmit() {
-  const result = await doCreate(false)
+  const result = await doCreate()
   if (result?.id) {
-    const submitResult = await store.submit(result.id)
-    if (submitResult.ok) {
-      router.push(`/requests/${result.id}`)
-    } else {
-      errorMsg.value = submitResult.error ?? 'ไม่สามารถส่งอนุมัติได้'
+    loading.value = true
+    try {
+      const submitResult = await store.submit(result.id)
+      if (submitResult.ok) {
+        router.push(`/requests/${result.id}`)
+      } else {
+        errorMsg.value = submitResult.error ?? 'ไม่สามารถส่งอนุมัติได้'
+      }
+    } finally {
+      loading.value = false
     }
   }
 }
 
-async function doCreate(submit: boolean): Promise<{ id?: number } | null> {
+async function doCreate(): Promise<{ id?: number } | null> {
   errorMsg.value = ''
   loading.value = true
 

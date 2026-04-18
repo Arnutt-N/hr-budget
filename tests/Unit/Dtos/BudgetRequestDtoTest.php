@@ -46,6 +46,22 @@ class BudgetRequestDtoTest extends TestCase
     }
 
     /** @test */
+    public function item_validate_name_exceeds_255_fails(): void
+    {
+        $item = new BudgetRequestItemDto(str_repeat('x', 256), '1', '100');
+        $errors = $item->validate();
+        $this->assertArrayHasKey('item_name', $errors);
+    }
+
+    /** @test */
+    public function item_validate_remark_exceeds_1000_fails(): void
+    {
+        $item = new BudgetRequestItemDto('Test', '1', '100', str_repeat('x', 1001));
+        $errors = $item->validate();
+        $this->assertArrayHasKey('remark', $errors);
+    }
+
+    /** @test */
     public function item_from_array_parses_correctly(): void
     {
         $item = BudgetRequestItemDto::fromArray([
@@ -82,6 +98,14 @@ class BudgetRequestDtoTest extends TestCase
     {
         $dto = new ApprovalActionDto('Missing documentation');
         $this->assertEmpty($dto->validate('reject'));
+    }
+
+    /** @test */
+    public function approve_note_exceeds_2000_fails(): void
+    {
+        $dto = new ApprovalActionDto(str_repeat('x', 2001));
+        $errors = $dto->validate('approve');
+        $this->assertArrayHasKey('note', $errors);
     }
 
     // --- BudgetRequestListQueryDto ---
@@ -132,6 +156,15 @@ class BudgetRequestDtoTest extends TestCase
         $items = [new BudgetRequestItemDto('Item A', '2', '100')];
         $dto = new CreateBudgetRequestDto('Test Request', 2569, null, $items);
         $this->assertEmpty($dto->validate());
+    }
+
+    /** @test */
+    public function create_dto_title_exceeds_255_fails(): void
+    {
+        $items = [new BudgetRequestItemDto('Item A', '2', '100')];
+        $dto = new CreateBudgetRequestDto(str_repeat('x', 256), 2569, null, $items);
+        $errors = $dto->validate();
+        $this->assertArrayHasKey('request_title', $errors);
     }
 
     // --- UpdateBudgetRequestDto ---
