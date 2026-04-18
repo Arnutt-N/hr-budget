@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -26,8 +26,11 @@ async function onLogout(): Promise<void> {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         <div class="flex items-center gap-3">
           <span class="text-lg font-bold text-gray-900">HR Budget</span>
-          <span class="text-xs text-gray-400 hidden sm:inline">Day 1 Foundation</span>
         </div>
+        <nav class="flex items-center gap-4 text-sm">
+          <RouterLink to="/dashboard" class="text-gray-600 hover:text-gray-900">แดชบอร์ด</RouterLink>
+          <RouterLink to="/requests" class="text-gray-600 hover:text-gray-900">คำของบประมาณ</RouterLink>
+        </nav>
         <div class="flex items-center gap-4 text-sm">
           <span class="text-gray-700">{{ auth.user?.name || 'Loading...' }}</span>
           <button

@@ -29,7 +29,17 @@ export async function apiFetch<T = unknown>(
     auth.logout()
   }
 
-  return (await res.json()) as ApiResponse<T>
+  let body: ApiResponse<T>
+  try {
+    body = (await res.json()) as ApiResponse<T>
+  } catch {
+    return {
+      success: false,
+      error: res.status >= 500 ? 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์' : `HTTP ${res.status}`,
+    }
+  }
+
+  return body
 }
 
 export function useApi() {

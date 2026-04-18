@@ -95,7 +95,7 @@ jobs:
           ];
           PHP
 
-      - name: Run PHPUnit (Day 1 API tests)
+      - name: Run PHPUnit
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'ci-test-secret-min-32-chars-01234567' }}
           DB_HOST: 127.0.0.1
@@ -106,11 +106,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_PASS: root
-        # Scope to tests/Unit/Api — the Day 1 additions. Pre-existing tests in
-        # tests/Unit/ (BudgetRequest*, Models/*) require seeded fixture data
-        # that is out of scope for Day 1; to be re-enabled in Day 2 once data
-        # fixtures are set up.
-        run: vendor/bin/phpunit tests/Unit/Api/
+        run: vendor/bin/phpunit tests/Unit/Api/ tests/Unit/Dtos/ tests/Unit/Services/
 
   # -------------------------------------------------------------------
   # Frontend: typecheck + production build
@@ -190,10 +186,10 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: NPM install (frontend)
-        run: cd frontend && npm ci
+        run: cd frontend && npm ci --ignore-optional
 
       - name: NPM install (root — playwright)
-        run: npm ci
+        run: npm ci --ignore-optional
 
       - name: Wait for MySQL + import schema
         run: |
