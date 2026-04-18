@@ -2,21 +2,27 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { useFiscalYearStore } from '@/stores/fiscalYears'
+import { useOrganizationStore } from '@/stores/organizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useBudgetRequestStore()
+const fyStore = useFiscalYearStore()
+const orgStore = useOrganizationStore()
 
 const requestTitle = ref('')
-const fiscalYear = ref(2569)
+const fiscalYear = ref(0)
 const orgId = ref<number | null>(null)
 const items = ref<ItemRow[]>([])
 const errorMsg = ref('')
 const loaded = ref(false)
 
 onMounted(async () => {
+  await Promise.all([fyStore.fetchList(), orgStore.fetchList()])
+
   const id = Number(route.params.id)
   const ok = await store.fetchById(id)
   if (!ok) return
@@ -95,12 +101,27 @@ async function handleSave() {
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ปีงบประมาณ (พ.ศ.)</label>
-            <input
+            <label class="mb-1 block text-sm font-medium text-gray-700">ปีงบประมาณ</label>
+            <select
               v-model.number="fiscalYear"
-              type="number"
               class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
+            >
+              <option v-for="fy in fyStore.fiscalYears" :key="fy.id" :value="fy.year">
+                {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">หน่วยงาน</label>
+            <select
+              v-model="orgId"
+              class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option :value="null">-- เลือกหน่วยงาน --</option>
+              <option v-for="org in orgStore.organizations" :key="org.id" :value="org.id">
+                {{ org.name_th }}
+              </option>
+            </select>
           </div>
         </div>
 

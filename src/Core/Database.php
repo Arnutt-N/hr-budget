@@ -117,14 +117,19 @@ class Database
      */
     public static function insert(string $table, array $data): int
     {
+        self::validateIdentifier($table);
+        foreach (array_keys($data) as $column) {
+            self::validateIdentifier($column);
+        }
+
         $columns = implode(', ', array_keys($data));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
-        
+
         $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
-        
+
         $stmt = self::getInstance()->prepare($sql);
         $stmt->execute(array_values($data));
-        
+
         return (int) self::getInstance()->lastInsertId();
     }
 
@@ -133,16 +138,21 @@ class Database
      */
     public static function update(string $table, array $data, string $where, array $whereParams = []): int
     {
+        self::validateIdentifier($table);
+        foreach (array_keys($data) as $column) {
+            self::validateIdentifier($column);
+        }
+
         $sets = [];
         foreach (array_keys($data) as $column) {
             $sets[] = "{$column} = ?";
         }
-        
+
         $sql = "UPDATE {$table} SET " . implode(', ', $sets) . " WHERE {$where}";
-        
+
         $stmt = self::getInstance()->prepare($sql);
         $stmt->execute(array_merge(array_values($data), $whereParams));
-        
+
         return $stmt->rowCount();
     }
 
@@ -151,11 +161,13 @@ class Database
      */
     public static function delete(string $table, string $where, array $params = []): int
     {
+        self::validateIdentifier($table);
+
         $sql = "DELETE FROM {$table} WHERE {$where}";
-        
+
         $stmt = self::getInstance()->prepare($sql);
         $stmt->execute($params);
-        
+
         return $stmt->rowCount();
     }
 
@@ -192,5 +204,12 @@ class Database
     public static function rollback(): void
     {
         self::getInstance()->rollBack();
+    }
+
+    private static function validateIdentifier(string $name): void
+    {
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $name)) {
+            throw new \InvalidArgumentException("Invalid SQL identifier: {$name}");
+        }
     }
 }
