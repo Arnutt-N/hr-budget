@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
+import FileUploader from '@/components/FileUploader.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,7 +208,7 @@ async function handleReject() {
       </div>
 
       <!-- Approval history -->
-      <div v-if="req.approvals && req.approvals.length > 0" class="rounded-lg bg-white p-6 shadow">
+      <div v-if="req.approvals && req.approvals.length > 0" class="mb-6 rounded-lg bg-white p-6 shadow">
         <h3 class="mb-3 text-sm font-semibold text-gray-700">ประวัติการดำเนินการ</h3>
         <div class="space-y-3">
           <div
@@ -226,6 +227,11 @@ async function handleReject() {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- File attachments -->
+      <div class="mb-6 rounded-lg bg-white p-6 shadow">
+        <FileUploader :request-id="req.id" :disabled="false" />
       </div>
     </template>
   </div>

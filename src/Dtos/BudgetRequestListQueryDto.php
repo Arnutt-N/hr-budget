@@ -13,6 +13,8 @@ final class BudgetRequestListQueryDto
         public readonly ?string $status = null,
         public readonly ?int $fiscalYear = null,
         public readonly ?string $search = null,
+        public readonly ?string $dateFrom = null,
+        public readonly ?string $dateTo = null,
         public readonly int $page = 1,
         public readonly int $perPage = 20,
     ) {}
@@ -34,6 +36,14 @@ final class BudgetRequestListQueryDto
 
         if ($this->perPage < 1 || $this->perPage > self::MAX_PER_PAGE) {
             $errors['per_page'] = 'จำนวนต่อหน้าต้องอยู่ระหว่าง 1-100';
+        }
+
+        if ($this->dateFrom !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->dateFrom)) {
+            $errors['date_from'] = 'รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)';
+        }
+
+        if ($this->dateTo !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $this->dateTo)) {
+            $errors['date_to'] = 'รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)';
         }
 
         return $errors;
@@ -67,10 +77,15 @@ final class BudgetRequestListQueryDto
             }
         }
 
+        $dateFrom = isset($_GET['date_from']) && $_GET['date_from'] !== '' ? trim((string) $_GET['date_from']) : null;
+        $dateTo = isset($_GET['date_to']) && $_GET['date_to'] !== '' ? trim((string) $_GET['date_to']) : null;
+
         return new self(
             status: $status,
             fiscalYear: $fiscalYear,
             search: $search,
+            dateFrom: $dateFrom,
+            dateTo: $dateTo,
             page: max(1, (int) ($_GET['page'] ?? 1)),
             perPage: min(self::MAX_PER_PAGE, max(1, (int) ($_GET['per_page'] ?? 20))),
         );
@@ -87,6 +102,12 @@ final class BudgetRequestListQueryDto
         }
         if ($this->search !== null) {
             $filters['search'] = $this->search;
+        }
+        if ($this->dateFrom !== null) {
+            $filters['date_from'] = $this->dateFrom;
+        }
+        if ($this->dateTo !== null) {
+            $filters['date_to'] = $this->dateTo;
         }
         return $filters;
     }
