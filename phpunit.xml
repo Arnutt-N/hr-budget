@@ -37,5 +37,8 @@
         <env name="DB_NAME" value="hr_budget_test"/>
         <env name="DB_USER" value="root"/>
         <env name="DB_PASS" value=""/>
+        <env name="JWT_SECRET" value="test-secret-min-32-chars-for-hs256-0123456789abcdef"/>
+        <env name="JWT_TTL" value="3600"/>
+        <env name="CORS_ORIGINS" value="http://localhost:5174"/>
     </php>
 </phpunit>

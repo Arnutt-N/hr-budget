@@ -5,9 +5,11 @@
  * Application Entry Point
  */
 
-// Set error reporting based on environment
+// Report errors into PHP's log, but do NOT display them to end users.
+// APP_DEBUG (read after .env loads below) can opt-in to on-screen display.
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 
 // Define base path
 define('BASE_PATH', dirname(__DIR__));
@@ -30,9 +32,18 @@ $dotenv->safeLoad();
 // Set timezone
 date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Asia/Bangkok');
 
-// Display errors in development
-if (($_ENV['APP_DEBUG'] ?? false) === 'true') {
-    ini_set('display_errors', 1);
+// Opt-in to on-screen errors ONLY when explicitly in debug mode.
+// Accept common truthy forms ("true", "1") from .env.
+$__debug = filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOLEAN);
+if ($__debug) {
+    ini_set('display_errors', '1');
+}
+
+// Apply CORS middleware for /api/* requests (must run BEFORE Auth::init
+// because Auth starts a session and sends Set-Cookie which complicates preflight).
+$__requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '';
+if (str_contains($__requestPath, '/api/')) {
+    \App\Api\Middleware\CorsMiddleware::apply();
 }
 
 // Initialize authentication

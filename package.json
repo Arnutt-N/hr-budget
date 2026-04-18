@@ -22,9 +22,11 @@
         "vite": "^6.0.3"
     },
     "dependencies": {
-        "@rollup/rollup-win32-x64-msvc": "^4.53.3",
         "chart.js": "^4.4.7",
         "dayjs": "^1.11.13",
         "sweetalert2": "^11.14.5"
+    },
+    "optionalDependencies": {
+        "@rollup/rollup-win32-x64-msvc": "^4.53.3"
     }
 }

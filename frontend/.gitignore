@@ -1,0 +1,16 @@
+node_modules
+dist
+.env
+.env.local
+.env.*.local
+
+# TypeScript incremental build artifacts (from vue-tsc -b composite build)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.log
