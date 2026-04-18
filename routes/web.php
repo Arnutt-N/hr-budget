@@ -13,6 +13,7 @@ use App\Controllers\BudgetRequestController;
 use App\Controllers\BudgetExecutionController;
 use App\Controllers\DisbursementController;
 use App\Api\Controllers\AuthController as ApiAuthController;
+use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -25,6 +26,16 @@ Router::get('/api/v1/health', function () {
 });
 Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);
 Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
+
+// Budget Request CRUD + Approval
+Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);
+Router::post('/api/v1/requests', [ApiBudgetRequestController::class, 'create']);
+Router::get('/api/v1/requests/{id}', [ApiBudgetRequestController::class, 'show']);
+Router::put('/api/v1/requests/{id}', [ApiBudgetRequestController::class, 'update']);
+Router::delete('/api/v1/requests/{id}', [ApiBudgetRequestController::class, 'delete']);
+Router::post('/api/v1/requests/{id}/submit', [ApiBudgetRequestController::class, 'submit']);
+Router::post('/api/v1/requests/{id}/approve', [ApiBudgetRequestController::class, 'approve']);
+Router::post('/api/v1/requests/{id}/reject', [ApiBudgetRequestController::class, 'reject']);
 
 // Authentication Routes
 Router::get('/login', [AuthController::class, 'showLogin']);
