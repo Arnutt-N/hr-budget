@@ -32,6 +32,11 @@ export async function apiFetch<T = unknown>(
     void auth.logout()
   }
 
+  // 204 No Content (e.g. DELETE) has no body — res.json() would throw
+  if (res.status === 204) {
+    return { success: true } as ApiResponse<T>
+  }
+
   let body: ApiResponse<T>
   try {
     body = (await res.json()) as ApiResponse<T>
