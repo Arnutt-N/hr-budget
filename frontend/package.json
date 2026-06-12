@@ -36,11 +36,5 @@
     "vite": "^5.4.11",
     "vitest": "^4.1.8",
     "vue-tsc": "^2.1.10"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.60.1"
-  },
-  "overrides": {
-    "rollup": "4.24.0"
   }
 }
