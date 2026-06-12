@@ -181,7 +181,7 @@ class BudgetRequestServiceTest extends TestCase
     /** @test */
     public function approve_changes_pending_to_approved(): void
     {
-        [$service, $reqRepo, , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
+        [$service, $reqRepo, , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending', 'request_title' => 'Test', 'org_id' => 1]);
         $dto = new ApprovalActionDto('LG');
 
         $this->assertTrue($service->approve(3, 'admin', 1, $dto));
@@ -207,7 +207,7 @@ class BudgetRequestServiceTest extends TestCase
     /** @test */
     public function approve_succeeds_for_admin_self_approval(): void
     {
-        [$service, , , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 3, 'request_status' => 'pending']);
+        [$service, , , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 3, 'request_status' => 'pending', 'request_title' => 'Self', 'org_id' => 1]);
         $this->assertTrue($service->approve(3, 'admin', 1, new ApprovalActionDto('OK')));
         $this->assertSame('approved', $approvalRepo->logs[0]['action']);
     }

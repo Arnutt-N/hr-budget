@@ -2,29 +2,45 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { useFiscalYearStore } from '@/stores/fiscalYears'
 import StatusBadge from '@/components/StatusBadge.vue'
 import type { RequestStatus } from '@/types/budget-request'
 
 const router = useRouter()
 const store = useBudgetRequestStore()
+const fyStore = useFiscalYearStore()
 
 const filterStatus = ref<RequestStatus | ''>('')
+const filterFiscalYear = ref<string>('')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
 const filterSearch = ref('')
 
 onMounted(() => {
+  fyStore.fetchList()
   store.fetchList()
 })
 
 function applyFilters() {
   store.fetchList({
     status: filterStatus.value || undefined,
+    fiscal_year: filterFiscalYear.value ? Number(filterFiscalYear.value) : undefined,
+    date_from: filterDateFrom.value || undefined,
+    date_to: filterDateTo.value || undefined,
     search: filterSearch.value || undefined,
     page: 1,
   })
 }
 
 function goToPage(page: number) {
-  store.fetchList({ page })
+  store.fetchList({
+    status: filterStatus.value || undefined,
+    fiscal_year: filterFiscalYear.value ? Number(filterFiscalYear.value) : undefined,
+    date_from: filterDateFrom.value || undefined,
+    date_to: filterDateTo.value || undefined,
+    search: filterSearch.value || undefined,
+    page,
+  })
 }
 
 function formatDate(dateStr: string | null): string {
@@ -51,31 +67,54 @@ function formatAmount(amount: string | null): string {
     </div>
 
     <!-- Filters -->
-    <div class="mb-4 flex flex-wrap gap-3 rounded-lg bg-white p-4 shadow">
-      <select
-        v-model="filterStatus"
-        class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-      >
-        <option value="">ทุกสถานะ</option>
-        <option value="draft">ร่าง</option>
-        <option value="saved">บันทึกแล้ว</option>
-        <option value="pending">รออนุมัติ</option>
-        <option value="approved">อนุมัติแล้ว</option>
-        <option value="rejected">ปฏิเสธ</option>
-      </select>
-      <input
-        v-model="filterSearch"
-        type="text"
-        placeholder="ค้นหาชื่อคำขอ..."
-        class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-        @keyup.enter="applyFilters"
-      />
-      <button
-        @click="applyFilters"
-        class="rounded bg-gray-700 px-3 py-1.5 text-sm text-white hover:bg-gray-800"
-      >
-        ค้นหา
-      </button>
+    <div class="mb-4 rounded-lg bg-white p-4 shadow">
+      <div class="flex flex-wrap gap-3">
+        <select
+          v-model="filterFiscalYear"
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="">ทุกปีงบ</option>
+          <option v-for="fy in fyStore.fiscalYears" :key="fy.id" :value="fy.year">
+            {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
+          </option>
+        </select>
+        <select
+          v-model="filterStatus"
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+        >
+          <option value="">ทุกสถานะ</option>
+          <option value="draft">ร่าง</option>
+          <option value="saved">บันทึกแล้ว</option>
+          <option value="pending">รออนุมัติ</option>
+          <option value="approved">อนุมัติแล้ว</option>
+          <option value="rejected">ปฏิเสธ</option>
+        </select>
+        <input
+          v-model="filterDateFrom"
+          type="date"
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          title="จากวันที่"
+        />
+        <input
+          v-model="filterDateTo"
+          type="date"
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          title="ถึงวันที่"
+        />
+        <input
+          v-model="filterSearch"
+          type="text"
+          placeholder="ค้นหาชื่อคำขอ..."
+          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          @keyup.enter="applyFilters"
+        />
+        <button
+          @click="applyFilters"
+          class="rounded bg-gray-700 px-3 py-1.5 text-sm text-white hover:bg-gray-800"
+        >
+          ค้นหา
+        </button>
+      </div>
     </div>
 
     <!-- Error -->
