@@ -1,21 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
 
-// On first mount, refresh user info from server.
-// Handles case where token is still valid but user data was stale.
-onMounted(async () => {
-  if (auth.isAuthenticated && !auth.user) {
-    await auth.fetchMe()
-  }
-})
+// User hydration happens in the router guard (auth.bootstrap) — by the time
+// this layout renders, auth.user is already resolved.
 
 async function onLogout(): Promise<void> {
-  auth.logout()
+  await auth.logout()
   await router.replace({ name: 'login' })
 }
 </script>
@@ -39,6 +34,7 @@ async function onLogout(): Promise<void> {
           </template>
         </nav>
         <div class="flex items-center gap-4 text-sm">
+          <NotificationBell />
           <span class="text-gray-700">{{ auth.user?.name || 'Loading...' }}</span>
           <button
             class="text-red-600 hover:text-red-800 font-medium"

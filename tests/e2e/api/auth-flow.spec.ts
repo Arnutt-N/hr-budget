@@ -56,7 +56,7 @@ test.describe('Auth Flow (Day 1)', () => {
     await expect(page.getByRole('heading', { name: /Dashboard/i })).toBeVisible()
   })
 
-  test('persists session across page refresh (JWT in localStorage)', async ({ page }) => {
+  test('persists session across page refresh (httpOnly cookie — token never in JS)', async ({ page }) => {
     // Login
     await page.goto('/login')
     await page.getByLabel('อีเมล').fill(USER_EMAIL)
@@ -64,12 +64,16 @@ test.describe('Auth Flow (Day 1)', () => {
     await page.getByRole('button', { name: /เข้าสู่ระบบ/ }).click()
     await expect(page).toHaveURL(/\/dashboard/)
 
-    // Refresh → should stay logged in
+    // Refresh → should stay logged in (rehydrated via /auth/me)
     await page.reload()
     await expect(page).toHaveURL(/\/dashboard/)
+
+    // Phase 1 hardening: the JWT lives in an httpOnly cookie, so it must
+    // NOT be readable from localStorage or document.cookie.
     const token = await page.evaluate(() => localStorage.getItem('hr_budget_token'))
-    expect(token).toBeTruthy()
-    expect(token!.split('.').length).toBe(3) // JWT = header.payload.signature
+    expect(token).toBeNull()
+    const documentCookie = await page.evaluate(() => document.cookie)
+    expect(documentCookie).not.toContain('hr_budget_token')
   })
 
   test('logout clears session and returns to /login', async ({ page }) => {

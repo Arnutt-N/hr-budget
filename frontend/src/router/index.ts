@@ -78,8 +78,15 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const auth = useAuthStore()
+
+  // Cookie auth: JS cannot read the token, so on first navigation we ask
+  // /auth/me whether a session exists. bootstrap() is a no-op afterwards.
+  if (!auth.initialized) {
+    await auth.bootstrap()
+  }
+
   const requiresAuth = to.matched.some((r) => r.meta.requiresAuth)
 
   if (requiresAuth && !auth.isAuthenticated) {

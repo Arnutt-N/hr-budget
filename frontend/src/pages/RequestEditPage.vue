@@ -5,6 +5,7 @@ import { useBudgetRequestStore } from '@/stores/budgetRequests'
 import { useFiscalYearStore } from '@/stores/fiscalYears'
 import { useOrganizationStore } from '@/stores/organizations'
 import ItemEditor from '@/components/ItemEditor.vue'
+import FileUploader from '@/components/FileUploader.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
 const route = useRoute()
@@ -129,6 +130,8 @@ async function handleSave() {
           <label class="mb-2 block text-sm font-medium text-gray-700">รายการงบประมาณ</label>
           <ItemEditor v-model="items" />
         </div>
+
+        <FileUploader :request-id="Number(route.params.id)" />
 
         <div class="flex gap-3 border-t pt-4">
           <button

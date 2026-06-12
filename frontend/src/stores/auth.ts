@@ -2,42 +2,46 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, LoginRequest, AuthResponse, ApiResponse } from '@/types/api'
 
-const TOKEN_KEY = 'hr_budget_token'
-const USER_KEY = 'hr_budget_user'
-
-function readString(key: string): string {
-  const v = localStorage.getItem(key)
-  if (!v || v === 'undefined' || v === 'null') {
-    localStorage.removeItem(key)
-    return ''
-  }
-  return v
-}
-
-function readJson<T>(key: string, fallback: T | null = null): T | null {
-  const v = localStorage.getItem(key)
-  if (!v || v === 'undefined' || v === 'null') {
-    localStorage.removeItem(key)
-    return fallback
-  }
-  try {
-    return JSON.parse(v) as T
-  } catch {
-    localStorage.removeItem(key)
-    return fallback
-  }
-}
-
+/**
+ * Cookie-based auth: the JWT lives in an httpOnly cookie set by the backend,
+ * so JS never sees it. The store only holds the user profile in memory;
+ * after a page refresh bootstrap() asks /auth/me whether the cookie session
+ * is still valid.
+ */
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string>(readString(TOKEN_KEY))
-  const user = ref<User | null>(readJson<User>(USER_KEY))
+  const user = ref<User | null>(null)
+  const initialized = ref(false)
 
-  const isAuthenticated = computed(() => token.value !== '')
+  const isAuthenticated = computed(() => user.value !== null)
+
+  /**
+   * One-time session hydration, awaited by the router guard before the
+   * first navigation resolves. A 401 here just means "not logged in".
+   */
+  async function bootstrap(): Promise<void> {
+    if (initialized.value) return
+    try {
+      const res = await fetch('/api/v1/auth/me', {
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      })
+      const json = (await res.json()) as ApiResponse<User>
+      user.value = json.success && json.data ? json.data : null
+    } catch {
+      user.value = null
+    } finally {
+      initialized.value = true
+    }
+  }
 
   async function login(payload: LoginRequest): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch('/api/v1/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
       body: JSON.stringify(payload),
     })
     const json = (await res.json()) as ApiResponse<AuthResponse>
@@ -49,34 +53,32 @@ export const useAuthStore = defineStore('auth', () => {
       return { ok: false, error: msg }
     }
 
-    token.value = json.data.token
     user.value = json.data.user
-    localStorage.setItem(TOKEN_KEY, token.value)
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
+    initialized.value = true
     return { ok: true }
   }
 
-  async function fetchMe(): Promise<boolean> {
-    if (!token.value) return false
-    const res = await fetch('/api/v1/auth/me', {
-      headers: { Authorization: `Bearer ${token.value}` },
-    })
-    const json = (await res.json()) as ApiResponse<User>
-    if (!json.success || !json.data) {
-      logout()
-      return false
+  /**
+   * Clears the server cookie, then local state. Safe to call when already
+   * logged out (used by apiFetch's 401 handler) — skips the network call.
+   */
+  async function logout(): Promise<void> {
+    if (user.value !== null) {
+      try {
+        await fetch('/api/v1/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+      } catch {
+        // Cookie clear failed (network down) — still drop local state.
+      }
     }
-    user.value = json.data
-    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
-    return true
-  }
-
-  function logout(): void {
-    token.value = ''
     user.value = null
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
+    // Force the next navigation to re-check the server: if the logout API
+    // call failed, the cookie may still be valid and bootstrap() must see it.
+    initialized.value = false
   }
 
-  return { token, user, isAuthenticated, login, fetchMe, logout }
+  return { user, initialized, isAuthenticated, bootstrap, login, logout }
 })

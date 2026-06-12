@@ -65,6 +65,8 @@ export interface ListFilters {
   status?: RequestStatus
   fiscal_year?: number
   search?: string
+  date_from?: string
+  date_to?: string
   page?: number
   per_page?: number
 }

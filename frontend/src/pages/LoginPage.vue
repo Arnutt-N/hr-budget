@@ -1,32 +1,50 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { z } from 'zod'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
+import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 
-const email = ref('')
-const password = ref('')
+const schema = toTypedSchema(
+  z.object({
+    email: z.string().min(1, 'กรุณากรอกอีเมล').email('รูปแบบอีเมลไม่ถูกต้อง'),
+    password: z.string().min(1, 'กรุณากรอกรหัสผ่าน'),
+  }),
+)
+
+const { defineField, handleSubmit, errors } = useForm({ validationSchema: schema })
+const [email] = defineField('email')
+const [password] = defineField('password')
+
 const errorMsg = ref('')
 const loading = ref(false)
 
-async function onSubmit(): Promise<void> {
+const onSubmit = handleSubmit(async (values) => {
   errorMsg.value = ''
   loading.value = true
   try {
-    const result = await auth.login({ email: email.value, password: password.value })
+    const result = await auth.login({ email: values.email, password: values.password })
     if (!result.ok) {
       errorMsg.value = result.error ?? 'เข้าสู่ระบบไม่สำเร็จ'
       return
     }
-    const redirect = (route.query.redirect as string) || '/dashboard'
+    // Open-redirect guard: only same-app paths ("/..." but not "//host")
+    const raw = route.query.redirect as string | undefined
+    const redirect = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard'
     await router.replace(redirect)
   } finally {
     loading.value = false
   }
-}
+})
 </script>
 
 <template>
@@ -40,39 +58,42 @@ async function onSubmit(): Promise<void> {
         <p class="text-sm text-gray-500 mt-1">ระบบจัดการงบประมาณ</p>
       </div>
 
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
-        <input
+      <div class="flex flex-col gap-1">
+        <label for="email" class="text-sm font-medium text-gray-700">อีเมล</label>
+        <InputText
           id="email"
           v-model.trim="email"
           type="email"
+          name="email"
           autocomplete="email"
-          required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          :invalid="!!errors.email"
+          fluid
         />
+        <small v-if="errors.email" class="text-red-600" role="alert">{{ errors.email }}</small>
       </div>
 
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน</label>
-        <input
-          id="password"
+      <div class="flex flex-col gap-1">
+        <label for="password" class="text-sm font-medium text-gray-700">รหัสผ่าน</label>
+        <Password
           v-model="password"
-          type="password"
-          autocomplete="current-password"
-          required
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          input-id="password"
+          :input-props="{ name: 'password', autocomplete: 'current-password' }"
+          :feedback="false"
+          :invalid="!!errors.password"
+          toggle-mask
+          fluid
         />
+        <small v-if="errors.password" class="text-red-600" role="alert">{{ errors.password }}</small>
       </div>
 
-      <p v-if="errorMsg" class="text-red-600 text-sm" role="alert">{{ errorMsg }}</p>
+      <Message v-if="errorMsg" severity="error" :closable="false">{{ errorMsg }}</Message>
 
-      <button
+      <Button
         type="submit"
-        :disabled="loading"
-        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
-      </button>
+        :loading="loading"
+        :label="loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'"
+        class="w-full"
+      />
     </form>
   </div>
 </template>
