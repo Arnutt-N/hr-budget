@@ -50,7 +50,7 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 
 - Singleton PDO via `Database::getInstance()` / `getPdo()` — there is no connection pool or container
 - `App\Core\Model` is a thin base with `all()`, `find($id)`, `where()`, `create()`; subclasses in `src/Models/` mostly declare `protected $table` + `$fillable`. Some models add static helpers (e.g. hierarchy walks)
-- **No ORM / migrations framework.** Migrations are hand-written SQL files in `database/migrations/` numbered `001_*.sql`...`062_*.sql`, applied via `run_migrations.bat` / `run_migrations.sh` (each script shells out to the `mysql` CLI). New migration files must be numbered sequentially and the runner script updated if you want it batched
+- **No ORM / migrations framework.** Migrations are hand-written SQL files in `database/migrations/` numbered sequentially (`001_*.sql`... — check the latest number before adding; a few unnumbered one-off SQL files also live there), applied via `run_migrations.bat` / `run_migrations.sh` (each script shells out to the `mysql` CLI). New migration files must be numbered sequentially and the runner script updated if you want it batched
 - Config from env: `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`. `config/database.php` is git-ignored — seed via `.env`
 
 ### Views (`src/Core/View.php` + `resources/views/`)
@@ -77,6 +77,16 @@ Controllers follow thin-controller/fat-model style, grouped roughly by domain:
 - **Admin CRUD** (`Admin*Controller`): organizations, fiscal years, approval settings, budget categories / category items (hierarchical via `parent_id` self-reference on category items), target types
 - **Files** (`FileController` + `File`/`Folder` models): per-fiscal-year document vault; `/files/init` bootstraps folder structure for a new year
 - **Dashboard** (`DashboardController`): chart data endpoint at `/api/dashboard/chart-data` feeds Chart.js widgets
+
+### REST API layer (`/api/v1/*`)
+
+Separate from the web MVC side — API routes are registered at the top of `routes/web.php`:
+
+- **Layering**: `src/Api/Controllers` → `src/Services` → `src/Repositories`, with request/response shapes in `src/Dtos` (PSR-4: one class per file). This differs from the web side's thin-controller/fat-model style — follow the layered style for API work
+- **Auth**: JWT Bearer tokens (`App\Core\Jwt`); `src/Api/Middleware/AuthMiddleware.php` rejects with 401 JSON. Login at `POST /api/v1/auth/login`
+- **Responses**: always use the `src/Api/Responses/ApiResponse.php` envelope (`success`/`data`/`error` + pagination meta) — never echo raw JSON from API controllers
+- **CORS**: handled by `src/Api/Middleware/CorsMiddleware.php`
+- Resources: fiscal-years, organizations, categories (+items), users, budget-requests (submit/approve/reject + notifications), files (upload), notifications
 
 ### Fiscal year conventions
 
