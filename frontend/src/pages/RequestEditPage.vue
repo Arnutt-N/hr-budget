@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
-import { useOrganizationStore } from '@/stores/organizations'
+import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
@@ -12,7 +12,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useBudgetRequestStore()
 const { data: fiscalYears } = useFiscalYearList()
-const orgStore = useOrganizationStore()
+const { data: organizations } = useOrganizationList()
 
 const requestTitle = ref('')
 const fiscalYear = ref(0)
@@ -22,8 +22,6 @@ const errorMsg = ref('')
 const loaded = ref(false)
 
 onMounted(async () => {
-  await orgStore.fetchList()
-
   const id = Number(route.params.id)
   const ok = await store.fetchById(id)
   if (!ok) return
@@ -119,7 +117,7 @@ async function handleSave() {
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
               <option :value="null">-- เลือกหน่วยงาน --</option>
-              <option v-for="org in orgStore.organizations" :key="org.id" :value="org.id">
+              <option v-for="org in organizations ?? []" :key="org.id" :value="org.id">
                 {{ org.name_th }}
               </option>
             </select>

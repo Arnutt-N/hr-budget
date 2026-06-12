@@ -1,127 +1,223 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useOrganizationStore } from '@/stores/organizations'
-import type { Organization, CreateOrganization } from '@/types/organization'
+import { ref, computed } from 'vue'
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { z } from 'zod'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import Checkbox from 'primevue/checkbox'
+import Tag from 'primevue/tag'
+import Message from 'primevue/message'
+import type { Organization } from '@/types/organization'
+import {
+  useOrganizationList,
+  useCreateOrganization,
+  useUpdateOrganization,
+  useDeleteOrganization,
+} from '@/queries/useOrganizations'
 
-const store = useOrganizationStore()
+const confirm = useConfirm()
+const toast = useToast()
 
-const showModal = ref(false)
+const { data: organizations, isLoading, isError, error } = useOrganizationList()
+const createMutation = useCreateOrganization()
+const updateMutation = useUpdateOrganization()
+const deleteMutation = useDeleteOrganization()
+
+// Same labels as legacy Organization::getTypeLabels()
+const ORG_TYPE_LABELS: Record<string, string> = {
+  ministry: 'กระทรวง',
+  department: 'กรม',
+  division: 'กอง/สำนัก',
+  section: 'กลุ่มงาน',
+  province: 'จังหวัด',
+  office: 'ส่วนราชการ',
+}
+const orgTypeOptions = Object.entries(ORG_TYPE_LABELS).map(([value, label]) => ({ value, label }))
+
+const showDialog = ref(false)
 const editingId = ref<number | null>(null)
-const form = ref<CreateOrganization>({ code: '', name_th: '' })
+const dialogTitle = computed(() => (editingId.value ? 'แก้ไขหน่วยงาน' : 'เพิ่มหน่วยงาน'))
+const saving = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
 
-const orgTypes = ['ministry', 'department', 'division', 'section', 'province', 'office']
+const schema = toTypedSchema(
+  z.object({
+    code: z.string({ required_error: 'กรุณาระบุรหัสหน่วยงาน' }).min(1, 'กรุณาระบุรหัสหน่วยงาน').max(50, 'รหัสต้องไม่เกิน 50 ตัวอักษร'),
+    name_th: z.string({ required_error: 'กรุณาระบุชื่อหน่วยงาน' }).min(1, 'กรุณาระบุชื่อหน่วยงาน').max(255, 'ชื่อต้องไม่เกิน 255 ตัวอักษร'),
+    abbreviation: z.string().optional(),
+    org_type: z.string().optional(),
+    is_active: z.boolean().optional(),
+  }),
+)
 
-onMounted(() => { store.fetchList() })
+const { defineField, handleSubmit, errors, resetForm } = useForm({ validationSchema: schema })
+const [code] = defineField('code')
+const [nameTh] = defineField('name_th')
+const [abbreviation] = defineField('abbreviation')
+const [orgType] = defineField('org_type')
+const [isActive] = defineField('is_active')
 
-function openCreate() {
+function openCreate(): void {
   editingId.value = null
-  form.value = { code: '', name_th: '' }
-  showModal.value = true
+  resetForm({ values: { code: '', name_th: '', abbreviation: '', org_type: undefined, is_active: true } })
+  showDialog.value = true
 }
 
-function openEdit(org: Organization) {
+function openEdit(org: Organization): void {
   editingId.value = org.id
-  form.value = {
-    code: org.code,
-    name_th: org.name_th,
-    abbreviation: org.abbreviation ?? undefined,
-    org_type: org.org_type ?? undefined,
-    region: org.region ?? undefined,
-    parent_id: org.parent_id ?? undefined,
-  }
-  showModal.value = true
+  resetForm({
+    values: {
+      code: org.code,
+      name_th: org.name_th,
+      abbreviation: org.abbreviation ?? '',
+      org_type: org.org_type ?? undefined,
+      is_active: !!org.is_active,
+    },
+  })
+  showDialog.value = true
 }
 
-async function save() {
-  let result: { ok: boolean; error?: string }
-  if (editingId.value) {
-    result = await store.update(editingId.value, form.value)
-  } else {
-    result = await store.create(form.value)
+const onSave = handleSubmit(async (values) => {
+  try {
+    if (editingId.value) {
+      await updateMutation.mutateAsync({ id: editingId.value, data: values })
+      toast.add({ severity: 'success', summary: 'แก้ไขหน่วยงานสำเร็จ', life: 3000 })
+    } else {
+      await createMutation.mutateAsync(values)
+      toast.add({ severity: 'success', summary: 'เพิ่มหน่วยงานสำเร็จ', life: 3000 })
+    }
+    showDialog.value = false
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+    toast.add({ severity: 'error', summary: 'บันทึกไม่สำเร็จ', detail: message, life: 5000 })
   }
-  if (result.ok) {
-    showModal.value = false
-  } else {
-    alert(result.error ?? 'เกิดข้อผิดพลาด')
-  }
-}
+})
 
-async function remove(id: number) {
-  if (confirm('ยืนยันลบหน่วยงาน?')) {
-    await store.remove(id)
-  }
+function confirmDelete(org: Organization): void {
+  confirm.require({
+    message: `ยืนยันลบหน่วยงาน "${org.name_th}"?`,
+    header: 'ยืนยันการลบ',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ลบ',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await deleteMutation.mutateAsync(org.id)
+        toast.add({ severity: 'success', summary: 'ลบหน่วยงานสำเร็จ', life: 3000 })
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+        toast.add({ severity: 'error', summary: 'ลบไม่สำเร็จ', detail: message, life: 5000 })
+      }
+    },
+  })
 }
 </script>
 
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">หน่วยงาน</h1>
-      <button @click="openCreate" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-        + เพิ่มหน่วยงาน
-      </button>
+      <h1 class="text-2xl font-bold text-white">หน่วยงาน</h1>
+      <Button label="เพิ่มหน่วยงาน" icon="pi pi-plus" @click="openCreate" />
     </div>
 
-    <div v-if="store.loading" class="py-8 text-center text-gray-500">กำลังโหลด...</div>
+    <Message v-if="isError" severity="error" :closable="false">
+      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
+    </Message>
 
-    <table v-else class="w-full overflow-hidden rounded-lg bg-white shadow">
-      <thead class="bg-gray-50 text-left text-sm text-gray-600">
-        <tr>
-          <th class="px-4 py-3">รหัส</th>
-          <th class="px-4 py-3">ชื่อหน่วยงาน</th>
-          <th class="px-4 py-3">ประเภท</th>
-          <th class="px-4 py-3">สถานะ</th>
-          <th class="px-4 py-3 text-right">จัดการ</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-100">
-        <tr v-for="org in store.organizations" :key="org.id" class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-mono text-sm">{{ org.code }}</td>
-          <td class="px-4 py-3">{{ org.name_th }}</td>
-          <td class="px-4 py-3 text-sm text-gray-600">{{ org.org_type ?? '-' }}</td>
-          <td class="px-4 py-3">
-            <span :class="org.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'" class="rounded-full px-2 py-0.5 text-xs font-medium">
-              {{ org.is_active ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
-            </span>
-          </td>
-          <td class="space-x-2 px-4 py-3 text-right">
-            <button @click="openEdit(org)" class="text-xs text-blue-600 hover:underline">แก้ไข</button>
-            <button @click="remove(org.id)" class="text-xs text-red-600 hover:underline">ลบ</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <DataTable
+      v-else
+      :value="organizations ?? []"
+      :loading="isLoading"
+      paginator
+      :rows="10"
+      data-key="id"
+      class="overflow-hidden rounded-lg border border-dark-border shadow"
+    >
+      <template #empty>
+        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลหน่วยงาน</p>
+      </template>
 
-    <!-- Modal -->
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showModal = false">
-      <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-        <h2 class="mb-4 text-lg font-bold">{{ editingId ? 'แก้ไขหน่วยงาน' : 'เพิ่มหน่วยงาน' }}</h2>
-        <div class="space-y-3">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">รหัสหน่วยงาน</label>
-            <input v-model="form.code" type="text" class="w-full rounded border px-3 py-2" maxlength="50" />
+      <Column field="code" header="รหัส" sortable>
+        <template #body="{ data }">
+          <span class="font-mono text-sm">{{ data.code }}</span>
+        </template>
+      </Column>
+      <Column field="name_th" header="ชื่อหน่วยงาน" sortable>
+        <template #body="{ data }">
+          <span class="font-medium">{{ data.name_th }}</span>
+          <span v-if="data.abbreviation" class="ml-1 text-sm text-dark-muted">({{ data.abbreviation }})</span>
+        </template>
+      </Column>
+      <Column field="org_type" header="ประเภท" sortable>
+        <template #body="{ data }">
+          {{ data.org_type ? (ORG_TYPE_LABELS[data.org_type] ?? data.org_type) : '-' }}
+        </template>
+      </Column>
+      <Column header="สถานะ">
+        <template #body="{ data }">
+          <Tag :value="data.is_active ? 'ใช้งาน' : 'ไม่ใช้งาน'" :severity="data.is_active ? 'success' : 'secondary'" />
+        </template>
+      </Column>
+      <Column header="จัดการ" class="text-right">
+        <template #body="{ data }">
+          <div class="flex justify-end gap-1">
+            <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
           </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ชื่อหน่วยงาน</label>
-            <input v-model="form.name_th" type="text" class="w-full rounded border px-3 py-2" />
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ชื่อย่อ</label>
-            <input v-model="form.abbreviation" type="text" class="w-full rounded border px-3 py-2" />
-          </div>
-          <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ประเภท</label>
-            <select v-model="form.org_type" class="w-full rounded border px-3 py-2">
-              <option value="">-- เลือก --</option>
-              <option v-for="t in orgTypes" :key="t" :value="t">{{ t }}</option>
-            </select>
-          </div>
+        </template>
+      </Column>
+    </DataTable>
+
+    <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
+      <form class="space-y-4" @submit.prevent="onSave">
+        <div class="flex flex-col gap-1">
+          <label for="org-code" class="text-sm font-medium text-dark-muted">รหัสหน่วยงาน</label>
+          <InputText id="org-code" v-model.trim="code" maxlength="50" :invalid="!!errors.code" fluid />
+          <small v-if="errors.code" class="text-red-600" role="alert">{{ errors.code }}</small>
         </div>
-        <div class="mt-4 flex justify-end gap-2">
-          <button @click="showModal = false" class="rounded border px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">ยกเลิก</button>
-          <button @click="save" class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">บันทึก</button>
+
+        <div class="flex flex-col gap-1">
+          <label for="org-name" class="text-sm font-medium text-dark-muted">ชื่อหน่วยงาน</label>
+          <InputText id="org-name" v-model.trim="nameTh" :invalid="!!errors.name_th" fluid />
+          <small v-if="errors.name_th" class="text-red-600" role="alert">{{ errors.name_th }}</small>
         </div>
-      </div>
-    </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="org-abbr" class="text-sm font-medium text-dark-muted">ชื่อย่อ</label>
+          <InputText id="org-abbr" v-model.trim="abbreviation" fluid />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="org-type" class="text-sm font-medium text-dark-muted">ประเภท</label>
+          <Select
+            v-model="orgType"
+            label-id="org-type"
+            :options="orgTypeOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="-- เลือก --"
+            show-clear
+            fluid
+          />
+        </div>
+
+        <label v-if="editingId" class="flex items-center gap-2 text-sm">
+          <Checkbox v-model="isActive" binary input-id="org-is-active" />
+          ใช้งาน
+        </label>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />
+          <Button type="submit" label="บันทึก" :loading="saving" />
+        </div>
+      </form>
+    </Dialog>
   </div>
 </template>

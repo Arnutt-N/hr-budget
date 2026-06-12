@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Landmark } from '@lucide/vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -54,8 +55,11 @@ const onSubmit = handleSubmit(async (values) => {
       @submit.prevent="onSubmit"
     >
       <div class="text-center">
-        <h1 class="text-2xl font-bold text-white">HR Budget</h1>
-        <p class="text-sm text-dark-muted mt-1">ระบบจัดการงบประมาณ</p>
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-500">
+          <Landmark class="h-6 w-6 text-white" />
+        </div>
+        <h1 class="text-2xl font-bold text-white">ระบบบริหารงบประมาณบุคลากร</h1>
+        <p class="text-sm text-dark-muted mt-1">เข้าสู่ระบบจัดการข้อมูล</p>
       </div>
 
       <div class="flex flex-col gap-1">

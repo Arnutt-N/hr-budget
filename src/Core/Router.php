@@ -143,15 +143,20 @@ class Router
      */
     private static function callHandler(callable|array $handler, array $params): void
     {
+        // String keys would become PHP 8 named arguments and fatal when the
+        // route placeholder name differs from the method's parameter name
+        // (e.g. {id} vs $categoryId) — params are positional by contract.
+        $params = array_values($params);
+
         if (is_callable($handler)) {
             call_user_func_array($handler, $params);
         } elseif (is_array($handler) && count($handler) === 2) {
             [$controller, $method] = $handler;
-            
+
             if (is_string($controller)) {
                 $controller = new $controller();
             }
-            
+
             call_user_func_array([$controller, $method], $params);
         }
     }

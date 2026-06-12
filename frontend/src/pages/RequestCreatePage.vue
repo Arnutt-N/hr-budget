@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
-import { useOrganizationStore } from '@/stores/organizations'
+import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
 const router = useRouter()
 const store = useBudgetRequestStore()
 const { data: fiscalYears } = useFiscalYearList()
-const orgStore = useOrganizationStore()
+const { data: organizations } = useOrganizationList()
 
 const requestTitle = ref('')
 const fiscalYear = ref<number>(0)
@@ -20,10 +20,6 @@ const items = ref<ItemRow[]>([
 ])
 const errorMsg = ref('')
 const loading = ref(false)
-
-onMounted(() => {
-  orgStore.fetchList()
-})
 
 // Default the fiscal year once the list arrives (TanStack data is async/reactive)
 watch(
@@ -137,7 +133,7 @@ async function doCreate(): Promise<{ id?: number } | null> {
             class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
           >
             <option :value="null">-- เลือกหน่วยงาน --</option>
-            <option v-for="org in orgStore.organizations" :key="org.id" :value="org.id">
+            <option v-for="org in organizations ?? []" :key="org.id" :value="org.id">
               {{ org.name_th }}
             </option>
           </select>
