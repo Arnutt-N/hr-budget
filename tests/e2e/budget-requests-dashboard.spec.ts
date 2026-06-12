@@ -10,7 +10,7 @@ test.describe('Budget Request Dashboard', () => {
     async function loginAsAdmin(page) {
         await page.goto('/login');
         await page.fill('input[name="email"]', 'admin@moj.go.th');
-        await page.fill('input[name="password"]', 'password');
+        await page.fill('input[name="password"]', 'admin123');
         await page.click('button[type="submit"]');
         await expect(page).toHaveURL(/dashboard/);
     }

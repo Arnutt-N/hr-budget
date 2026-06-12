@@ -16,7 +16,7 @@ test.describe('Budget Requests Security', () => {
     }
 
     test('TC08: Viewer cannot see approve/reject buttons', async ({ page }) => {
-        await login(page, 'viewer@moj.go.th', 'password');
+        await login(page, 'viewer@moj.go.th', 'viewer123');
 
         // Navigate to a pending request
         await page.goto('/requests/1'); // Assume request 1 is pending
@@ -27,7 +27,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC09: Cannot approve request via direct API call without proper role', async ({ page, request }) => {
-        await login(page, 'viewer@moj.go.th', 'password');
+        await login(page, 'viewer@moj.go.th', 'viewer123');
 
         // Attempt to approve via POST request
         const response = await request.post('/requests/1/approve', {
@@ -42,7 +42,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC10: XSS prevention in request title', async ({ page }) => {
-        await login(page, 'admin@moj.go.th', 'password');
+        await login(page, 'admin@moj.go.th', 'admin123');
 
         const xssPayload = '<script>alert("XSS")</script>';
 
@@ -66,7 +66,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC11: SQL injection prevention in search', async ({ page }) => {
-        await login(page, 'admin@moj.go.th', 'password');
+        await login(page, 'admin@moj.go.th', 'admin123');
 
         // Navigate to requests list
         await page.goto('/requests');
@@ -90,7 +90,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC12: Cannot submit empty request without items', async ({ page }) => {
-        await login(page, 'admin@moj.go.th', 'password');
+        await login(page, 'admin@moj.go.th', 'admin123');
 
         // Create request without adding items
         await page.goto('/requests/create');
@@ -111,7 +111,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC13: Validate negative quantity in item', async ({ page }) => {
-        await login(page, 'admin@moj.go.th', 'password');
+        await login(page, 'admin@moj.go.th', 'admin123');
 
         await page.goto('/requests/1');
 
@@ -131,7 +131,7 @@ test.describe('Budget Requests Security', () => {
     });
 
     test('TC14: Cannot delete items from submitted request', async ({ page }) => {
-        await login(page, 'admin@moj.go.th', 'password');
+        await login(page, 'admin@moj.go.th', 'admin123');
 
         // Navigate to a submitted/pending request
         await page.goto('/requests/2'); // Assume request 2 is pending
@@ -159,7 +159,7 @@ test.describe('Budget Requests Validation', () => {
     async function login(page: Page) {
         await page.goto('/login');
         await page.fill('input[name="email"]', 'admin@moj.go.th');
-        await page.fill('input[name="password"]', 'password');
+        await page.fill('input[name="password"]', 'admin123');
         await page.click('button[type="submit"]');
         await expect(page).toHaveURL(/dashboard/);
     }

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * JWT Auth Middleware for protected API endpoints.
  *
@@ -22,12 +25,21 @@ use App\Api\Responses\ApiResponse;
 
 final class AuthMiddleware
 {
+    /** Cookie carrying the JWT for the SPA. Set/cleared by AuthController. */
+    public const COOKIE_NAME = 'hr_budget_token';
+
     /** @var array<string,mixed>|null */
     private static ?array $user = null;
 
     /**
      * Resolve and return the current authenticated user (as array).
      * Exits with 401 JSON on any failure.
+     *
+     * Accepts the token from (in order):
+     *   1. Authorization: Bearer header (tests, mobile, tools)
+     *   2. httpOnly cookie (SPA) — mutating requests must also carry
+     *      X-Requested-With: XMLHttpRequest as a CSRF guard, since cross-site
+     *      forms cannot set custom headers without a CORS preflight.
      *
      * @return array<string,mixed>
      */
@@ -37,12 +49,23 @@ final class AuthMiddleware
             ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
             ?? '';
 
-        if (!str_starts_with($header, 'Bearer ')) {
-            self::logDenied('missing_bearer');
-            ApiResponse::unauthorized('Missing Bearer token');
+        if (str_starts_with($header, 'Bearer ')) {
+            $token = substr($header, 7);
+        } else {
+            $token = (string) ($_COOKIE[self::COOKIE_NAME] ?? '');
+            if ($token === '') {
+                self::logDenied('missing_token');
+                ApiResponse::unauthorized('Missing Bearer token');
+            }
+
+            $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+            $isMutation = !in_array($method, ['GET', 'HEAD', 'OPTIONS'], true);
+            if ($isMutation && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') !== 'XMLHttpRequest') {
+                self::logDenied('csrf_header_missing', ['method' => $method]);
+                ApiResponse::forbidden('Missing CSRF header');
+            }
         }
 
-        $token = substr($header, 7);
         $payload = Jwt::verify($token);
         if ($payload === null) {
             // Jwt::verify already logged the specific exception server-side.
@@ -83,7 +106,8 @@ final class AuthMiddleware
     private static function logDenied(string $reason, array $context = []): void
     {
         $ip = $_SERVER['REMOTE_ADDR'] ?? '?';
-        $path = $_SERVER['REQUEST_URI'] ?? '?';
+        // Strip CR/LF so a crafted URI cannot inject fake log lines
+        $path = preg_replace('/[\r\n]/', '', $_SERVER['REQUEST_URI'] ?? '?');
         $extra = $context === [] ? '' : ' ' . json_encode($context, JSON_UNESCAPED_SLASHES);
         error_log("[auth] api_denied reason={$reason} path={$path} ip={$ip}{$extra}");
     }

@@ -4,8 +4,8 @@ import type { ApiResponse } from '@/types/api'
 /**
  * Typed fetch wrapper. Automatically:
  *  - Prepends /api/v1
- *  - Attaches Bearer token when logged in
- *  - Logs out + redirects on 401
+ *  - Sends the httpOnly auth cookie (credentials) + CSRF header
+ *  - Drops local auth state on 401
  */
 export async function apiFetch<T = unknown>(
   path: string,
@@ -17,17 +17,19 @@ export async function apiFetch<T = unknown>(
   if (!isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
-  if (auth.token) {
-    headers.set('Authorization', `Bearer ${auth.token}`)
-  }
+  // CSRF guard: backend rejects cookie-authed mutations without this header.
+  headers.set('X-Requested-With', 'XMLHttpRequest')
 
   const res = await fetch(`/api/v1${path.startsWith('/') ? path : '/' + path}`, {
     ...options,
+    credentials: 'same-origin',
     headers,
   })
 
   if (res.status === 401) {
-    auth.logout()
+    // logout() skips the network call when user is already null,
+    // so a 401 from /auth/me during bootstrap cannot loop.
+    void auth.logout()
   }
 
   let body: ApiResponse<T>

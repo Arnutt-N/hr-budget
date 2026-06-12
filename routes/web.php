@@ -31,6 +31,7 @@ Router::get('/api/v1/health', function () {
     ]);
 });
 Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);
+Router::post('/api/v1/auth/logout', [ApiAuthController::class, 'logout']);
 Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
 
 // Fiscal Year CRUD
