@@ -20,6 +20,10 @@ use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
 use App\Api\Controllers\NotificationController as ApiNotificationController;
 use App\Api\Controllers\FileController as ApiFileController;
+use App\Api\Controllers\DivisionController as ApiDivisionController;
+use App\Api\Controllers\PlanController as ApiPlanController;
+use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
+use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -69,6 +73,34 @@ Router::post('/api/v1/users', [ApiUserController::class, 'create']);
 Router::get('/api/v1/users/{id}', [ApiUserController::class, 'show']);
 Router::put('/api/v1/users/{id}', [ApiUserController::class, 'update']);
 Router::delete('/api/v1/users/{id}', [ApiUserController::class, 'delete']);
+
+// Division CRUD (admin-only)
+Router::get('/api/v1/divisions', [ApiDivisionController::class, 'list']);
+Router::post('/api/v1/divisions', [ApiDivisionController::class, 'create']);
+Router::get('/api/v1/divisions/{id}', [ApiDivisionController::class, 'show']);
+Router::put('/api/v1/divisions/{id}', [ApiDivisionController::class, 'update']);
+Router::delete('/api/v1/divisions/{id}', [ApiDivisionController::class, 'delete']);
+
+// Budget Plan CRUD (admin-only, soft delete)
+Router::get('/api/v1/plans', [ApiPlanController::class, 'list']);
+Router::post('/api/v1/plans', [ApiPlanController::class, 'create']);
+Router::get('/api/v1/plans/{id}', [ApiPlanController::class, 'show']);
+Router::put('/api/v1/plans/{id}', [ApiPlanController::class, 'update']);
+Router::delete('/api/v1/plans/{id}', [ApiPlanController::class, 'delete']);
+
+// Target Type CRUD (admin-only)
+Router::get('/api/v1/target-types', [ApiTargetTypeController::class, 'list']);
+Router::post('/api/v1/target-types', [ApiTargetTypeController::class, 'create']);
+Router::get('/api/v1/target-types/{id}', [ApiTargetTypeController::class, 'show']);
+Router::put('/api/v1/target-types/{id}', [ApiTargetTypeController::class, 'update']);
+Router::delete('/api/v1/target-types/{id}', [ApiTargetTypeController::class, 'delete']);
+
+// Budget Target CRUD (admin-only)
+Router::get('/api/v1/targets', [ApiBudgetTargetController::class, 'list']);
+Router::post('/api/v1/targets', [ApiBudgetTargetController::class, 'create']);
+Router::get('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'show']);
+Router::put('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'update']);
+Router::delete('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'delete']);
 
 // Budget Request CRUD + Approval
 Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);
