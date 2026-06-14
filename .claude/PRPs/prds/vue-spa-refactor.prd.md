@@ -133,7 +133,7 @@ Login → main layout (sidebar) → Admin → Fiscal Years table → create/edit
 | 3 | Dashboard + Notifications | vue-chartjs dashboard, notification badge/list (polling) | complete | with 4 | 2 | [plan](../plans/completed/vue-spa-phase3-dashboard-notifications.plan.md) · [report](../reports/vue-spa-phase3-dashboard-notifications-report.md) |
 | 4 | Budget Request Workflow | create→submit→approve/reject + file upload UI | complete | with 3 | 2 | [plan](../plans/completed/vue-spa-phase4-budget-requests.plan.md) · [report](../reports/vue-spa-phase4-budget-requests-report.md) |
 | 5 | Budget Tracking + Disbursements | New stateless APIs replacing store-session; multi-step form state in Pinia | complete | - | 2 | [plan](../plans/vue-spa-phase5-tracking-disbursements.plan.md) |
-| 6 | Cutover + Cleanup | Archive PHP views/web controllers, single SPA entry route, update CLAUDE.md + tests | in-progress | - | 3, 4, 5 | - |
+| 6 | Cutover + Cleanup | Archive PHP views/web controllers, single SPA entry route, update CLAUDE.md + tests | complete | - | 3, 4, 5 | [plan](../plans/vue-spa-phase6-cutover-cleanup.plan.md) |
 
 ### Phase Details
 
