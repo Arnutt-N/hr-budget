@@ -122,7 +122,9 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  // BASE_URL mirrors Vite `base`: '/' for the default/dev build, the
+  // subdirectory (e.g. '/hr_budget/public/app/') for the deploy build.
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 

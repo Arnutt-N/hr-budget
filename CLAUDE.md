@@ -4,14 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HR Budget Management System (ระบบจัดการงบประมาณทรัพยากรบุคคล) — a Thai-language budgeting app for a government HR division. Stack: **PHP 8.3 custom MVC** (not Laravel) + MySQL/MariaDB + Vite/Tailwind 4 + vanilla JS (Chart.js, SweetAlert2, dayjs). Deployed under Laragon at the subdirectory `/hr_budget/public/`.
+HR Budget Management System (ระบบจัดการงบประมาณทรัพยากรบุคคล) — a Thai-language budgeting app for a government HR division. Stack: **PHP 8.3 custom MVC** backend exposing a **JSON API (`/api/v1/*`)** + a **Vue 3 SPA** (`frontend/`, PrimeVue + TanStack Query, JWT-cookie auth) as the only user-facing frontend. MySQL/MariaDB. Deployed under Laragon at the subdirectory `/hr_budget/public/`.
+
+> **Phase 6 cutover (2026-06-15):** the SPA replaced the server-rendered web/MVC pages. PHP now serves only `/api/v1/*` plus the compiled SPA shell (`public/app/index.html`, via the `Router::notFound()` catch-all). A small set of **legacy web remnants** with no SPA equivalent are still wired up: ThaID login (`/thaid/login`), budget-execution reporting (`/budgets`, `/budgets/export`), and the document vault (`/files`, `/folders`). The retired controllers/views are recoverable from the annotated git tag `pre-spa-cutover`.
 
 ## Commands
 
 ```bash
-# Frontend (Vite dev server on :5173)
-npm run dev
-npm run build                          # outputs to public/assets/ with manifest
+# Frontend = Vue 3 SPA in frontend/ (Vite dev server on :5174)
+cd frontend && npm run dev
+cd frontend && npm run build           # DEFAULT build → frontend/dist (base '/'), the CI artifact
+# Deploy build → public/app/ (tracked, served by PHP) with the subdirectory base:
+cd frontend && VITE_BASE=/hr_budget/public/app/ npm run build   # bash
+#   PowerShell: $env:VITE_BASE='/hr_budget/public/app/'; npm run build
+# The base + outDir switch is gated ONLY on the VITE_BASE env var (NOT on
+# production mode), so plain `npm run build` stays base '/' → dist for CI.
 
 # PHP tests (PHPUnit 10.5)
 vendor/bin/phpunit --testsuite Unit
@@ -36,15 +43,18 @@ Test environment reads `DB_NAME=hr_budget_test` (set in `phpunit.xml` and `tests
 
 `public/index.php` → loads `vendor/autoload.php` → `App\Core\ErrorHandler::register()` → `Dotenv::safeLoad()` → `Auth::init()` → `routes/web.php` (register routes) → `Router::dispatch()`.
 
-The root-level `index.php` simply `require`s `public/index.php` so the app runs whether the document root is the repo root or `public/`. `.htaccess` rewrites non-existent paths into `public/`.
+The root-level `index.php` simply `require`s `public/index.php` so the app runs whether the document root is the repo root or `public/`. `.htaccess` rewrites non-existent paths into `public/`. Real files under `public/app/assets/*` are served directly as static files (the `!-f` rewrite condition), never hitting PHP.
+
+**SPA shell serving (Phase 6):** any unmatched, non-API path falls through to `Router::notFound()`, which returns the compiled SPA shell `public/app/index.html` (HTTP 200, `text/html`) so deep links and hard refreshes boot the Vue app and let Vue Router resolve client-side. `/api/*` misses stay a JSON 404. `/api/v1/*` plus the SPA shell are the only server-rendered surfaces (besides the kept legacy remnants below).
 
 ### Routing (`src/Core/Router.php`)
 
 - Static facade: `Router::get('/path/{id}', [Controller::class, 'method'])`
 - Route params are regex-extracted and passed positionally to the handler
-- `POST` with `_method=PUT|DELETE` field is treated as the actual method — **forms that "update" or "delete" use this convention** (see many `/{id}/update`, `/{id}/delete` routes in `routes/web.php`)
+- `POST` with `_method=PUT|DELETE` field is treated as the actual method (still used by the legacy remnant routes)
 - `dispatch()` strips the script directory prefix from the URI, so the same routes work whether accessed via `/hr_budget/public/foo` or `/foo` (script prefix awareness is critical — do not hardcode leading `/hr_budget/public` in route definitions)
-- Unmatched routes render `errors/404`
+- `routes/web.php` = the `/api/v1/*` block (the live app surface) + a short **legacy web remnant** block (ThaID login, budget-execution reporting, document vault). Everything else the SPA replaced was retired in the Phase 6 cutover.
+- Unmatched, non-API paths → the SPA shell via `notFound()`; unmatched `/api/*` paths → JSON 404.
 
 ### Data layer (`src/Core/Database.php`, `Model.php`, `SimpleQueryBuilder.php`)
 
@@ -55,28 +65,28 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 
 ### Views (`src/Core/View.php` + `resources/views/`)
 
-Two layouts only: `layouts/main.php` (authenticated app with sidebar) and `layouts/auth.php` (login/forgot password). Views are plain PHP templates with `<?= ... ?>` — no Blade, no Twig.
+**The primary UI is the Vue SPA in `frontend/`.** `resources/views/**` is now a **legacy remnant** rendered only by the kept web routes: `errors/*` (the `notFound()` build-missing fallback), `budgets/execution.php` (budget-execution reporting), `files/**` (document vault), `layouts/main.php` + `layouts/auth.php` + shared `components/**`. Do not build new server-rendered pages here — add SPA pages instead. Views are plain PHP templates with `<?= ... ?>` — no Blade, no Twig.
 
-**Two non-obvious rules** documented in `.agents/workflows/view-template-guide.md`:
+**Two non-obvious rules** (apply to the remaining legacy views) documented in `.agents/workflows/view-template-guide.md`:
 
 1. **Do NOT use `View::section()` / `View::endSection()` in new views.** It produces blank pages in this project. Write HTML/PHP directly in the view body; the layout captures output via `ob_start()`.
 2. **Always wrap internal URLs with `View::url()`**: `href="<?= \App\Core\View::url('/budgets') ?>"`. Hardcoded `/budgets` breaks when deployed under a subdirectory (which is the default for this app).
 
 `View::render('viewname', $data, 'main')` renders a view into a layout; `$data` is `extract()`ed so keys become local variables. `Auth::user()` and `config/app.php` are auto-injected as `$auth` and `$config`.
 
-### Authentication (`src/Core/Auth.php`)
+### Authentication
 
-Session-based with configurable cookie params from `config/app.php > session`. `Auth::init()` starts the session and hydrates the user from `$_SESSION[session.key]`. `allowed_domains` in `config/auth.php` gates login by email domain. Thai ID login flow exists at `/thaid/login`.
+**Primary auth is JWT-cookie via `/api/v1/auth/*` + the SPA login page.** The legacy web session-login routes/methods (`GET/POST /login`, `/logout`, forgot-password) were removed in the Phase 6 cutover. `src/Core/Auth.php` is unchanged and still in use: `Auth::init()` runs in bootstrap (and in the PHPUnit bootstrap) to start the session and hydrate `$_SESSION[session.key]`. The one remaining session-login path is **ThaID** (`/thaid/login` → `AuthController::thaidLogin`), a documented parity gap (the SPA has no ThaID flow yet) — it mints a session via `Auth::mockThaIDLogin()` and redirects to the SPA shell at `/`. The API `AuthController` (`App\Api\Controllers\AuthController`) is a separate JWT class, independent of the web `Auth` session login.
 
 ### Domain modules
 
-Controllers follow thin-controller/fat-model style, grouped roughly by domain:
+These are now **SPA modules over the `/api/v1/*` API** (pages in `frontend/src/pages/`, queries in `frontend/src/queries/`): budget-request workflow (create → submit → approve/reject), disbursement/tracking wizard, dashboard + notifications, and all admin master-data CRUD (organizations, fiscal years, categories/items, divisions, plans, target types, targets, users). The legacy web controllers that served these (`DashboardController`, `BudgetRequestController`, `BudgetController`, `DisbursementController`, `Admin*Controller`, `BudgetTargetController`, `DivisionController`, `BudgetPlanController`) were **retired** in the Phase 6 cutover — recover them from the `pre-spa-cutover` git tag if needed.
 
-- **Budget Request workflow** (`BudgetRequestController`): create → submit → approve/reject. Backed by `BudgetRequest`, `BudgetRequestItem`, `BudgetRequestApproval`, configurable approvers via `ApprovalSetting` + `Approver`
-- **Budget Execution / Tracking / Disbursement** (`BudgetController`, `BudgetExecutionController`, `DisbursementController`): multi-step form that stashes intermediate state server-side via `/budgets/tracking/store-session` before finalizing a `BudgetRecord` / `Disbursement`
-- **Admin CRUD** (`Admin*Controller`): organizations, fiscal years, approval settings, budget categories / category items (hierarchical via `parent_id` self-reference on category items), target types
-- **Files** (`FileController` + `File`/`Folder` models): per-fiscal-year document vault; `/files/init` bootstraps folder structure for a new year
-- **Dashboard** (`DashboardController`): chart data endpoint at `/api/dashboard/chart-data` feeds Chart.js widgets
+Three thin web controllers remain for the documented legacy remnants:
+
+- **Budget Execution reporting** (`BudgetExecutionController` → `/budgets`, `/budgets/export`, renders `budgets/execution.php`; export redirects to `public/export_execution.php`) — read-only overview/export, no SPA equivalent yet.
+- **Document vault** (`FileController` + `File`/`Folder` models → `/files`, `/folders`, `/files/init`) — per-fiscal-year file vault; `/files/init` bootstraps folder structure for a new year. The SPA only has request-attachment upload (`/api/v1/requests/{id}/files`).
+- **ThaID login** (`AuthController::thaidLogin` → `/thaid/login`).
 
 ### REST API layer (`/api/v1/*`)
 
@@ -109,8 +119,9 @@ One-shot PHP debug scripts drop into the repo root or `public/` (e.g. `inspect_s
 
 ## Key gotchas
 
-- **Many routes under `/admin/{resource}/{id}/delete` are POST-only** (not DELETE); the `_method` override is not currently used for these. Match existing routes rather than inventing RESTful variants
-- `src/Core/Router.php` has a leftover temp debug block that writes to `$log` when the URI contains `execution`. It doesn't actually log anywhere — safe to ignore, but don't rely on it either
+- **SPA is served from `public/app/`** — a **tracked** build artifact (committed for production serving), produced by the deploy build (`VITE_BASE=/hr_budget/public/app/ npm run build`). The Vite `base` and Vue Router base (`createWebHistory(import.meta.env.BASE_URL)`) must match the subdirectory; the default build (no `VITE_BASE`) stays base `/` → `frontend/dist` (the CI artifact, git-ignored). Do not gate the deploy base on `mode === 'production'` — CI's build IS production mode and must stay base `/`.
+- **The SPA catch-all lives in `Router::notFound()`** (not a wildcard route — the `{name}` → `[^/]+` regex can't match nested paths). Keep the `/api/` JSON-404 branch FIRST so API misses never get HTML.
+- **Retirement is via git history + the `pre-spa-cutover` tag, NOT `archives/`** (`archives/` is git-ignored, so moving code there would delete it from version control). Restore a retired file with `git checkout pre-spa-cutover -- <path>`.
 - Email/session/DB env vars are loaded with `Dotenv::safeLoad()`, so a missing `.env` won't throw — config fallbacks in `config/*.php` apply instead
 - Test bootstrap calls `Auth::init()` which starts a session; `ob_start()` is also called to swallow header output during test runs — any test that asserts on response headers must account for this
 - `composer audit` and `vendor/bin/phpstan` are not wired up; there is no CI config checked in
