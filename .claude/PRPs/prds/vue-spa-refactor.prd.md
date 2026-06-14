@@ -130,7 +130,7 @@ Login → main layout (sidebar) → Admin → Fiscal Years table → create/edit
 |---|-------|-------------|--------|----------|---------|----------|
 | 1 | SPA Scaffold + Auth | (Revised: scaffold pre-exists) Stack upgrade (PrimeVue+TanStack+vee-validate+Vitest) + JWT httpOnly cookie auth hardening | complete | - | - | [plan](../plans/completed/vue-spa-phase1-foundation-auth.plan.md) · [report](../reports/vue-spa-phase1-foundation-auth-report.md) |
 | 2 | Admin Master Data CRUD | All admin resources via PrimeVue DataTable + validated forms; close admin API gaps | complete | - | 1 | [plan](../plans/completed/vue-spa-phase2-admin-crud.plan.md) · [report](../reports/vue-spa-phase2-admin-crud-report.md) |
-| 3 | Dashboard + Notifications | vue-chartjs dashboard, notification badge/list (polling) | pending | with 4 | 2 | - |
+| 3 | Dashboard + Notifications | vue-chartjs dashboard, notification badge/list (polling) | complete | with 4 | 2 | [plan](../plans/completed/vue-spa-phase3-dashboard-notifications.plan.md) · [report](../reports/vue-spa-phase3-dashboard-notifications-report.md) |
 | 4 | Budget Request Workflow | create→submit→approve/reject + file upload UI | pending | with 3 | 2 | - |
 | 5 | Budget Tracking + Disbursements | New stateless APIs replacing store-session; multi-step form state in Pinia | pending | - | 2 | - |
 | 6 | Cutover + Cleanup | Archive PHP views/web controllers, single SPA entry route, update CLAUDE.md + tests | pending | - | 3, 4, 5 | - |
