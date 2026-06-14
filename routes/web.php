@@ -25,6 +25,8 @@ use App\Api\Controllers\PlanController as ApiPlanController;
 use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
 use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
 use App\Api\Controllers\DashboardController as ApiDashboardController;
+use App\Api\Controllers\DisbursementSessionController as ApiDisbursementSessionController;
+use App\Api\Controllers\DisbursementRecordController as ApiDisbursementRecordController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -128,6 +130,17 @@ Router::post('/api/v1/requests/{id}/files', [ApiFileController::class, 'upload']
 Router::get('/api/v1/requests/{id}/files', [ApiFileController::class, 'list']);
 Router::get('/api/v1/files/{id}/download', [ApiFileController::class, 'download']);
 Router::delete('/api/v1/files/{id}', [ApiFileController::class, 'delete']);
+
+// Disbursement Tracking — static + more-specific routes before parameterized {id}
+Router::get('/api/v1/expense-structure', [ApiDisbursementRecordController::class, 'expenseStructure']);
+Router::get('/api/v1/disbursement-sessions', [ApiDisbursementSessionController::class, 'list']);
+Router::post('/api/v1/disbursement-sessions', [ApiDisbursementSessionController::class, 'create']);
+Router::get('/api/v1/disbursement-sessions/{id}/activities', [ApiDisbursementSessionController::class, 'activities']);
+Router::get('/api/v1/disbursement-sessions/{id}', [ApiDisbursementSessionController::class, 'show']);
+Router::delete('/api/v1/disbursement-sessions/{id}', [ApiDisbursementSessionController::class, 'delete']);
+Router::post('/api/v1/disbursement-records', [ApiDisbursementRecordController::class, 'create']);
+Router::get('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordController::class, 'show']);
+Router::put('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordController::class, 'update']);
 
 // Authentication Routes
 Router::get('/login', [AuthController::class, 'showLogin']);
