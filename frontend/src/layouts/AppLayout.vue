@@ -7,7 +7,11 @@ import {
   FileText,
   Calendar,
   Building2,
+  Building,
+  Network,
   List,
+  Target,
+  Goal,
   Users,
   LogOut,
   Menu,
@@ -94,9 +98,29 @@ async function onLogout(): Promise<void> {
             <span class="ml-3">หน่วยงาน</span>
           </RouterLink>
 
+          <RouterLink to="/divisions" class="nav-link" @click="sidebarOpen = false">
+            <Building class="h-5 w-5" />
+            <span class="ml-3">กอง/สำนัก</span>
+          </RouterLink>
+
+          <RouterLink to="/plans" class="nav-link" @click="sidebarOpen = false">
+            <Network class="h-5 w-5" />
+            <span class="ml-3">แผนงาน/ผลผลิต</span>
+          </RouterLink>
+
           <RouterLink to="/categories" class="nav-link" @click="sidebarOpen = false">
             <List class="h-5 w-5" />
             <span class="ml-3">ประเภทรายจ่าย</span>
+          </RouterLink>
+
+          <RouterLink to="/target-types" class="nav-link" @click="sidebarOpen = false">
+            <Target class="h-5 w-5" />
+            <span class="ml-3">ประเภทเป้าหมาย</span>
+          </RouterLink>
+
+          <RouterLink to="/targets" class="nav-link" @click="sidebarOpen = false">
+            <Goal class="h-5 w-5" />
+            <span class="ml-3">เป้าหมายงบประมาณ</span>
           </RouterLink>
 
           <RouterLink to="/users" class="nav-link" @click="sidebarOpen = false">

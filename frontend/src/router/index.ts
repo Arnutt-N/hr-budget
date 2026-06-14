@@ -69,6 +69,30 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/UserListPage.vue'),
         meta: { requiresAdmin: true, title: 'จัดการผู้ใช้' },
       },
+      {
+        path: 'divisions',
+        name: 'divisions',
+        component: () => import('@/pages/DivisionListPage.vue'),
+        meta: { requiresAdmin: true, title: 'จัดการกอง/สำนัก' },
+      },
+      {
+        path: 'plans',
+        name: 'plans',
+        component: () => import('@/pages/PlanListPage.vue'),
+        meta: { requiresAdmin: true, title: 'จัดการแผนงาน/ผลผลิต' },
+      },
+      {
+        path: 'target-types',
+        name: 'target-types',
+        component: () => import('@/pages/TargetTypeListPage.vue'),
+        meta: { requiresAdmin: true, title: 'จัดการประเภทเป้าหมาย' },
+      },
+      {
+        path: 'targets',
+        name: 'targets',
+        component: () => import('@/pages/TargetListPage.vue'),
+        meta: { requiresAdmin: true, title: 'จัดการเป้าหมายงบประมาณ' },
+      },
     ],
   },
   {
