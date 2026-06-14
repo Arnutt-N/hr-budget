@@ -1,32 +1,36 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import {
+  useBudgetRequest,
+  useSubmitBudgetRequest,
+  useApproveBudgetRequest,
+  useRejectBudgetRequest,
+} from '@/queries/useBudgetRequests'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FileUploader from '@/components/FileUploader.vue'
 
 const route = useRoute()
-const router = useRouter()
-const store = useBudgetRequestStore()
 const auth = useAuthStore()
+const requestId = computed(() => Number(route.params.id))
+const requestQuery = useBudgetRequest(requestId)
+const submitMut = useSubmitBudgetRequest()
+const approveMut = useApproveBudgetRequest()
+const rejectMut = useRejectBudgetRequest()
 
 const rejectMode = ref(false)
 const rejectNote = ref('')
 const errorMsg = ref('')
 
-const req = computed(() => store.currentRequest)
-const isOwner = computed(() => req.value && auth.user && req.value.created_by === auth.user.id)
+const req = computed(() => requestQuery.data.value ?? null)
+const isOwner = computed(() => !!req.value && !!auth.user && req.value.created_by === auth.user.id)
 const isAdmin = computed(() => auth.user?.role === 'admin')
 const canEdit = computed(() => isOwner.value && (req.value?.request_status === 'draft' || req.value?.request_status === 'saved'))
 const canSubmit = computed(() => isOwner.value && (req.value?.request_status === 'draft' || req.value?.request_status === 'saved'))
 const canApprove = computed(() => req.value?.request_status === 'pending')
-const showApproveReject = computed(() => canApprove.value && (isAdmin.value || !isOwner.value))
-
-onMounted(() => {
-  const id = Number(route.params.id)
-  if (id) store.fetchById(id)
-})
+// Backend gates approve/reject to admins only — mirror that in the UI.
+const showApproveReject = computed(() => canApprove.value && isAdmin.value)
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '-'
@@ -49,14 +53,20 @@ const actionLabels: Record<string, string> = {
 
 async function handleSubmit() {
   errorMsg.value = ''
-  const result = await store.submit(req.value!.id)
-  if (!result.ok) errorMsg.value = result.error ?? 'ไม่สามารถส่งอนุมัติได้'
+  try {
+    await submitMut.mutateAsync(req.value!.id)
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'ไม่สามารถส่งอนุมัติได้'
+  }
 }
 
 async function handleApprove() {
   errorMsg.value = ''
-  const result = await store.approve(req.value!.id)
-  if (!result.ok) errorMsg.value = result.error ?? 'ไม่สามารถอนุมัติได้'
+  try {
+    await approveMut.mutateAsync({ id: req.value!.id })
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'ไม่สามารถอนุมัติได้'
+  }
 }
 
 async function handleReject() {
@@ -65,11 +75,12 @@ async function handleReject() {
     return
   }
   errorMsg.value = ''
-  const result = await store.reject(req.value!.id, rejectNote.value.trim())
-  if (!result.ok) {
-    errorMsg.value = result.error ?? 'ไม่สามารถปฏิเสธได้'
-  } else {
+  try {
+    await rejectMut.mutateAsync({ id: req.value!.id, note: rejectNote.value.trim() })
     rejectMode.value = false
+    rejectNote.value = ''
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'ไม่สามารถปฏิเสธได้'
   }
 }
 </script>
@@ -83,7 +94,7 @@ async function handleReject() {
       </router-link>
     </div>
 
-    <div v-if="store.loading" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
+    <div v-if="requestQuery.isLoading.value" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 
     <div v-else-if="!req" class="rounded-lg bg-dark-card border border-dark-border py-16 text-center shadow">
       <p class="text-dark-muted">ไม่พบคำของบประมาณ</p>

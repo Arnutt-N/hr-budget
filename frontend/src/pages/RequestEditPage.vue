@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { useBudgetRequest, useUpdateBudgetRequest } from '@/queries/useBudgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
@@ -10,7 +10,9 @@ import type { ItemRow } from '@/components/ItemEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
-const store = useBudgetRequestStore()
+const requestId = computed(() => Number(route.params.id))
+const requestQuery = useBudgetRequest(requestId)
+const updateMut = useUpdateBudgetRequest()
 const { data: fiscalYears } = useFiscalYearList()
 const { data: organizations } = useOrganizationList()
 
@@ -20,34 +22,34 @@ const orgId = ref<number | null>(null)
 const items = ref<ItemRow[]>([])
 const errorMsg = ref('')
 const loaded = ref(false)
+const saving = computed(() => updateMut.isPending.value)
 
-onMounted(async () => {
-  const id = Number(route.params.id)
-  const ok = await store.fetchById(id)
-  if (!ok) return
+// One-shot populate when the request arrives (don't clobber edits on refetch).
+watch(
+  requestQuery.data,
+  (req) => {
+    if (!req || loaded.value) return
 
-  const req = store.currentRequest
-  if (!req) return
+    if (req.request_status !== 'draft' && req.request_status !== 'saved') {
+      router.replace(`/requests/${requestId.value}`)
+      return
+    }
 
-  if (req.request_status !== 'draft' && req.request_status !== 'saved') {
-    router.replace(`/requests/${id}`)
-    return
-  }
+    requestTitle.value = req.request_title
+    fiscalYear.value = req.fiscal_year
+    orgId.value = req.org_id
+    items.value = (req.items || []).map((item) => ({
+      item_name: item.item_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      remark: item.remark,
+      category_item_id: item.category_item_id,
+    }))
 
-  requestTitle.value = req.request_title
-  fiscalYear.value = req.fiscal_year
-  orgId.value = req.org_id
-
-  items.value = (req.items || []).map((item) => ({
-    item_name: item.item_name,
-    quantity: item.quantity,
-    unit_price: item.unit_price,
-    remark: item.remark,
-    category_item_id: item.category_item_id,
-  }))
-
-  loaded.value = true
-})
+    loaded.value = true
+  },
+  { immediate: true },
+)
 
 async function handleSave() {
   errorMsg.value = ''
@@ -57,18 +59,19 @@ async function handleSave() {
     return
   }
 
-  const id = Number(route.params.id)
-  const result = await store.update(id, {
-    request_title: requestTitle.value.trim(),
-    fiscal_year: fiscalYear.value,
-    org_id: orgId.value,
-    items: validItems,
-  })
-
-  if (result.ok) {
-    router.push(`/requests/${id}`)
-  } else {
-    errorMsg.value = result.error ?? 'ไม่สามารถบันทึกได้'
+  try {
+    await updateMut.mutateAsync({
+      id: requestId.value,
+      data: {
+        request_title: requestTitle.value.trim(),
+        fiscal_year: fiscalYear.value,
+        org_id: orgId.value,
+        items: validItems,
+      },
+    })
+    router.push(`/requests/${requestId.value}`)
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'ไม่สามารถบันทึกได้'
   }
 }
 </script>
@@ -129,15 +132,15 @@ async function handleSave() {
           <ItemEditor v-model="items" />
         </div>
 
-        <FileUploader :request-id="Number(route.params.id)" />
+        <FileUploader :request-id="requestId" />
 
         <div class="flex gap-3 border-t border-dark-border pt-4">
           <button
             @click="handleSave"
-            :disabled="store.loading"
+            :disabled="saving"
             class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
           >
-            {{ store.loading ? 'กำลังบันทึก...' : 'บันทึก' }}
+            {{ saving ? 'กำลังบันทึก...' : 'บันทึก' }}
           </button>
           <router-link
             :to="`/requests/${route.params.id}`"
