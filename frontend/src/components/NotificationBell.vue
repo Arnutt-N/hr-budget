@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useNotificationStore } from '@/stores/notifications'
+import { Bell } from '@lucide/vue'
+import {
+  useUnreadCount,
+  useNotificationList,
+  useMarkRead,
+  useMarkAllRead,
+} from '@/queries/useNotifications'
 
 const router = useRouter()
-const store = useNotificationStore()
 const open = ref(false)
-let pollTimer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  store.refreshUnreadCount()
-  pollTimer = setInterval(() => store.refreshUnreadCount(), 60_000)
-})
+const unreadQuery = useUnreadCount()
+const listQuery = useNotificationList(open) // lazy: fetches only while the dropdown is open
+const markRead = useMarkRead()
+const markAllRead = useMarkAllRead()
 
-onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
-})
+const unreadCount = computed(() => unreadQuery.data.value ?? 0)
+const notifications = computed(() => listQuery.data.value ?? [])
 
-async function toggleDropdown() {
-  if (!open.value) {
-    await store.fetchList()
-  }
+function toggleDropdown() {
   open.value = !open.value
 }
 
@@ -29,13 +29,18 @@ function close() {
 }
 
 async function handleClick(id: number, link: string | null) {
-  await store.markRead(id)
+  await markRead.mutateAsync(id)
   open.value = false
   if (link && link.startsWith('/')) router.push(link)
 }
 
 async function handleMarkAllRead() {
-  await store.markAllRead()
+  await markAllRead.mutateAsync()
+}
+
+function viewAll() {
+  open.value = false
+  router.push('/notifications')
 }
 
 function timeAgo(dateStr: string): string {
@@ -47,9 +52,9 @@ function timeAgo(dateStr: string): string {
 }
 
 function typeIcon(type: string): string {
-  if (type === 'approved') return '\u2713'
-  if (type === 'rejected') return '\u2717'
-  return '\u2709'
+  if (type === 'approved') return '✓'
+  if (type === 'rejected') return '✗'
+  return '✉'
 }
 </script>
 
@@ -59,16 +64,14 @@ function typeIcon(type: string): string {
       @click="toggleDropdown"
       class="relative rounded-full p-2 text-dark-muted hover:bg-slate-800 hover:text-white"
       title="การแจ้งเตือน"
+      aria-label="การแจ้งเตือน"
     >
-      <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
+      <Bell class="h-5 w-5" />
       <span
-        v-if="store.unreadCount > 0"
+        v-if="unreadCount > 0"
         class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
       >
-        {{ store.unreadCount > 9 ? '9+' : store.unreadCount }}
+        {{ unreadCount > 9 ? '9+' : unreadCount }}
       </span>
     </button>
 
@@ -81,9 +84,9 @@ function typeIcon(type: string): string {
       class="absolute right-0 z-40 mt-2 w-80 rounded-lg border border-dark-border bg-dark-card shadow-lg"
     >
       <div class="flex items-center justify-between border-b border-dark-border px-4 py-3">
-        <span class="font-medium text-white text-sm">การแจ้งเตือน</span>
+        <span class="text-sm font-medium text-white">การแจ้งเตือน</span>
         <button
-          v-if="store.unreadCount > 0"
+          v-if="unreadCount > 0"
           @click="handleMarkAllRead"
           class="text-xs text-primary-400 hover:text-primary-500"
         >
@@ -92,13 +95,18 @@ function typeIcon(type: string): string {
       </div>
 
       <div class="max-h-80 overflow-y-auto">
-        <div v-if="store.loading" class="px-4 py-8 text-center text-dark-muted text-sm">กำลังโหลด...</div>
-        <div v-else-if="store.notifications.length === 0" class="px-4 py-8 text-center text-dark-muted text-sm">
+        <div v-if="listQuery.isLoading.value" class="px-4 py-8 text-center text-sm text-dark-muted">
+          กำลังโหลด...
+        </div>
+        <div
+          v-else-if="notifications.length === 0"
+          class="px-4 py-8 text-center text-sm text-dark-muted"
+        >
           ไม่มีการแจ้งเตือน
         </div>
         <div v-else>
           <button
-            v-for="n in store.notifications"
+            v-for="n in notifications"
             :key="n.id"
             @click="handleClick(n.id, n.link)"
             class="w-full border-b border-dark-border px-4 py-3 text-left transition hover:bg-slate-800/50"
@@ -115,6 +123,13 @@ function typeIcon(type: string): string {
           </button>
         </div>
       </div>
+
+      <button
+        @click="viewAll"
+        class="w-full border-t border-dark-border px-4 py-3 text-center text-xs text-primary-400 hover:bg-slate-800/50 hover:text-primary-500"
+      >
+        ดูการแจ้งเตือนทั้งหมด
+      </button>
     </div>
   </div>
 </template>

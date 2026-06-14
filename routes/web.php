@@ -24,6 +24,7 @@ use App\Api\Controllers\DivisionController as ApiDivisionController;
 use App\Api\Controllers\PlanController as ApiPlanController;
 use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
 use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
+use App\Api\Controllers\DashboardController as ApiDashboardController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -101,6 +102,10 @@ Router::post('/api/v1/targets', [ApiBudgetTargetController::class, 'create']);
 Router::get('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'show']);
 Router::put('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'update']);
 Router::delete('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'delete']);
+
+// Dashboard (read-only, any authenticated user)
+Router::get('/api/v1/dashboard/summary', [ApiDashboardController::class, 'summary']);
+Router::get('/api/v1/dashboard/chart-data', [ApiDashboardController::class, 'chartData']);
 
 // Budget Request CRUD + Approval
 Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);
