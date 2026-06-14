@@ -158,7 +158,8 @@ async function onLogout(): Promise<void> {
           >
             <Menu class="h-6 w-6" />
           </button>
-          <h2 class="hidden text-lg font-semibold text-white sm:block">{{ pageTitle }}</h2>
+          <!-- Chrome, not a semantic heading — the page content owns the h1/h2 -->
+          <div class="hidden text-lg font-semibold text-white sm:block">{{ pageTitle }}</div>
         </div>
 
         <div class="flex items-center gap-4">
