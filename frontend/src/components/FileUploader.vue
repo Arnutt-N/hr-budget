@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useFileStore } from '@/stores/files'
+import { ref, computed, toRef } from 'vue'
 import { fileDownloadUrl } from '@/api/files'
+import {
+  useRequestFiles,
+  useUploadRequestFile,
+  useDeleteRequestFile,
+} from '@/queries/useRequestFiles'
 
 const props = defineProps<{
   requestId: number
@@ -13,13 +17,12 @@ const emit = defineEmits<{
   removed: []
 }>()
 
-const store = useFileStore()
+const filesQuery = useRequestFiles(toRef(props, 'requestId'))
+const uploadMut = useUploadRequestFile()
+const deleteMut = useDeleteRequestFile()
+
 const dragOver = ref(false)
 const uploadError = ref<string | null>(null)
-
-onMounted(() => {
-  if (props.requestId) store.fetchForRequest(props.requestId)
-})
 
 const ALLOWED_EXTENSIONS = ['pdf', 'xlsx', 'xls', 'csv', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'gif']
 const MAX_SIZE = 10 * 1024 * 1024
@@ -41,9 +44,11 @@ async function handleFiles(fileList: FileList | null) {
       uploadError.value = err
       continue
     }
-    const ok = await store.upload(props.requestId, file)
-    if (ok) {
+    try {
+      await uploadMut.mutateAsync({ requestId: props.requestId, file })
       emit('uploaded')
+    } catch (e) {
+      uploadError.value = e instanceof Error ? e.message : 'อัปโหลดไม่สำเร็จ'
     }
   }
 }
@@ -61,8 +66,12 @@ function onFileInput(e: Event) {
 }
 
 async function handleDelete(fileId: number) {
-  const ok = await store.remove(props.requestId, fileId)
-  if (ok) emit('removed')
+  try {
+    await deleteMut.mutateAsync({ requestId: props.requestId, fileId })
+    emit('removed')
+  } catch (e) {
+    uploadError.value = e instanceof Error ? e.message : 'ลบไฟล์ไม่สำเร็จ'
+  }
 }
 
 function formatSize(bytes: number): string {
@@ -71,7 +80,7 @@ function formatSize(bytes: number): string {
   return bytes + ' B'
 }
 
-const files = computed(() => store.filesForRequest(props.requestId))
+const files = computed(() => filesQuery.data.value ?? [])
 </script>
 
 <template>

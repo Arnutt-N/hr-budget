@@ -1,45 +1,38 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { ref, computed } from 'vue'
+import { useBudgetRequestList } from '@/queries/useBudgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 import StatusBadge from '@/components/StatusBadge.vue'
-import type { RequestStatus } from '@/types/budget-request'
+import type { ListFilters, RequestStatus } from '@/types/budget-request'
 
-const router = useRouter()
-const store = useBudgetRequestStore()
 const { data: fiscalYears } = useFiscalYearList()
 
+const PER_PAGE = 20
+
+// `filters` is the applied query input; editing the inputs is staged until "ค้นหา".
+const filters = ref<ListFilters>({ page: 1, per_page: PER_PAGE })
 const filterStatus = ref<RequestStatus | ''>('')
 const filterFiscalYear = ref<string>('')
-const filterDateFrom = ref('')
-const filterDateTo = ref('')
 const filterSearch = ref('')
 
-onMounted(() => {
-  store.fetchList()
-})
+const query = useBudgetRequestList(filters)
+const requests = computed(() => query.data.value?.data ?? [])
+const meta = computed(() => query.data.value?.meta ?? null)
+const currentPage = computed(() => meta.value?.page ?? 1)
+const totalPages = computed(() => meta.value?.total_pages ?? 0)
 
 function applyFilters() {
-  store.fetchList({
+  filters.value = {
     status: filterStatus.value || undefined,
     fiscal_year: filterFiscalYear.value ? Number(filterFiscalYear.value) : undefined,
-    date_from: filterDateFrom.value || undefined,
-    date_to: filterDateTo.value || undefined,
     search: filterSearch.value || undefined,
     page: 1,
-  })
+    per_page: PER_PAGE,
+  }
 }
 
 function goToPage(page: number) {
-  store.fetchList({
-    status: filterStatus.value || undefined,
-    fiscal_year: filterFiscalYear.value ? Number(filterFiscalYear.value) : undefined,
-    date_from: filterDateFrom.value || undefined,
-    date_to: filterDateTo.value || undefined,
-    search: filterSearch.value || undefined,
-    page,
-  })
+  filters.value = { ...filters.value, page }
 }
 
 function formatDate(dateStr: string | null): string {
@@ -89,18 +82,6 @@ function formatAmount(amount: string | null): string {
           <option value="rejected">ปฏิเสธ</option>
         </select>
         <input
-          v-model="filterDateFrom"
-          type="date"
-          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
-          title="จากวันที่"
-        />
-        <input
-          v-model="filterDateTo"
-          type="date"
-          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
-          title="ถึงวันที่"
-        />
-        <input
           v-model="filterSearch"
           type="text"
           placeholder="ค้นหาชื่อคำขอ..."
@@ -117,15 +98,15 @@ function formatAmount(amount: string | null): string {
     </div>
 
     <!-- Error -->
-    <div v-if="store.error" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-      {{ store.error }}
+    <div v-if="query.isError.value" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
+      {{ (query.error.value as Error | null)?.message ?? 'เกิดข้อผิดพลาด' }}
     </div>
 
     <!-- Loading -->
-    <div v-if="store.loading" class="py-12 text-center text-dark-muted">กำลังโหลด...</div>
+    <div v-if="query.isLoading.value" class="py-12 text-center text-dark-muted">กำลังโหลด...</div>
 
     <!-- Table -->
-    <div v-else-if="store.requests.length > 0" class="overflow-x-auto rounded-lg bg-dark-card border border-dark-border shadow">
+    <div v-else-if="requests.length > 0" class="overflow-x-auto rounded-lg bg-dark-card border border-dark-border shadow">
       <table class="min-w-full divide-y divide-dark-border">
         <thead class="bg-dark-bg">
           <tr>
@@ -138,7 +119,7 @@ function formatAmount(amount: string | null): string {
           </tr>
         </thead>
         <tbody class="divide-y divide-dark-border">
-          <tr v-for="req in store.requests" :key="req.id" class="hover:bg-slate-800/50">
+          <tr v-for="req in requests" :key="req.id" class="hover:bg-slate-800/50">
             <td class="px-4 py-3 text-sm">
               <router-link :to="`/requests/${req.id}`" class="text-primary-400 hover:text-primary-500 hover:underline">
                 {{ req.request_title }}
@@ -175,20 +156,20 @@ function formatAmount(amount: string | null): string {
     </div>
 
     <!-- Pagination -->
-    <div v-if="store.meta && store.meta.total_pages > 1" class="mt-4 flex items-center justify-center gap-2">
+    <div v-if="totalPages > 1" class="mt-4 flex items-center justify-center gap-2">
       <button
-        :disabled="store.currentPage <= 1"
-        @click="goToPage(store.currentPage - 1)"
+        :disabled="currentPage <= 1"
+        @click="goToPage(currentPage - 1)"
         class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
       >
         ก่อนหน้า
       </button>
       <span class="text-sm text-dark-muted">
-        หน้า {{ store.currentPage }} / {{ store.totalPages }}
+        หน้า {{ currentPage }} / {{ totalPages }}
       </span>
       <button
-        :disabled="store.currentPage >= store.totalPages"
-        @click="goToPage(store.currentPage + 1)"
+        :disabled="currentPage >= totalPages"
+        @click="goToPage(currentPage + 1)"
         class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
       >
         ถัดไป
