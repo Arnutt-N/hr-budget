@@ -8,145 +8,43 @@
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\View;
 use App\Core\Router;
-use App\Models\User;
 
 class AuthController
 {
     /**
-     * Show login page
-     */
-    public function showLogin(): void
-    {
-        // Redirect if already logged in
-        if (Auth::check()) {
-            Router::redirect('/');
-            return;
-        }
-
-        View::setLayout('auth');
-        View::render('auth/login', [
-            'title' => 'เข้าสู่ระบบ'
-        ]);
-    }
-
-    /**
-     * Handle login attempt
-     */
-    public function login(): void
-    {
-        // Verify CSRF
-        if (!View::verifyCsrf()) {
-            $this->redirectWithError('Invalid request. Please try again.');
-            return;
-        }
-
-        $email = trim($_POST['email'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        // Validate input
-        if (empty($email) || empty($password)) {
-            $this->redirectWithError('กรุณากรอกอีเมลและรหัสผ่าน');
-            return;
-        }
-
-        // Validate email format
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->redirectWithError('รูปแบบอีเมลไม่ถูกต้อง');
-            return;
-        }
-
-        // Attempt login
-        if (Auth::attempt($email, $password)) {
-            // Log activity
-            $this->logActivity('login', 'User logged in successfully');
-            
-            // Redirect to dashboard
-            Router::redirect('/');
-            return;
-        }
-
-        $this->redirectWithError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-    }
-
-    /**
-     * Handle logout
-     */
-    public function logout(): void
-    {
-        // Log activity before logout
-        if (Auth::check()) {
-            $this->logActivity('logout', 'User logged out');
-        }
-
-        Auth::logout();
-        Router::redirect('/login');
-    }
-
-    /**
-     * Mock ThaID login
+     * Mock ThaID login.
+     *
+     * Phase 6 SPA cutover: web session login (showLogin/login/logout) and
+     * forgot-password were retired — primary auth is the Vue SPA + the JWT
+     * cookie at /api/v1/auth/*. ThaID has no SPA flow yet, so this server
+     * route is kept as a documented parity-gap remnant. It mints a session
+     * via Auth::mockThaIDLogin() and lands on the SPA shell at '/'.
+     * (Recover the removed methods from the `pre-spa-cutover` git tag.)
      */
     public function thaidLogin(): void
     {
+        // Security: the mock ThaID flow authenticates ANY caller as a viewer
+        // with no real identity proof. It must never run in production. Gate it
+        // on APP_ENV so only dev/testing can use the mock.
+        $appEnv = $_ENV['APP_ENV'] ?? 'production';
+        $authConfig = require __DIR__ . '/../../config/auth.php';
+        $isMock = $authConfig['thaid']['mock'] ?? false;
+
+        if ($appEnv === 'production' && $isMock) {
+            $_SESSION['flash_error'] = 'การเข้าสู่ระบบผ่าน ThaID (Mock) ถูกปิดใช้งานในระบบจริง';
+            Router::redirect('/');
+            return;
+        }
+
         try {
             $user = Auth::mockThaIDLogin();
             $this->logActivity('login', 'User logged in via ThaID (Mock)');
             Router::redirect('/');
         } catch (\Exception $e) {
-            $this->redirectWithError('ไม่สามารถเข้าสู่ระบบผ่าน ThaID ได้');
+            $_SESSION['flash_error'] = 'ไม่สามารถเข้าสู่ระบบผ่าน ThaID ได้';
+            Router::redirect('/');
         }
-    }
-
-    /**
-     * Show forgot password page
-     */
-    public function showForgotPassword(): void
-    {
-        View::setLayout('auth');
-        View::render('auth/forgot-password', [
-            'title' => 'ลืมรหัสผ่าน'
-        ]);
-    }
-
-    /**
-     * Handle forgot password request
-     */
-    public function forgotPassword(): void
-    {
-        if (!View::verifyCsrf()) {
-            $this->redirectWithError('Invalid request. Please try again.', '/forgot-password');
-            return;
-        }
-
-        $email = trim($_POST['email'] ?? '');
-
-        if (empty($email)) {
-            $this->redirectWithError('กรุณากรอกอีเมล', '/forgot-password');
-            return;
-        }
-
-        // Check if user exists
-        $user = User::findByEmail($email);
-
-        // Always show success message for security (don't reveal if email exists)
-        $_SESSION['flash_success'] = 'หากอีเมลนี้มีในระบบ คุณจะได้รับลิงก์รีเซ็ตรหัสผ่านทางอีเมล';
-        
-        if ($user) {
-            // TODO: Send password reset email
-            $this->logActivity('password_reset_request', "Password reset requested for: {$email}");
-        }
-
-        Router::redirect('/forgot-password');
-    }
-
-    /**
-     * Redirect with error message
-     */
-    private function redirectWithError(string $message, string $url = '/login'): void
-    {
-        $_SESSION['flash_error'] = $message;
-        Router::redirect($url);
     }
 
     /**

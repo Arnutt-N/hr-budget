@@ -241,9 +241,6 @@
                 <i data-lucide="table" class="text-primary-500 w-5 h-5"></i>
                 รายละเอียดการเบิกจ่าย
             </h3>
-            <a href="<?= \App\Core\View::url('/budgets/list?year=' . $fiscalYear) ?>" class="text-sm text-primary-500 hover:text-primary-400 transition-colors flex items-center gap-1">
-                ดูรายละเอียด <i data-lucide="arrow-right" class="w-4 h-4"></i>
-            </a>
         </div>
         
         <!-- Table Wrapper -->

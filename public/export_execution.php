@@ -20,7 +20,9 @@ use App\Models\BudgetExecution;
 // Ensure user is logged in
 session_start();
 if (!Auth::check()) {
-    header('Location: login.php');
+    // Phase 6 cutover: login.php was retired; send to the SPA root, which
+    // handles login. View::url() keeps the subdirectory prefix correct.
+    header('Location: ' . \App\Core\View::url('/'));
     exit;
 }
 

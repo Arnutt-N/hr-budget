@@ -209,7 +209,8 @@ class Auth
     public static function require(): void
     {
         if (self::guest()) {
-            Router::redirect('/login');
+            // Phase 6 cutover: web /login was retired; the SPA root handles login.
+            Router::redirect('/');
         }
     }
 

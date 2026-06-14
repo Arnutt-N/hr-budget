@@ -199,31 +199,6 @@
                 <span class="ml-3 nav-text">ผลการเบิกจ่าย</span>
             </a>
 
-            <a href="<?= \App\Core\View::url('/budgets/list') ?>" class="nav-link <?= $currentPage == 'budgets' ? 'active' : '' ?>">
-                <i data-lucide="list" class="nav-icon"></i>
-                <span class="ml-3 nav-text">รายการเบิกจ่าย</span>
-            </a>
-            
-            <a href="<?= \App\Core\View::url('/requests') ?>" class="nav-link <?= ($currentPage ?? '') === 'requests' ? 'active' : '' ?>">
-                <i data-lucide="file-text" class="nav-icon"></i>
-                <span class="ml-3 nav-text">คำขอประมาณ</span>
-            </a>
-            
-            <!-- Reports Section -->
-            <div class="pt-4 mt-4 border-t border-dark-border">
-                <div class="px-3 mb-2 text-xs font-semibold text-dark-muted uppercase tracking-wider nav-text">
-                    รายงาน
-                </div>
-                <a href="<?= \App\Core\View::url('/reports/disbursement') ?>" class="nav-link <?= ($currentPage ?? '') === 'reports-disbursement' ? 'active' : '' ?>">
-                    <i data-lucide="line-chart" class="nav-icon"></i>
-                    <span class="ml-3 nav-text">รายงานเบิกจ่าย</span>
-                </a>
-                <a href="<?= \App\Core\View::url('/reports/requests') ?>" class="nav-link <?= ($currentPage ?? '') === 'reports-requests' ? 'active' : '' ?>">
-                    <i data-lucide="file-text" class="nav-icon"></i>
-                    <span class="ml-3 nav-text">รายงานคำขอ</span>
-                </a>
-            </div>
-            
             <!-- Management Section -->
             <div class="pt-4 mt-4 border-t border-dark-border">
                 <div class="px-3 mb-2 text-xs font-semibold text-dark-muted uppercase tracking-wider nav-text">
@@ -231,36 +206,36 @@
                 </div>
                 
                 <!-- Organizations -->
-                <a href="<?= \App\Core\View::url('/admin/organizations') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-organizations' ? 'active' : '' ?>">
+                <a href="<?= \App\Core\View::url('/organizations') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-organizations' ? 'active' : '' ?>">
                     <i data-lucide="building-2" class="nav-icon"></i>
                     <span class="ml-3 nav-text">หน่วยงาน</span>
                 </a>
-                
+
                 <!-- Budget Plans -->
-                <a href="<?= \App\Core\View::url('/admin/plans') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-plans' ? 'active' : '' ?>">
+                <a href="<?= \App\Core\View::url('/plans') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-plans' ? 'active' : '' ?>">
                     <i data-lucide="network" class="nav-icon"></i>
                     <span class="ml-3 nav-text">แผนงาน/ผลผลิต</span>
                 </a>
-                
+
                 <!-- Budget Categories -->
-                <a href="<?= \App\Core\View::url('/admin/categories') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-categories' ? 'active' : '' ?>">
+                <a href="<?= \App\Core\View::url('/categories') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-categories' ? 'active' : '' ?>">
                     <i data-lucide="list" class="nav-icon"></i>
                     <span class="ml-3 nav-text">ประเภทรายจ่าย</span>
                 </a>
-                
+
                 <!-- Target Types -->
-                <a href="<?= \App\Core\View::url('/admin/target-types') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-target-types' ? 'active' : '' ?>">
+                <a href="<?= \App\Core\View::url('/target-types') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-target-types' ? 'active' : '' ?>">
                     <i data-lucide="target" class="nav-icon"></i>
                     <span class="ml-3 nav-text">ประเภทเป้าหมาย</span>
                 </a>
-                
+
                 <a href="<?= \App\Core\View::url('/files') ?>" class="nav-link <?= ($currentPage ?? '') === 'files' ? 'active' : '' ?>">
                     <i data-lucide="folder-open" class="nav-icon"></i>
                     <span class="ml-3 nav-text">จัดการไฟล์</span>
                 </a>
-                
+
                 <?php if (\App\Core\Auth::can('users.manage')): ?>
-                <a href="<?= \App\Core\View::url('/admin/users') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-users' ? 'active' : '' ?>">
+                <a href="<?= \App\Core\View::url('/users') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-users' ? 'active' : '' ?>">
                     <i data-lucide="users" class="nav-icon"></i>
                     <span class="ml-3 nav-text">จัดการผู้ใช้</span>
                 </a>
@@ -270,10 +245,6 @@
 
         <!-- User & Logout -->
         <div class="p-4 border-t border-dark-border">
-            <a href="<?= \App\Core\View::url('/profile') ?>" class="nav-link mb-2">
-                <i data-lucide="user-circle" class="nav-icon"></i>
-                <span class="ml-3 nav-text">โปรไฟล์</span>
-            </a>
             <a href="<?= \App\Core\View::url('/logout') ?>" class="nav-link text-red-400 hover:text-red-300 hover:bg-red-900/20">
                 <i data-lucide="log-out" class="nav-icon"></i>
                 <span class="ml-3 nav-text">ออกจากระบบ</span>

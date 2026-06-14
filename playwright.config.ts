@@ -23,10 +23,22 @@ export default defineConfig({
   ],
   
   use: {
-    // Base URL for tests:
-    //   - BASE_URL env overrides (set in CI to http://127.0.0.1:5174)
-    //   - Default to Vue SPA dev server (Day 1+ flow)
-    //   - Legacy MVC tests can override per-test via page.goto('http://hr_budget.test/public/...')
+    // Base URL for tests. Two modes (SPA-only after the Phase 6 cutover):
+    //
+    //   1. DEFAULT — Vue SPA dev/preview server at :5174 (base '/').
+    //      `npm run test:e2e` uses this; CI sets BASE_URL=http://127.0.0.1:5174
+    //      and runs only tests/e2e/api against the PHP-served /api/v1 layer.
+    //
+    //   2. CUTOVER SMOKE — the PHP-served, subdirectory-based deploy build, to
+    //      exercise the Router::notFound() SPA catch-all + the subdirectory
+    //      base end-to-end. Build the deploy bundle first
+    //      (`cd frontend && VITE_BASE=/hr_budget/public/app/ npm run build`),
+    //      then run e.g.:
+    //        BASE_URL=http://hr_budget.test/hr_budget/public npx playwright \
+    //          test tests/e2e/auth-login-logout.spec.ts
+    //
+    // The dev-server default below is what every SPA spec relies on — do not
+    // change it; switch modes via the BASE_URL env var only.
     baseURL: process.env.BASE_URL || 'http://localhost:5174',
     
     // Collect trace when retrying the failed test
