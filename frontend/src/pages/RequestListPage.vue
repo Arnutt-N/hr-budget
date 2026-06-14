@@ -2,13 +2,13 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
-import { useFiscalYearStore } from '@/stores/fiscalYears'
+import { useFiscalYearList } from '@/queries/useFiscalYears'
 import StatusBadge from '@/components/StatusBadge.vue'
 import type { RequestStatus } from '@/types/budget-request'
 
 const router = useRouter()
 const store = useBudgetRequestStore()
-const fyStore = useFiscalYearStore()
+const { data: fiscalYears } = useFiscalYearList()
 
 const filterStatus = ref<RequestStatus | ''>('')
 const filterFiscalYear = ref<string>('')
@@ -17,7 +17,6 @@ const filterDateTo = ref('')
 const filterSearch = ref('')
 
 onMounted(() => {
-  fyStore.fetchList()
   store.fetchList()
 })
 
@@ -57,30 +56,30 @@ function formatAmount(amount: string | null): string {
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">คำของบประมาณ</h1>
+      <h1 class="text-2xl font-bold text-white">คำของบประมาณ</h1>
       <router-link
         to="/requests/create"
-        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
       >
         + สร้างคำขอใหม่
       </router-link>
     </div>
 
     <!-- Filters -->
-    <div class="mb-4 rounded-lg bg-white p-4 shadow">
+    <div class="mb-4 rounded-lg bg-dark-card border border-dark-border p-4 shadow">
       <div class="flex flex-wrap gap-3">
         <select
           v-model="filterFiscalYear"
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
         >
           <option value="">ทุกปีงบ</option>
-          <option v-for="fy in fyStore.fiscalYears" :key="fy.id" :value="fy.year">
+          <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
             {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
           </option>
         </select>
         <select
           v-model="filterStatus"
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
         >
           <option value="">ทุกสถานะ</option>
           <option value="draft">ร่าง</option>
@@ -92,20 +91,20 @@ function formatAmount(amount: string | null): string {
         <input
           v-model="filterDateFrom"
           type="date"
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
           title="จากวันที่"
         />
         <input
           v-model="filterDateTo"
           type="date"
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
           title="ถึงวันที่"
         />
         <input
           v-model="filterSearch"
           type="text"
           placeholder="ค้นหาชื่อคำขอ..."
-          class="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
+          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
           @keyup.enter="applyFilters"
         />
         <button
@@ -118,30 +117,30 @@ function formatAmount(amount: string | null): string {
     </div>
 
     <!-- Error -->
-    <div v-if="store.error" class="mb-4 rounded bg-red-50 p-3 text-sm text-red-700" role="alert">
+    <div v-if="store.error" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
       {{ store.error }}
     </div>
 
     <!-- Loading -->
-    <div v-if="store.loading" class="py-12 text-center text-gray-500">กำลังโหลด...</div>
+    <div v-if="store.loading" class="py-12 text-center text-dark-muted">กำลังโหลด...</div>
 
     <!-- Table -->
-    <div v-else-if="store.requests.length > 0" class="overflow-x-auto rounded-lg bg-white shadow">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+    <div v-else-if="store.requests.length > 0" class="overflow-x-auto rounded-lg bg-dark-card border border-dark-border shadow">
+      <table class="min-w-full divide-y divide-dark-border">
+        <thead class="bg-dark-bg">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">ชื่อคำขอ</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">สถานะ</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500">ยอดรวม</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">ผู้สร้าง</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">วันที่</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500">จัดการ</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">ชื่อคำขอ</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">สถานะ</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-dark-muted">ยอดรวม</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">ผู้สร้าง</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">วันที่</th>
+            <th class="px-4 py-3 text-center text-xs font-medium text-dark-muted">จัดการ</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr v-for="req in store.requests" :key="req.id" class="hover:bg-gray-50">
+        <tbody class="divide-y divide-dark-border">
+          <tr v-for="req in store.requests" :key="req.id" class="hover:bg-slate-800/50">
             <td class="px-4 py-3 text-sm">
-              <router-link :to="`/requests/${req.id}`" class="text-blue-600 hover:underline">
+              <router-link :to="`/requests/${req.id}`" class="text-primary-400 hover:text-primary-500 hover:underline">
                 {{ req.request_title }}
               </router-link>
             </td>
@@ -149,12 +148,12 @@ function formatAmount(amount: string | null): string {
               <StatusBadge :status="req.request_status" />
             </td>
             <td class="px-4 py-3 text-right text-sm">{{ formatAmount(req.total_amount) }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600">{{ req.created_by_name || '-' }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(req.created_at) }}</td>
+            <td class="px-4 py-3 text-sm text-dark-muted">{{ req.created_by_name || '-' }}</td>
+            <td class="px-4 py-3 text-sm text-dark-muted">{{ formatDate(req.created_at) }}</td>
             <td class="px-4 py-3 text-center">
               <router-link
                 :to="`/requests/${req.id}`"
-                class="text-blue-600 hover:underline text-sm"
+                class="text-primary-400 hover:text-primary-500 hover:underline text-sm"
               >
                 ดู
               </router-link>
@@ -165,11 +164,11 @@ function formatAmount(amount: string | null): string {
     </div>
 
     <!-- Empty state -->
-    <div v-else class="rounded-lg bg-white py-16 text-center shadow">
-      <p class="text-gray-500">ไม่มีคำของบประมาณ</p>
+    <div v-else class="rounded-lg bg-dark-card border border-dark-border py-16 text-center shadow">
+      <p class="text-dark-muted">ไม่มีคำของบประมาณ</p>
       <router-link
         to="/requests/create"
-        class="mt-4 inline-block text-blue-600 hover:underline text-sm"
+        class="mt-4 inline-block text-primary-400 hover:text-primary-500 hover:underline text-sm"
       >
         สร้างคำขอใหม่
       </router-link>
@@ -180,17 +179,17 @@ function formatAmount(amount: string | null): string {
       <button
         :disabled="store.currentPage <= 1"
         @click="goToPage(store.currentPage - 1)"
-        class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+        class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
       >
         ก่อนหน้า
       </button>
-      <span class="text-sm text-gray-600">
+      <span class="text-sm text-dark-muted">
         หน้า {{ store.currentPage }} / {{ store.totalPages }}
       </span>
       <button
         :disabled="store.currentPage >= store.totalPages"
         @click="goToPage(store.currentPage + 1)"
-        class="rounded border px-3 py-1.5 text-sm disabled:opacity-40"
+        class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
       >
         ถัดไป
       </button>

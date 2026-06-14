@@ -11,6 +11,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@lucide/vue": "^1.17.0",
     "@primeuix/themes": "^2.0.3",
     "@tanstack/vue-query": "^5.101.0",
     "@vee-validate/zod": "^4.15.1",

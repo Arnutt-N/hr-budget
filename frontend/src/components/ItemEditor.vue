@@ -42,25 +42,25 @@ function formatAmount(qty: string, price: string): string {
 <template>
   <div>
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+      <table class="min-w-full divide-y divide-dark-border">
+        <thead class="bg-dark-bg">
           <tr>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">ชื่อรายการ</th>
-            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 w-24">จำนวน</th>
-            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 w-32">ราคาหน่วย</th>
-            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 w-32">จำนวนเงิน</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">หมายเหตุ</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-dark-muted">ชื่อรายการ</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-dark-muted w-24">จำนวน</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-dark-muted w-32">ราคาหน่วย</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-dark-muted w-32">จำนวนเงิน</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-dark-muted">หมายเหตุ</th>
             <th class="px-3 py-2 w-16"></th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200">
+        <tbody class="divide-y divide-dark-border">
           <tr v-for="(item, index) in items" :key="index">
             <td class="px-3 py-2">
               <input
                 type="text"
                 :value="item.item_name"
                 @input="updateField(index, 'item_name', ($event.target as HTMLInputElement).value)"
-                class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+                class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
                 placeholder="ชื่อรายการ"
               />
             </td>
@@ -69,7 +69,7 @@ function formatAmount(qty: string, price: string): string {
                 type="number"
                 :value="item.quantity"
                 @input="updateField(index, 'quantity', ($event.target as HTMLInputElement).value)"
-                class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-right focus:border-blue-500 focus:outline-none"
+                class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm text-right focus:border-primary-500 focus:outline-none"
                 min="0"
                 step="any"
               />
@@ -79,12 +79,12 @@ function formatAmount(qty: string, price: string): string {
                 type="number"
                 :value="item.unit_price"
                 @input="updateField(index, 'unit_price', ($event.target as HTMLInputElement).value)"
-                class="w-full rounded border border-gray-300 px-2 py-1 text-sm text-right focus:border-blue-500 focus:outline-none"
+                class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm text-right focus:border-primary-500 focus:outline-none"
                 min="0"
                 step="any"
               />
             </td>
-            <td class="px-3 py-2 text-right text-sm text-gray-700 whitespace-nowrap">
+            <td class="px-3 py-2 text-right text-sm text-dark-muted whitespace-nowrap">
               {{ formatAmount(item.quantity, item.unit_price) }}
             </td>
             <td class="px-3 py-2">
@@ -92,7 +92,7 @@ function formatAmount(qty: string, price: string): string {
                 type="text"
                 :value="item.remark ?? ''"
                 @input="updateField(index, 'remark', ($event.target as HTMLInputElement).value || null)"
-                class="w-full rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+                class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
                 placeholder="หมายเหตุ"
               />
             </td>
@@ -100,7 +100,7 @@ function formatAmount(qty: string, price: string): string {
               <button
                 type="button"
                 @click="removeItem(index)"
-                class="text-red-500 hover:text-red-700 text-sm"
+                class="text-red-400 hover:text-red-300 text-sm"
                 title="ลบรายการ"
               >
                 ✕
@@ -114,11 +114,11 @@ function formatAmount(qty: string, price: string): string {
       <button
         type="button"
         @click="addItem"
-        class="rounded border border-dashed border-gray-400 px-3 py-1.5 text-sm text-gray-600 hover:border-blue-500 hover:text-blue-600"
+        class="rounded border border-dashed border-dark-border px-3 py-1.5 text-sm text-dark-muted hover:border-primary-500 hover:text-primary-400"
       >
         + เพิ่มรายการ
       </button>
-      <div class="text-sm font-medium text-gray-700">
+      <div class="text-sm font-medium text-dark-muted">
         ยอดรวม:
         <span class="text-base ml-1">{{ totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
       </div>

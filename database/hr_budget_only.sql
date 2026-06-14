@@ -1783,6 +1783,60 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `region_label`*/;
 SET character_set_client = @saved_cs_client;
 
+--
+-- Phase 2 admin CRUD tables (mirror of migration 064) — FK checks are
+-- disabled during dump load, so creation order vs. referenced tables is safe.
+--
+CREATE TABLE IF NOT EXISTS `divisions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(20) NOT NULL,
+  `name_th` varchar(255) NOT NULL,
+  `name_en` varchar(255) DEFAULT NULL,
+  `short_name` varchar(50) DEFAULT NULL,
+  `parent_id` int DEFAULT NULL,
+  `type` enum('central','regional','provincial') DEFAULT 'central',
+  `is_active` tinyint(1) DEFAULT '1',
+  `sort_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_divisions_code` (`code`),
+  KEY `idx_divisions_parent` (`parent_id`),
+  CONSTRAINT `fk_divisions_parent` FOREIGN KEY (`parent_id`) REFERENCES `divisions` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `target_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) NOT NULL,
+  `name_th` varchar(255) NOT NULL,
+  `description` text,
+  `is_active` tinyint(1) DEFAULT '1',
+  `sort_order` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_target_types_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `budget_targets` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `target_type_id` int NOT NULL,
+  `fiscal_year` int NOT NULL,
+  `quarter` int DEFAULT NULL,
+  `organization_id` int DEFAULT NULL,
+  `category_id` int DEFAULT NULL,
+  `target_percent` decimal(5,2) DEFAULT NULL,
+  `target_amount` decimal(15,2) DEFAULT NULL,
+  `notes` text,
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_budget_targets` (`target_type_id`,`fiscal_year`,`quarter`,`organization_id`,`category_id`),
+  KEY `idx_budget_targets_year` (`fiscal_year`),
+  CONSTRAINT `fk_budget_targets_type` FOREIGN KEY (`target_type_id`) REFERENCES `target_types` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!50606 SET GLOBAL INNODB_STATS_AUTO_RECALC=@OLD_INNODB_STATS_AUTO_RECALC */;
 
