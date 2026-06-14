@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useBudgetRequestStore } from '@/stores/budgetRequests'
+import { useToast } from 'primevue/usetoast'
+import { useCreateBudgetRequest, useSubmitBudgetRequest } from '@/queries/useBudgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
 const router = useRouter()
-const store = useBudgetRequestStore()
+const toast = useToast()
+const createMut = useCreateBudgetRequest()
+const submitMut = useSubmitBudgetRequest()
 const { data: fiscalYears } = useFiscalYearList()
 const { data: organizations } = useOrganizationList()
 
@@ -19,7 +22,7 @@ const items = ref<ItemRow[]>([
   { item_name: '', quantity: '0', unit_price: '0', remark: null, category_item_id: null },
 ])
 const errorMsg = ref('')
-const loading = ref(false)
+const loading = computed(() => createMut.isPending.value || submitMut.isPending.value)
 
 // Default the fiscal year once the list arrives (TanStack data is async/reactive)
 watch(
@@ -38,55 +41,48 @@ const canSave = computed(() =>
 )
 
 async function saveDraft() {
-  const result = await doCreate()
-  if (result?.id) {
-    router.push(`/requests/${result.id}`)
-  }
+  const id = await doCreate()
+  if (id) router.push(`/requests/${id}`)
 }
 
 async function saveAndSubmit() {
-  const result = await doCreate()
-  if (result?.id) {
-    loading.value = true
-    try {
-      const submitResult = await store.submit(result.id)
-      if (submitResult.ok) {
-        router.push(`/requests/${result.id}`)
-      } else {
-        errorMsg.value = submitResult.error ?? 'ไม่สามารถส่งอนุมัติได้'
-      }
-    } finally {
-      loading.value = false
-    }
+  const id = await doCreate()
+  if (!id) return // create failed → errorMsg shown, stay on the form
+  try {
+    await submitMut.mutateAsync(id)
+  } catch (e) {
+    // Created as a draft but submit failed. A Toast survives the route change
+    // (rendered app-level in AppLayout) so the user knows to retry on detail.
+    toast.add({
+      severity: 'warn',
+      summary: 'ส่งอนุมัติไม่สำเร็จ',
+      detail: e instanceof Error ? e.message : 'บันทึกร่างแล้ว — ลองส่งอนุมัติอีกครั้งในหน้ารายละเอียด',
+      life: 6000,
+    })
   }
+  router.push(`/requests/${id}`)
 }
 
-async function doCreate(): Promise<{ id?: number } | null> {
+async function doCreate(): Promise<number | null> {
   errorMsg.value = ''
-  loading.value = true
+
+  const validItems = items.value.filter((i) => i.item_name.trim() !== '')
+  if (validItems.length === 0) {
+    errorMsg.value = 'ต้องมีรายการอย่างน้อย 1 รายการ'
+    return null
+  }
 
   try {
-    const validItems = items.value.filter((i) => i.item_name.trim() !== '')
-    if (validItems.length === 0) {
-      errorMsg.value = 'ต้องมีรายการอย่างน้อย 1 รายการ'
-      return null
-    }
-
-    const result = await store.create({
+    const created = await createMut.mutateAsync({
       request_title: requestTitle.value.trim(),
       fiscal_year: fiscalYear.value,
       org_id: orgId.value,
       items: validItems,
     })
-
-    if (!result.ok) {
-      errorMsg.value = result.error ?? 'เกิดข้อผิดพลาด'
-      return null
-    }
-
-    return { id: result.id }
-  } finally {
-    loading.value = false
+    return created.id
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+    return null
   }
 }
 </script>
