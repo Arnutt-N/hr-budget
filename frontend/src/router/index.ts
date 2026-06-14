@@ -44,6 +44,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/RequestListPage.vue'),
         meta: { title: 'คำของบประมาณ' },
       },
+      {
+        path: 'notifications',
+        name: 'notifications',
+        component: () => import('@/pages/NotificationListPage.vue'),
+        meta: { title: 'การแจ้งเตือน' },
+      },
       // Admin pages
       {
         path: 'fiscal-years',

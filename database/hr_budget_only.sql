@@ -699,7 +699,7 @@ CREATE TABLE `budget_transactions` (
 
 LOCK TABLES `budget_transactions` WRITE;
 /*!40000 ALTER TABLE `budget_transactions` DISABLE KEYS */;
-INSERT INTO `budget_transactions` VALUES (1,1,'expenditure',1000.00,'ทดสอบ',NULL,1,'2025-12-13 04:18:05');
+INSERT INTO `budget_transactions` VALUES (1,1,'expenditure',1000.00,'ทดสอบ',NULL,1,'2025-12-13 04:18:05'),(2,1,'expenditure',5000.00,'ทดสอบ ปีงบ 2569',NULL,1,'2025-10-15 04:18:05');
 /*!40000 ALTER TABLE `budget_transactions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1419,6 +1419,7 @@ CREATE TABLE `notifications` (
 
 LOCK TABLES `notifications` WRITE;
 /*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,2,'approved','คำขอได้รับการอนุมัติ','งบประมาณของคุณได้รับการอนุมัติแล้ว','/requests',0,'2026-06-14 09:00:00');
 /*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 

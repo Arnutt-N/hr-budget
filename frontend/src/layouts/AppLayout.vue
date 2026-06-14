@@ -13,6 +13,7 @@ import {
   Target,
   Goal,
   Users,
+  Bell,
   LogOut,
   Menu,
 } from '@lucide/vue'
@@ -80,6 +81,11 @@ async function onLogout(): Promise<void> {
         <RouterLink to="/requests" class="nav-link" @click="sidebarOpen = false">
           <FileText class="h-5 w-5" />
           <span class="ml-3">คำขอประมาณ</span>
+        </RouterLink>
+
+        <RouterLink to="/notifications" class="nav-link" @click="sidebarOpen = false">
+          <Bell class="h-5 w-5" />
+          <span class="ml-3">การแจ้งเตือน</span>
         </RouterLink>
 
         <!-- Management Section (admin only) -->

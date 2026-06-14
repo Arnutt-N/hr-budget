@@ -109,3 +109,6 @@ id_ed25519*
 /storage/*.key
 secrets/
 .claude/settings.local.json
+
+
+project-log-md/
