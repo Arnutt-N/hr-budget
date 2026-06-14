@@ -44,6 +44,19 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/RequestListPage.vue'),
         meta: { title: 'คำของบประมาณ' },
       },
+      // Disbursement tracking (authed staff — NOT admin-only)
+      {
+        path: 'disbursements/wizard',
+        name: 'disbursement-wizard',
+        component: () => import('@/pages/DisbursementWizardPage.vue'),
+        meta: { title: 'บันทึกการเบิกจ่าย' },
+      },
+      {
+        path: 'disbursements',
+        name: 'disbursements',
+        component: () => import('@/pages/DisbursementListPage.vue'),
+        meta: { title: 'บันทึกการเบิกจ่าย' },
+      },
       {
         path: 'notifications',
         name: 'notifications',

@@ -5,6 +5,7 @@ import {
   Landmark,
   LayoutDashboard,
   FileText,
+  Wallet,
   Calendar,
   Building2,
   Building,
@@ -81,6 +82,11 @@ async function onLogout(): Promise<void> {
         <RouterLink to="/requests" class="nav-link" @click="sidebarOpen = false">
           <FileText class="h-5 w-5" />
           <span class="ml-3">คำขอประมาณ</span>
+        </RouterLink>
+
+        <RouterLink to="/disbursements" class="nav-link" @click="sidebarOpen = false">
+          <Wallet class="h-5 w-5" />
+          <span class="ml-3">บันทึกการเบิกจ่าย</span>
         </RouterLink>
 
         <RouterLink to="/notifications" class="nav-link" @click="sidebarOpen = false">
