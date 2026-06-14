@@ -25,7 +25,7 @@ test.describe('Auth Flow (Day 1)', () => {
   test('redirects unauthenticated users from / to /login', async ({ page }) => {
     await page.goto('/')
     await expect(page).toHaveURL(/\/login/)
-    await expect(page.getByRole('heading', { name: 'HR Budget' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'ระบบบริหารงบประมาณบุคลากร' })).toBeVisible()
   })
 
   test('shows validation error on empty submit', async ({ page }) => {

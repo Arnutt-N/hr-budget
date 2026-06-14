@@ -57,7 +57,7 @@ function typeIcon(type: string): string {
   <div class="relative">
     <button
       @click="toggleDropdown"
-      class="relative rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+      class="relative rounded-full p-2 text-dark-muted hover:bg-slate-800 hover:text-white"
       title="การแจ้งเตือน"
     >
       <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,22 +78,22 @@ function typeIcon(type: string): string {
     <!-- Dropdown -->
     <div
       v-if="open"
-      class="absolute right-0 z-40 mt-2 w-80 rounded-lg border bg-white shadow-lg"
+      class="absolute right-0 z-40 mt-2 w-80 rounded-lg border border-dark-border bg-dark-card shadow-lg"
     >
-      <div class="flex items-center justify-between border-b px-4 py-3">
-        <span class="font-medium text-gray-900 text-sm">การแจ้งเตือน</span>
+      <div class="flex items-center justify-between border-b border-dark-border px-4 py-3">
+        <span class="font-medium text-white text-sm">การแจ้งเตือน</span>
         <button
           v-if="store.unreadCount > 0"
           @click="handleMarkAllRead"
-          class="text-xs text-blue-600 hover:text-blue-800"
+          class="text-xs text-primary-400 hover:text-primary-500"
         >
           อ่านทั้งหมด
         </button>
       </div>
 
       <div class="max-h-80 overflow-y-auto">
-        <div v-if="store.loading" class="px-4 py-8 text-center text-gray-500 text-sm">กำลังโหลด...</div>
-        <div v-else-if="store.notifications.length === 0" class="px-4 py-8 text-center text-gray-500 text-sm">
+        <div v-if="store.loading" class="px-4 py-8 text-center text-dark-muted text-sm">กำลังโหลด...</div>
+        <div v-else-if="store.notifications.length === 0" class="px-4 py-8 text-center text-dark-muted text-sm">
           ไม่มีการแจ้งเตือน
         </div>
         <div v-else>
@@ -101,15 +101,15 @@ function typeIcon(type: string): string {
             v-for="n in store.notifications"
             :key="n.id"
             @click="handleClick(n.id, n.link)"
-            class="w-full border-b px-4 py-3 text-left transition hover:bg-gray-50"
-            :class="{ 'bg-blue-50': !n.is_read }"
+            class="w-full border-b border-dark-border px-4 py-3 text-left transition hover:bg-slate-800/50"
+            :class="{ 'bg-sky-500/10': !n.is_read }"
           >
             <div class="flex items-start gap-2">
               <span class="mt-0.5 text-sm">{{ typeIcon(n.type) }}</span>
               <div class="min-w-0 flex-1">
-                <p class="text-sm text-gray-900">{{ n.title }}</p>
-                <p v-if="n.message" class="truncate text-xs text-gray-500">{{ n.message }}</p>
-                <p class="mt-1 text-[11px] text-gray-400">{{ timeAgo(n.created_at) }}</p>
+                <p class="text-sm text-white">{{ n.title }}</p>
+                <p v-if="n.message" class="truncate text-xs text-dark-muted">{{ n.message }}</p>
+                <p class="mt-1 text-[11px] text-dark-muted">{{ timeAgo(n.created_at) }}</p>
               </div>
             </div>
           </button>

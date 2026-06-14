@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Landmark } from '@lucide/vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -48,18 +49,21 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-screen flex items-center justify-center bg-dark-bg px-4">
     <form
-      class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md space-y-5"
+      class="bg-dark-card border border-dark-border p-8 rounded-xl shadow-lg w-full max-w-md space-y-5"
       @submit.prevent="onSubmit"
     >
       <div class="text-center">
-        <h1 class="text-2xl font-bold text-gray-900">HR Budget</h1>
-        <p class="text-sm text-gray-500 mt-1">ระบบจัดการงบประมาณ</p>
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-500">
+          <Landmark class="h-6 w-6 text-white" />
+        </div>
+        <h1 class="text-2xl font-bold text-white">ระบบบริหารงบประมาณบุคลากร</h1>
+        <p class="text-sm text-dark-muted mt-1">เข้าสู่ระบบจัดการข้อมูล</p>
       </div>
 
       <div class="flex flex-col gap-1">
-        <label for="email" class="text-sm font-medium text-gray-700">อีเมล</label>
+        <label for="email" class="text-sm font-medium text-dark-muted">อีเมล</label>
         <InputText
           id="email"
           v-model.trim="email"
@@ -73,7 +77,7 @@ const onSubmit = handleSubmit(async (values) => {
       </div>
 
       <div class="flex flex-col gap-1">
-        <label for="password" class="text-sm font-medium text-gray-700">รหัสผ่าน</label>
+        <label for="password" class="text-sm font-medium text-dark-muted">รหัสผ่าน</label>
         <Password
           v-model="password"
           input-id="password"

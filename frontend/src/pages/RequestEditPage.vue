@@ -2,8 +2,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequestStore } from '@/stores/budgetRequests'
-import { useFiscalYearStore } from '@/stores/fiscalYears'
-import { useOrganizationStore } from '@/stores/organizations'
+import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
@@ -11,8 +11,8 @@ import type { ItemRow } from '@/components/ItemEditor.vue'
 const route = useRoute()
 const router = useRouter()
 const store = useBudgetRequestStore()
-const fyStore = useFiscalYearStore()
-const orgStore = useOrganizationStore()
+const { data: fiscalYears } = useFiscalYearList()
+const { data: organizations } = useOrganizationList()
 
 const requestTitle = ref('')
 const fiscalYear = ref(0)
@@ -22,8 +22,6 @@ const errorMsg = ref('')
 const loaded = ref(false)
 
 onMounted(async () => {
-  await Promise.all([fyStore.fetchList(), orgStore.fetchList()])
-
   const id = Number(route.params.id)
   const ok = await store.fetchById(id)
   if (!ok) return
@@ -78,48 +76,48 @@ async function handleSave() {
 <template>
   <div>
     <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">แก้ไขคำของบประมาณ</h1>
-      <router-link :to="`/requests/${route.params.id}`" class="text-sm text-gray-500 hover:text-gray-700">
+      <h1 class="text-2xl font-bold text-white">แก้ไขคำของบประมาณ</h1>
+      <router-link :to="`/requests/${route.params.id}`" class="text-sm text-dark-muted hover:text-dark-text">
         &larr; กลับ
       </router-link>
     </div>
 
-    <div v-if="!loaded" class="py-16 text-center text-gray-500">กำลังโหลด...</div>
+    <div v-if="!loaded" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 
     <template v-else>
-      <div v-if="errorMsg" class="mb-4 rounded bg-red-50 p-3 text-sm text-red-700" role="alert">
+      <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
         {{ errorMsg }}
       </div>
 
-      <div class="space-y-6 rounded-lg bg-white p-6 shadow">
+      <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ชื่อคำขอ *</label>
+            <label class="mb-1 block text-sm font-medium text-dark-muted">ชื่อคำขอ *</label>
             <input
               v-model="requestTitle"
               type="text"
-              class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">ปีงบประมาณ</label>
+            <label class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
             <select
               v-model.number="fiscalYear"
-              class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
-              <option v-for="fy in fyStore.fiscalYears" :key="fy.id" :value="fy.year">
+              <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
                 {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
               </option>
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">หน่วยงาน</label>
+            <label class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
             <select
               v-model="orgId"
-              class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+              class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
               <option :value="null">-- เลือกหน่วยงาน --</option>
-              <option v-for="org in orgStore.organizations" :key="org.id" :value="org.id">
+              <option v-for="org in organizations ?? []" :key="org.id" :value="org.id">
                 {{ org.name_th }}
               </option>
             </select>
@@ -127,23 +125,23 @@ async function handleSave() {
         </div>
 
         <div>
-          <label class="mb-2 block text-sm font-medium text-gray-700">รายการงบประมาณ</label>
+          <label class="mb-2 block text-sm font-medium text-dark-muted">รายการงบประมาณ</label>
           <ItemEditor v-model="items" />
         </div>
 
         <FileUploader :request-id="Number(route.params.id)" />
 
-        <div class="flex gap-3 border-t pt-4">
+        <div class="flex gap-3 border-t border-dark-border pt-4">
           <button
             @click="handleSave"
             :disabled="store.loading"
-            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
           >
             {{ store.loading ? 'กำลังบันทึก...' : 'บันทึก' }}
           </button>
           <router-link
             :to="`/requests/${route.params.id}`"
-            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            class="rounded-lg border border-dark-border bg-dark-card px-4 py-2 text-sm font-medium text-dark-muted hover:bg-slate-800/50"
           >
             ยกเลิก
           </router-link>

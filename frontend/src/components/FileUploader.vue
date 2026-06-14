@@ -76,46 +76,46 @@ const files = computed(() => store.filesForRequest(props.requestId))
 
 <template>
   <div>
-    <h3 class="mb-2 text-sm font-medium text-gray-700">ไฟล์แนบ</h3>
+    <h3 class="mb-2 text-sm font-medium text-dark-muted">ไฟล์แนบ</h3>
 
     <!-- Drop zone -->
     <div
       @dragover.prevent="dragOver = true"
       @dragleave.prevent="dragOver = false"
       @drop.prevent="onDrop"
-      :class="{ 'border-blue-400 bg-blue-50': dragOver, 'border-gray-300': !dragOver, 'opacity-50': disabled }"
+      :class="{ 'border-primary-400 bg-sky-500/10': dragOver, 'border-dark-border': !dragOver, 'opacity-50': disabled }"
       class="rounded-lg border-2 border-dashed p-6 text-center transition"
     >
       <template v-if="disabled">
-        <p class="text-sm text-gray-400">บันทึกคำขอก่อน จึงจะแนบไฟล์ได้</p>
+        <p class="text-sm text-dark-muted">บันทึกคำขอก่อน จึงจะแนบไฟล์ได้</p>
       </template>
       <template v-else>
-        <p class="text-sm text-gray-500">คลิกหรือลากไฟล์มาวาง</p>
-        <label class="mt-2 inline-block cursor-pointer rounded bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700">
+        <p class="text-sm text-dark-muted">คลิกหรือลากไฟล์มาวาง</p>
+        <label class="mt-2 inline-block cursor-pointer rounded bg-primary-600 px-3 py-1.5 text-xs text-white hover:bg-primary-500">
           เลือกไฟล์
           <input type="file" class="hidden" multiple :accept="ALLOWED_EXTENSIONS.map(e => '.' + e).join(',')" @change="onFileInput" />
         </label>
       </template>
     </div>
 
-    <p v-if="uploadError" class="mt-2 text-xs text-red-600">{{ uploadError }}</p>
+    <p v-if="uploadError" class="mt-2 text-xs text-red-400">{{ uploadError }}</p>
 
     <!-- File list -->
-    <ul v-if="files.length > 0" class="mt-3 divide-y rounded-lg border bg-white">
+    <ul v-if="files.length > 0" class="mt-3 divide-y divide-dark-border rounded-lg border border-dark-border bg-dark-card">
       <li v-for="f in files" :key="f.id" class="flex items-center justify-between px-3 py-2">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="text-xs font-mono text-gray-400 uppercase">{{ f.file_type }}</span>
+          <span class="text-xs font-mono text-dark-muted uppercase">{{ f.file_type }}</span>
           <a
             :href="fileDownloadUrl(f.id)"
-            class="truncate text-sm text-blue-600 hover:underline"
+            class="truncate text-sm text-primary-400 hover:text-primary-500 hover:underline"
             :title="f.original_name"
           >{{ f.original_name }}</a>
-          <span class="text-xs text-gray-400">({{ formatSize(f.file_size) }})</span>
+          <span class="text-xs text-dark-muted">({{ formatSize(f.file_size) }})</span>
         </div>
         <button
           v-if="!disabled"
           @click="handleDelete(f.id)"
-          class="ml-2 shrink-0 text-xs text-red-500 hover:text-red-700"
+          class="ml-2 shrink-0 text-xs text-red-400 hover:text-red-300"
           title="ลบไฟล์"
         >
           &#10005;

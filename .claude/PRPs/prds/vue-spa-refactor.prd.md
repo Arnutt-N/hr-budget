@@ -43,7 +43,7 @@ We'll know we're right when the Admin Master Data module (Phase 2) reaches featu
 
 - [x] CSRF strategy: SameSite=Strict httpOnly cookie + mandatory `X-Requested-With` header on cookie-authed mutations + CORS allowlist (decided in Phase 1 plan)
 - [ ] Notification freshness: polling interval vs SSE — decide in Phase 3
-- [ ] Do `plans`, `divisions`, `targets`, `target-types` admin resources need new API endpoints in Phase 2, or do existing ones cover them? (API audit task, Phase 2 start)
+- [x] Do `plans`, `divisions`, `targets`, `target-types` admin resources need new API endpoints in Phase 2? **Resolved (Phase 2):** all four needed new `/api/v1/*` chains (Repository→DTO→Service→Controller). `plans` table already existed (built against real schema, not the broken legacy `BudgetPlanController`); `divisions`/`target_types`/`budget_targets` tables created via migration 064. No `TargetType` model existed (legacy admin page was already broken).
 - [ ] vue-i18n now or hardcode Thai strings (current approach)? Leaning hardcode-Thai to match existing views; revisit if bilingual requirement appears
 - [ ] Server-side token revocation on logout (JWT stays valid until TTL) — review jwt_ttl length before production; revocation list only if a real requirement appears (security review 2026-06-12)
 - [ ] Login-CSRF hardening (Origin check on /auth/login) and removing `env` from public /health — deferred follow-ups from Phase 1 security review
@@ -129,7 +129,7 @@ Login → main layout (sidebar) → Admin → Fiscal Years table → create/edit
 | # | Phase | Description | Status | Parallel | Depends | PRP Plan |
 |---|-------|-------------|--------|----------|---------|----------|
 | 1 | SPA Scaffold + Auth | (Revised: scaffold pre-exists) Stack upgrade (PrimeVue+TanStack+vee-validate+Vitest) + JWT httpOnly cookie auth hardening | complete | - | - | [plan](../plans/completed/vue-spa-phase1-foundation-auth.plan.md) · [report](../reports/vue-spa-phase1-foundation-auth-report.md) |
-| 2 | Admin Master Data CRUD | All admin resources via PrimeVue DataTable + validated forms; close admin API gaps | pending | - | 1 | - |
+| 2 | Admin Master Data CRUD | All admin resources via PrimeVue DataTable + validated forms; close admin API gaps | complete | - | 1 | [plan](../plans/completed/vue-spa-phase2-admin-crud.plan.md) · [report](../reports/vue-spa-phase2-admin-crud-report.md) |
 | 3 | Dashboard + Notifications | vue-chartjs dashboard, notification badge/list (polling) | pending | with 4 | 2 | - |
 | 4 | Budget Request Workflow | create→submit→approve/reject + file upload UI | pending | with 3 | 2 | - |
 | 5 | Budget Tracking + Disbursements | New stateless APIs replacing store-session; multi-step form state in Pinia | pending | - | 2 | - |
