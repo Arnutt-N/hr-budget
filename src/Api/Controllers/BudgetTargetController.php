@@ -47,7 +47,8 @@ final class BudgetTargetController
                 return;
             }
 
-            $id = $this->service->create($user['role'] ?? 'viewer', $dto);
+            $actorId = isset($user['id']) ? (int) $user['id'] : null;
+            $id = $this->service->create($user['role'] ?? 'viewer', $dto, $actorId);
             if ($id === null) {
                 ApiResponse::error('ไม่สามารถสร้างเป้าหมายได้', 422);
                 return;

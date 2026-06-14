@@ -52,15 +52,43 @@ final class UpdateBudgetTargetDto
             }
         }
 
+        // For required scalars (target_type_id, fiscal_year) a present-but-empty
+        // value casts to 0 and is caught by validate(). For the nullable columns
+        // (quarter/org/category/percent/amount) an empty/null value must stay NULL
+        // — never 0 — or it corrupts the FK / the uk_budget_targets unique index.
         return new self(
             targetTypeId: array_key_exists('target_type_id', $raw) ? (int) $raw['target_type_id'] : null,
             fiscalYear: array_key_exists('fiscal_year', $raw) ? (int) $raw['fiscal_year'] : null,
-            quarter: array_key_exists('quarter', $raw) ? (int) $raw['quarter'] : null,
-            organizationId: array_key_exists('organization_id', $raw) ? (int) $raw['organization_id'] : null,
-            categoryId: array_key_exists('category_id', $raw) ? (int) $raw['category_id'] : null,
-            targetPercent: array_key_exists('target_percent', $raw) ? (float) $raw['target_percent'] : null,
-            targetAmount: array_key_exists('target_amount', $raw) ? (float) $raw['target_amount'] : null,
+            quarter: self::nullableInt($raw, 'quarter'),
+            organizationId: self::nullableInt($raw, 'organization_id'),
+            categoryId: self::nullableInt($raw, 'category_id'),
+            targetPercent: self::nullableFloat($raw, 'target_percent'),
+            targetAmount: self::nullableFloat($raw, 'target_amount'),
             notes: array_key_exists('notes', $raw) ? trim((string) $raw['notes']) : null,
         );
+    }
+
+    private static function nullableInt(array $raw, string $key): ?int
+    {
+        if (!array_key_exists($key, $raw)) {
+            return null;
+        }
+        $value = $raw[$key];
+        if ($value === null || $value === '') {
+            return null;
+        }
+        return (int) $value;
+    }
+
+    private static function nullableFloat(array $raw, string $key): ?float
+    {
+        if (!array_key_exists($key, $raw)) {
+            return null;
+        }
+        $value = $raw[$key];
+        if ($value === null || $value === '') {
+            return null;
+        }
+        return (float) $value;
     }
 }

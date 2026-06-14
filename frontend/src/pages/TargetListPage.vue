@@ -13,7 +13,7 @@ import Select from 'primevue/select'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import Message from 'primevue/message'
-import type { Target } from '@/types/target'
+import type { Target, CreateTarget, UpdateTarget } from '@/types/target'
 import {
   useTargetList,
   useCreateTarget,
@@ -141,24 +141,24 @@ function openEdit(target: Target): void {
 }
 
 const onSave = handleSubmit(async (values) => {
-  // Build payload: omit undefined keys, pass through nulls.
-  const payload: Record<string, unknown> = {
+  // zod coerces these to number; nullable selects pass null through.
+  const payload: CreateTarget = {
     target_type_id: values.target_type_id,
     fiscal_year: values.fiscal_year,
+    quarter: values.quarter ?? null,
+    organization_id: values.organization_id ?? null,
+    category_id: values.category_id ?? null,
+    target_percent: values.target_percent ?? null,
+    target_amount: values.target_amount ?? null,
+    notes: values.notes ? values.notes : undefined,
   }
-  if (values.quarter !== undefined) payload.quarter = values.quarter
-  if (values.organization_id !== undefined) payload.organization_id = values.organization_id
-  if (values.category_id !== undefined) payload.category_id = values.category_id
-  if (values.target_percent !== undefined) payload.target_percent = values.target_percent
-  if (values.target_amount !== undefined) payload.target_amount = values.target_amount
-  if (values.notes !== undefined && values.notes !== '') payload.notes = values.notes
 
   try {
     if (editingId.value) {
-      await updateMutation.mutateAsync({ id: editingId.value, data: payload })
+      await updateMutation.mutateAsync({ id: editingId.value, data: payload as UpdateTarget })
       toast.add({ severity: 'success', summary: 'แก้ไขเป้าหมายสำเร็จ', life: 3000 })
     } else {
-      await createMutation.mutateAsync(payload as never)
+      await createMutation.mutateAsync(payload)
       toast.add({ severity: 'success', summary: 'เพิ่มเป้าหมายสำเร็จ', life: 3000 })
     }
     showDialog.value = false

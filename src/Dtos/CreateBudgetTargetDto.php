@@ -15,7 +15,6 @@ final class CreateBudgetTargetDto
         public readonly ?float $targetPercent = null,
         public readonly ?float $targetAmount = null,
         public readonly ?string $notes = null,
-        public readonly ?int $createdBy = null,
     ) {}
 
     /** @return array<string,string> */
@@ -62,7 +61,8 @@ final class CreateBudgetTargetDto
             targetPercent: self::nullableFloat($raw, 'target_percent'),
             targetAmount: self::nullableFloat($raw, 'target_amount'),
             notes: self::nullableString($raw, 'notes'),
-            createdBy: self::nullableInt($raw, 'created_by'),
+            // created_by is intentionally NOT read from the request body —
+            // it is set from the authenticated user in the service layer.
         );
     }
 

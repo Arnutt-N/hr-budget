@@ -37,7 +37,7 @@ final class BudgetTargetService
         return $this->repo->findById($id);
     }
 
-    public function create(string $role, CreateBudgetTargetDto $dto): ?int
+    public function create(string $role, CreateBudgetTargetDto $dto, ?int $actorId = null): ?int
     {
         if ($role !== 'admin') {
             return null;
@@ -53,7 +53,8 @@ final class BudgetTargetService
                 'target_percent' => $dto->targetPercent,
                 'target_amount' => $dto->targetAmount,
                 'notes' => $dto->notes,
-                'created_by' => $dto->createdBy,
+                // From the authenticated user, never from client input.
+                'created_by' => $actorId,
             ]);
         } catch (\Throwable $e) {
             return null;

@@ -73,6 +73,18 @@ final class PlanService
             return false;
         }
 
+        // Guard the code+fiscal_year unique key when either side changes,
+        // so a collision surfaces as a clean 422 rather than a swallowed
+        // MySQL duplicate-entry error from Database::update().
+        $newCode = $dto->code ?? ($existing['code'] ?? null);
+        $newYear = $dto->fiscalYear ?? (int) $existing['fiscal_year'];
+        if (($dto->code !== null || $dto->fiscalYear !== null) && $newCode !== null && $newCode !== '') {
+            $byCode = $this->repo->findByCodeYear($newCode, $newYear);
+            if ($byCode !== null && (int) $byCode['id'] !== $id) {
+                return false;
+            }
+        }
+
         $updateData = [];
         if ($dto->budgetTypeId !== null) {
             $updateData['budget_type_id'] = $dto->budgetTypeId;
