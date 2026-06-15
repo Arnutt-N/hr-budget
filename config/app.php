@@ -15,7 +15,9 @@ return [
     // Session Configuration
     'session' => [
         'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 120),
-        'secure' => filter_var($_ENV['SESSION_SECURE'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        'secure' => isset($_ENV['SESSION_SECURE'])
+            ? filter_var($_ENV['SESSION_SECURE'], FILTER_VALIDATE_BOOLEAN)
+            : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
         'http_only' => true,
         'same_site' => 'Lax'
     ],
