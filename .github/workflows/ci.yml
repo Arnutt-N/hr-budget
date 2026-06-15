@@ -109,7 +109,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: root
           DB_PASS: root
-        run: vendor/bin/phpunit tests/Unit/Api/ tests/Unit/Dtos/ tests/Unit/Services/
+        run: vendor/bin/phpunit tests/Unit/Api/ tests/Unit/Dtos/ tests/Unit/Services/ tests/Unit/Core/
 
   # -------------------------------------------------------------------
   # Frontend: typecheck + production build

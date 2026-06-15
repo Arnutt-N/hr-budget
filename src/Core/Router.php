@@ -182,6 +182,11 @@ class Router
         $shell = BASE_PATH . '/public/app/index.html';
         if (is_file($shell)) {
             http_response_code(200);
+            // Strict CSP is safe here: the compiled SPA shell loads only an
+            // external module script (no inline scripts). Legacy server-rendered
+            // views keep baseline-only headers (they contain inline <script>).
+            // Baseline headers were already applied by the bootstrap; add CSP only.
+            SecurityHeaders::applyCsp();
             header('Content-Type: text/html; charset=UTF-8');
             readfile($shell);
             return;
