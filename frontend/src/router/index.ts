@@ -63,6 +63,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/NotificationListPage.vue'),
         meta: { title: 'การแจ้งเตือน' },
       },
+      // Document vault (authed — read for all, mutate gated to admin/editor in-page)
+      {
+        path: 'vault',
+        name: 'vault',
+        component: () => import('@/pages/DocumentVaultPage.vue'),
+        meta: { title: 'คลังเอกสาร' },
+      },
       // Admin pages
       {
         path: 'fiscal-years',
