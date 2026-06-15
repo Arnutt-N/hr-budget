@@ -10,6 +10,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\View;
 use App\Core\Router;
+use App\Core\Download;
 use App\Models\File;
 use App\Models\Folder;
 use App\Models\FiscalYear;
@@ -109,17 +110,21 @@ class FileController
         }
         
         $fullPath = BASE_PATH . '/public/' . $file['file_path'];
-        if (!file_exists($fullPath)) {
+
+        // Resolve + contain within the public/ root before streaming
+        // (defense-in-depth against traversal in a stored file_path).
+        // realpath() also returns false for a missing file.
+        $real = realpath($fullPath);
+        $root = realpath(BASE_PATH . '/public');
+        if ($real === false || $root === false || !str_starts_with($real, $root . DIRECTORY_SEPARATOR)) {
             $_SESSION['error'] = 'ไม่พบไฟล์';
             Router::redirect('/files?folder=' . $file['folder_id']);
             return;
         }
-        
-        header('Content-Type: ' . ($file['mime_type'] ?? 'application/octet-stream'));
-        header('Content-Disposition: attachment; filename="' . $file['original_name'] . '"');
-        header('Content-Length: ' . filesize($fullPath));
-        readfile($fullPath);
-        exit;
+
+        // Sanitized attachment headers (CRLF/MIME injection guard + nosniff
+        // + RFC 5987 filename* for Thai names).
+        Download::sendFile($real, $file['original_name'], $file['mime_type'] ?? null);
     }
 
     /**

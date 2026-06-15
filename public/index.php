@@ -49,6 +49,13 @@ if (str_contains($__requestPath, '/api/')) {
 // Initialize authentication
 \App\Core\Auth::init();
 
+// Apply baseline security headers to non-API (HTML / SPA) responses.
+// API responses are owned by CorsMiddleware (applied above) and stay
+// header-clean here so CORS/preflight behavior is unchanged.
+if (!str_contains($__requestPath, '/api/')) {
+    \App\Core\SecurityHeaders::applyBaseline();
+}
+
 // Load routes
 require BASE_PATH . '/routes/web.php';
 
