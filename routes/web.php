@@ -19,6 +19,8 @@ use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
 use App\Api\Controllers\NotificationController as ApiNotificationController;
 use App\Api\Controllers\FileController as ApiFileController;
+use App\Api\Controllers\VaultFolderController as ApiVaultFolderController;
+use App\Api\Controllers\VaultFileController as ApiVaultFileController;
 use App\Api\Controllers\DivisionController as ApiDivisionController;
 use App\Api\Controllers\PlanController as ApiPlanController;
 use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
@@ -129,6 +131,17 @@ Router::post('/api/v1/requests/{id}/files', [ApiFileController::class, 'upload']
 Router::get('/api/v1/requests/{id}/files', [ApiFileController::class, 'list']);
 Router::get('/api/v1/files/{id}/download', [ApiFileController::class, 'download']);
 Router::delete('/api/v1/files/{id}', [ApiFileController::class, 'delete']);
+
+// Document Vault — static / more-specific routes BEFORE parameterized {id}
+Router::get('/api/v1/vault/years', [ApiVaultFolderController::class, 'years']);
+Router::get('/api/v1/vault/folders/tree', [ApiVaultFolderController::class, 'tree']);
+Router::get('/api/v1/vault/folders', [ApiVaultFolderController::class, 'listFolders']);
+Router::post('/api/v1/vault/folders', [ApiVaultFolderController::class, 'create']);
+Router::get('/api/v1/vault/folders/{id}/files', [ApiVaultFolderController::class, 'listFiles']);
+Router::post('/api/v1/vault/folders/{id}/files', [ApiVaultFolderController::class, 'upload']);
+Router::delete('/api/v1/vault/folders/{id}', [ApiVaultFolderController::class, 'delete']);
+Router::get('/api/v1/vault/files/{id}/download', [ApiVaultFileController::class, 'download']);
+Router::delete('/api/v1/vault/files/{id}', [ApiVaultFileController::class, 'delete']);
 
 // Disbursement Tracking — static + more-specific routes before parameterized {id}
 Router::get('/api/v1/expense-structure', [ApiDisbursementRecordController::class, 'expenseStructure']);

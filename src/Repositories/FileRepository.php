@@ -6,7 +6,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 
-class FileRepository
+final class FileRepository
 {
     public function findByRequestId(int $requestId): array
     {
@@ -17,6 +17,18 @@ class FileRepository
              WHERE f.request_id = ?
              ORDER BY f.created_at DESC",
             [$requestId]
+        );
+    }
+
+    public function findByFolderId(int $folderId): array
+    {
+        return Database::query(
+            "SELECT f.*, u.name as uploaded_by_name
+             FROM files f
+             LEFT JOIN users u ON f.uploaded_by = u.id
+             WHERE f.folder_id = ?
+             ORDER BY f.created_at DESC",
+            [$folderId]
         );
     }
 
