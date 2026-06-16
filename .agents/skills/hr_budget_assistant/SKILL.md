@@ -1,11 +1,30 @@
 ---
 name: hr_budget_assistant
-description: Comprehensive coding assistant for the HR Budget project. Contains architecture details, schema info, coding standards, and workflow guides.
+description: "Coding context for the HR Budget project. PARTLY HISTORICAL after the 2026-06-15 SPA cutover — DB schema/models/SOLID/security concepts still apply, but the Overview, Routes Reference, Views, and server-rendered-controller sections are retired. Source of truth: CLAUDE.md."
 ---
 
 # HR Budget Project Assistant
 
 This skill provides comprehensive context and guidelines for developing the HR Budget application.
+
+> ## ⚠️ อ่านก่อน: สถาปัตยกรรมเปลี่ยนแล้ว (Phase 6 SPA cutover, 2026-06-15)
+>
+> เอกสารนี้เขียนยุค **server-rendered PHP MVC** บางส่วนจึง **ล้าสมัย** หลัง cutover:
+>
+> | ส่วนในเอกสารนี้ | สถานะ |
+> |---|---|
+> | Database Architecture / Tables, Models, OOP & SOLID, Security *หลักการ* | ✅ ยังใช้ได้ |
+> | Project Overview (บอกว่า frontend = Vanilla JS + PHP Views) | ⛔ retired — frontend จริงคือ **Vue 3 SPA** (`frontend/`) |
+> | Views section / `View::layout` / `View::section` / partial views | ⛔ ลบทิ้งแล้ว — เหลือแค่ `resources/views/errors/*` |
+> | Routes Reference (`/login`, `/budgets*`, web `/requests/*`, `/admin/*`, `/files/*`) | ⛔ retired — live surface คือ **`/api/v1/*` + Vue SPA**; ดูของจริงใน `routes/web.php` |
+> | "use `View::csrf()` in every form" | ⛔ ไม่มี server-rendered form แล้ว — auth เป็น JWT ผ่าน `/api/v1/auth/*` |
+>
+> **สถาปัตยกรรมปัจจุบัน:** PHP 8.3 เสิร์ฟแค่ `/api/v1/*` (layering: Controllers →
+> Services → Repositories + DTOs, ตอบผ่าน `ApiResponse` envelope) + เสิร์ฟ Vue SPA
+> shell (`public/app/index.html` ผ่าน `Router::notFound()` catch-all). legacy web
+> remnant เหลือแค่ `/thaid/login` (302 alias) + `/logout` + `errors/*`
+>
+> **Source of truth:** `CLAUDE.md` · `routes/web.php` (route จริง) · `frontend/` (UI จริง)
 
 ## 📑 Table of Contents
 
@@ -26,16 +45,18 @@ This skill provides comprehensive context and guidelines for developing the HR B
 
 ## 🏗️ Project Overview
 
-**Architecture:** Custom MVC Framework (PHP)
-**Database:** MySQL 8.0+
-**Frontend:** Vanilla JS, CSS (Tailwind-like utility classes), PHP Views
+**Architecture:** PHP 8.3 custom MVC serving a JSON API (`/api/v1/*`) + the compiled Vue SPA shell
+**Database:** MySQL / MariaDB
+**Frontend:** Vue 3 SPA (`frontend/`) — PrimeVue + Tailwind, TanStack Query, JWT-cookie auth
+**API layering:** Controllers → Services → Repositories + DTOs, responses via the `ApiResponse` envelope
 
 ### 📂 Key Directory Structure
-- `src/` - Core application logic (Controllers, Models, Helpers)
-- `resources/views/` - UI Templates (PHP files)
-- `public/` - Web root (index.php, assets, js)
-- `config/` - App configuration
-- `.agents/workflows/` - AI & User Workflows (Git, Backup, etc.)
+- `frontend/` - **Vue 3 SPA (the live UI)** — pages in `src/pages/`, queries in `src/queries/`
+- `src/Api/` - REST API controllers (`/api/v1/*`); `src/Services/`, `src/Repositories/`, `src/Dtos/`
+- `src/` - Core MVC + models (`src/Core/`, `src/Models/`)
+- `public/app/` - tracked compiled SPA build (served by PHP via the `Router::notFound()` catch-all)
+- `resources/views/errors/*` - the only remaining server-rendered views (standalone HTML)
+- `config/` - App configuration · `.agents/workflows/` - AI & User Workflows (Git, Backup, etc.)
 
 ## 🗄️ Database Architecture (Hierarchy)
 
