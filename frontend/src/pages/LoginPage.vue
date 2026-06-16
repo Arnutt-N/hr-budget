@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Landmark } from '@lucide/vue'
+import { Landmark, ShieldCheck } from '@lucide/vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -10,10 +10,22 @@ import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import { useAuthStore } from '@/stores/auth'
+import { fetchThaidStatus, thaidLoginUrl } from '@/api/auth'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+
+// ThaID is dormant unless the backend reports it configured — only then do we
+// render the button. The flow is a full-page navigation (OAuth), not a fetch.
+const thaidEnabled = ref(false)
+onMounted(async () => {
+  thaidEnabled.value = (await fetchThaidStatus()).enabled
+})
+
+function onThaidLogin(): void {
+  window.location.href = thaidLoginUrl()
+}
 
 const schema = toTypedSchema(
   z.object({
@@ -98,6 +110,26 @@ const onSubmit = handleSubmit(async (values) => {
         :label="loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'"
         class="w-full"
       />
+
+      <template v-if="thaidEnabled">
+        <div class="flex items-center gap-3 text-dark-muted text-xs">
+          <span class="h-px flex-1 bg-dark-border"></span>
+          <span>หรือ</span>
+          <span class="h-px flex-1 bg-dark-border"></span>
+        </div>
+        <Button
+          type="button"
+          severity="secondary"
+          outlined
+          label="เข้าสู่ระบบด้วย ThaID"
+          class="w-full"
+          @click="onThaidLogin"
+        >
+          <template #icon>
+            <ShieldCheck class="h-4 w-4 mr-2" />
+          </template>
+        </Button>
+      </template>
     </form>
   </div>
 </template>

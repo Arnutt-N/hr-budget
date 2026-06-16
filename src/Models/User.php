@@ -36,6 +36,18 @@ class User
     }
 
     /**
+     * Find user by their linked ThaID subject (PID / OIDC sub).
+     * This is the canonical identity key for ThaID-provisioned accounts.
+     */
+    public static function findByThaidSub(string $sub): ?array
+    {
+        return Database::queryOne(
+            "SELECT * FROM " . self::$table . " WHERE thaid_sub = ?",
+            [$sub]
+        );
+    }
+
+    /**
      * Get all users
      */
     public static function all(): array
