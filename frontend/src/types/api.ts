@@ -34,3 +34,9 @@ export interface HealthResponse {
   time: string
   env: string
 }
+
+/** Whether the ThaID login option is configured/available, per the backend gate. */
+export interface ThaidStatus {
+  enabled: boolean
+  mock: boolean
+}

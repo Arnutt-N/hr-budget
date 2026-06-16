@@ -1704,11 +1704,13 @@ CREATE TABLE `users` (
   `role` enum('admin','editor','viewer') COLLATE utf8mb4_unicode_ci DEFAULT 'viewer',
   `is_active` tinyint(1) DEFAULT '1',
   `department` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `thaid_sub` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_login_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `uniq_thaid_sub` (`thaid_sub`)
 ) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
