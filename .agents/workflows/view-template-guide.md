@@ -1,74 +1,46 @@
 ---
-description: PHP View Template Guidelines - กติกาสำหรับสร้าง View ใหม่
+description: PHP View Template Guidelines — server-rendered views are retired (post Phase 6 cutover)
 ---
 
 # PHP View Template Guidelines
 
-## ⚠️ สิ่งสำคัญ: ห้ามใช้ View::section()/endSection()
+> **อัปเดต 2026-06-16:** หลัง Phase 6 cutover + การปลด legacy (`/budgets`, `/files`)
+> และการ sweep view scaffolding — **server-rendered views ถูกเลิกใช้เกือบทั้งหมด**
+> UI หลักคือ Vue SPA ใน `frontend/` บน `/api/v1/*` เอกสารนี้จึงเป็นแนวทางสำหรับ
+> **view เดียวที่เหลือ** เท่านั้น
 
-เมื่อสร้าง view files ใหม่ **ห้าม** ใช้ `View::section()` และ `View::endSection()` เพราะจะทำให้หน้าว่างเปล่า (blank page)
+## ⛔ อย่าสร้าง server-rendered view ใหม่
 
-### ❌ ห้ามทำแบบนี้:
-```php
-<?php \App\Core\View::section('content'); ?>
+เพิ่มหน้าใหม่ใน **Vue SPA (`frontend/src/pages/`)** เสมอ ไม่ใช่ `resources/views/`
 
-<div>Content here...</div>
+## view ที่ยังเหลือจริง
 
-<?php \App\Core\View::endSection(); ?>
-```
+`resources/views/errors/*` เท่านั้น — หน้า error แบบ **standalone HTML** (403/404/500/502/503/504/505)
+render โดย:
 
-### ✅ ทำแบบนี้แทน:
-```php
-<div>Content here directly...</div>
-```
+- `App\Core\Auth` → `errors/403` (authz ล้มเหลว)
+- `Router::notFound()` → `errors/404` (fallback เมื่อ SPA build หาย)
+- `App\Core\ErrorHandler` → `errors/500` / `errors/{code}`
 
-เขียน HTML/PHP โดยตรงโดยไม่ต้อง wrap ด้วย section
+แต่ละไฟล์เป็น HTML document สมบูรณ์ในตัว — **ไม่มี layout wrapping** (`View::render` ตอนนี้
+render แบบ standalone อย่างเดียว)
 
----
+## API ที่ถูกลบไปแล้ว (อย่าใช้)
 
-## 📌 การใช้ URLs ใน Views
+`View::setLayout()`, `View::section()`, `View::endSection()`, `View::yield()`,
+`View::partial()`, `View::share()` — **ถูกลบ** พร้อม `layouts/**` + `components/**`
+(กู้จาก tag `pre-views-sweep`). `View::render()` รับแค่ `(string $view, array $data)`
 
-ทุก URL ที่เป็น internal links ต้องใช้ `View::url()` helper:
+## ถ้าต้องแก้ error view
 
-### ❌ ห้ามทำแบบนี้:
-```php
-<a href="/budgets">Budgets</a>
-<form action="/login" method="POST">
-```
+- ✅ ใช้ `View::url()` กับ internal links เสมอ — เช่น
+  `href="<?= \App\Core\View::url('/') ?>"` — เพราะ deploy ใต้ subdirectory
+  (`/hr_budget/public/`) ได้
+- ✅ escape ค่าทุกตัวที่ไม่คงที่ด้วย `htmlspecialchars(...)` หรือ `View::e(...)`
+- ✅ เป็น HTML document เต็มในไฟล์เดียว (เลียนแบบ `errors/404.php`)
 
-### ✅ ทำแบบนี้แทน:
-```php
-<a href="<?= \App\Core\View::url('/budgets') ?>">Budgets</a>
-<form action="<?= \App\Core\View::url('/login') ?>" method="POST">
-```
+## helper ของ View ที่ยังใช้ได้
 
-สิ่งนี้จำเป็นเพราะ app อาจ deploy ที่ subdirectory (เช่น `/hr_budget/public/`)
-
----
-
-## 📦 Layout ที่ใช้ได้
-
-- `main` - สำหรับหน้าหลังจาก login (มี sidebar)
-- `auth` - สำหรับหน้า login/forgot password
-
-### การใช้ Layout ใน Controller:
-```php
-// วิธีที่ 1: ส่ง layout ใน render()
-View::render('viewname', $data, 'main');
-
-// วิธีที่ 2: setLayout ก่อน render
-View::setLayout('auth');
-View::render('auth/login', $data);
-```
-
----
-
-## 📋 View File Checklist
-
-ก่อน commit view file ใหม่ ตรวจสอบ:
-
-- [ ] ไม่มี `View::section()` หรือ `View::endSection()`
-- [ ] ทุก internal URLs ใช้ `View::url()`
-- [ ] ใช้ `View::csrf()` ในทุก form
-- [ ] ใช้ `htmlspecialchars()` สำหรับ user input
-- [ ] Test หน้าว่าแสดงผลถูกต้อง
+`View::url()`, `View::baseUrl()`, `View::e()`, `View::date()/datetime()`,
+`View::currency*()/number()`, `View::vite()`, `View::csrf()/csrfToken()/verifyCsrf()`
+— ยังอยู่ใน `src/Core/View.php` (เผื่อ error view ใช้)
