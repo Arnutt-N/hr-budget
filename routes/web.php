@@ -147,6 +147,7 @@ Router::delete('/api/v1/files/{id}', [ApiFileController::class, 'delete']);
 
 // Document Vault — static / more-specific routes BEFORE parameterized {id}
 Router::get('/api/v1/vault/years', [ApiVaultFolderController::class, 'years']);
+Router::post('/api/v1/vault/years', [ApiVaultFolderController::class, 'initialize']);
 Router::get('/api/v1/vault/folders/tree', [ApiVaultFolderController::class, 'tree']);
 Router::get('/api/v1/vault/folders', [ApiVaultFolderController::class, 'listFolders']);
 Router::post('/api/v1/vault/folders', [ApiVaultFolderController::class, 'create']);
@@ -167,39 +168,24 @@ Router::post('/api/v1/disbursement-records', [ApiDisbursementRecordController::c
 Router::get('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordController::class, 'show']);
 Router::put('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordController::class, 'update']);
 
-// ====== Legacy web/MVC remnants — pending SPA parity (Phase 6 cutover) ======
-// Everything the Vue SPA replaces (auth login, dashboard, budget-request,
-// admin CRUD, tracking/disbursement) was retired here; its controllers/views
-// were `git rm`-ed (recover from the `pre-spa-cutover` tag). The routes below
-// are the only server-rendered web surfaces left — each has NO SPA equivalent:
-//   - ThaID login (sets a session, redirects)
-//   - Budget-execution reporting (read-only overview + Excel export)
-//   - Document vault (per-fiscal-year file/folder management)
-// All other paths fall through to the SPA shell via Router::notFound().
+// ====== Legacy web remnants — post-cutover (Phase 6) ======
+// Everything the Vue SPA replaces (auth login, dashboard, budget-request, admin
+// CRUD, tracking/disbursement) was retired in the Phase 6 cutover (recover from
+// the `pre-spa-cutover` tag). Budget-execution reporting and the document vault
+// were retired afterwards once the SPA reached parity (recover from
+// `pre-budgets-retire` / `pre-files-retire`). The only server-rendered web
+// surface left is the ThaID login alias; every other path falls through to the
+// SPA shell via Router::notFound().
 
 // ThaID login — superseded by the SPA-facing /api/v1/auth/thaid/* flow.
 // Kept as a backward-compatible 302 alias to the new entry point.
 Router::get('/thaid/login', fn() => Router::redirect('/api/v1/auth/thaid/login'));
 
-// Logout (kept session remnants — ThaID, /files — still use PHP session auth,
-// so users need a way to end it). NOT web login, which stays retired. Clears
-// the session and lands on the SPA root.
+// Logout — ThaID still mints a PHP session, so keep a way to clear it. NOT web
+// login, which stays retired. Clears the session and lands on the SPA root.
 $logout = function () {
     \App\Core\Auth::logout();
     Router::redirect('/');
 };
 Router::get('/logout', $logout);
 Router::post('/logout', $logout);
-
-// Budget Execution reporting: retired post-cutover. The SPA fully replaces it
-// via /api/v1/budget-execution/* (PR #17). Unmatched /budgets now falls through
-// to notFound() → SPA shell. Recover legacy code from `pre-budgets-retire`.
-
-// Document vault (parity gap — SPA only has request-attachment upload)
-Router::get('/files', [\App\Controllers\FileController::class, 'index']);
-Router::post('/files/upload', [\App\Controllers\FileController::class, 'upload']);
-Router::get('/files/{id}/download', [\App\Controllers\FileController::class, 'download']);
-Router::post('/files/{id}/delete', [\App\Controllers\FileController::class, 'deleteFile']);
-Router::post('/folders', [\App\Controllers\FileController::class, 'createFolder']);
-Router::post('/folders/{id}/delete', [\App\Controllers\FileController::class, 'deleteFolder']);
-Router::post('/files/init', [\App\Controllers\FileController::class, 'initializeYear']);

@@ -224,11 +224,6 @@
                     <span class="ml-3 nav-text">ประเภทเป้าหมาย</span>
                 </a>
 
-                <a href="<?= \App\Core\View::url('/files') ?>" class="nav-link <?= ($currentPage ?? '') === 'files' ? 'active' : '' ?>">
-                    <i data-lucide="folder-open" class="nav-icon"></i>
-                    <span class="ml-3 nav-text">จัดการไฟล์</span>
-                </a>
-
                 <?php if (\App\Core\Auth::can('users.manage')): ?>
                 <a href="<?= \App\Core\View::url('/users') ?>" class="nav-link <?= ($currentPage ?? '') === 'admin-users' ? 'active' : '' ?>">
                     <i data-lucide="users" class="nav-icon"></i>

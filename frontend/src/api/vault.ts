@@ -36,6 +36,21 @@ export async function deleteFolder(id: number): Promise<ApiResponse<null>> {
   return apiFetch<null>(`/vault/folders/${id}`, { method: 'DELETE' })
 }
 
+export interface InitializeYearResult {
+  fiscal_year: number
+  created: number
+}
+
+/** Scaffold a fiscal year's standard (system) folders from budget categories. */
+export async function initializeVaultYear(
+  year: number,
+): Promise<ApiResponse<InitializeYearResult>> {
+  return apiFetch<InitializeYearResult>(`/vault/years`, {
+    method: 'POST',
+    body: JSON.stringify({ fiscal_year: year }),
+  })
+}
+
 export async function uploadVaultFile(folderId: number, file: File): Promise<ApiResponse<VaultFile>> {
   const formData = new FormData()
   formData.append('file', file)

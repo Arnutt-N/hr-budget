@@ -8,6 +8,7 @@ import {
   deleteFolder,
   uploadVaultFile,
   deleteVaultFile,
+  initializeVaultYear,
   type CreateFolderPayload,
 } from '@/api/vault'
 
@@ -58,6 +59,18 @@ export function useCreateFolder() {
     mutationFn: async (payload: CreateFolderPayload) => {
       const res = await createFolder(payload)
       if (!res.success) throw new Error(res.error ?? 'สร้างโฟลเดอร์ไม่สำเร็จ')
+      return res.data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: VAULT_KEY }),
+  })
+}
+
+export function useInitializeVaultYear() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (year: number) => {
+      const res = await initializeVaultYear(year)
+      if (!res.success || !res.data) throw new Error(res.error ?? 'สร้างโครงสร้างโฟลเดอร์ไม่สำเร็จ')
       return res.data
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: VAULT_KEY }),
