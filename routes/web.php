@@ -6,10 +6,11 @@
  */
 
 use App\Core\Router;
-// Legacy web controllers kept for documented parity-gap routes only
-// (budget-execution reporting). All other web controllers were retired in the
-// Phase 6 SPA cutover — recover from the `pre-spa-cutover` tag.
-use App\Controllers\BudgetExecutionController;
+// Legacy web remnants (document vault FileController, ThaID login) are
+// referenced inline by fully-qualified name below — no top-level `use` needed.
+// The budget-execution reporting web routes were retired post-cutover (recover
+// from the `pre-budgets-retire` tag); all other web controllers were retired in
+// the Phase 6 SPA cutover (recover from the `pre-spa-cutover` tag).
 use App\Api\Controllers\AuthController as ApiAuthController;
 use App\Api\Controllers\ThaIdController as ApiThaIdController;
 use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
@@ -180,9 +181,9 @@ Router::put('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordControlle
 // Kept as a backward-compatible 302 alias to the new entry point.
 Router::get('/thaid/login', fn() => Router::redirect('/api/v1/auth/thaid/login'));
 
-// Logout (kept session remnants — ThaID, /budgets, /files — still use PHP
-// session auth, so users need a way to end it). NOT web login, which stays
-// retired. Clears the session and lands on the SPA root.
+// Logout (kept session remnants — ThaID, /files — still use PHP session auth,
+// so users need a way to end it). NOT web login, which stays retired. Clears
+// the session and lands on the SPA root.
 $logout = function () {
     \App\Core\Auth::logout();
     Router::redirect('/');
@@ -190,10 +191,9 @@ $logout = function () {
 Router::get('/logout', $logout);
 Router::post('/logout', $logout);
 
-// Budget Execution reporting (parity gap — no SPA overview/export page)
-Router::get('/budgets', [BudgetExecutionController::class, 'index']);
-Router::get('/budgets/export', [BudgetExecutionController::class, 'export']);
-Router::get('/execution', function() { Router::redirect('/budgets'); });
+// Budget Execution reporting: retired post-cutover. The SPA fully replaces it
+// via /api/v1/budget-execution/* (PR #17). Unmatched /budgets now falls through
+// to notFound() → SPA shell. Recover legacy code from `pre-budgets-retire`.
 
 // Document vault (parity gap — SPA only has request-attachment upload)
 Router::get('/files', [\App\Controllers\FileController::class, 'index']);

@@ -194,11 +194,6 @@
                 <span class="ml-3 nav-text">ภาพรวม (Dashboard)</span>
             </a>
             
-            <a href="<?= \App\Core\View::url('/budgets') ?>" class="nav-link <?= str_starts_with($currentPage ?? '', 'execution') ? 'active' : '' ?>">
-                <i data-lucide="trending-up" class="nav-icon"></i>
-                <span class="ml-3 nav-text">ผลการเบิกจ่าย</span>
-            </a>
-
             <!-- Management Section -->
             <div class="pt-4 mt-4 border-t border-dark-border">
                 <div class="px-3 mb-2 text-xs font-semibold text-dark-muted uppercase tracking-wider nav-text">
