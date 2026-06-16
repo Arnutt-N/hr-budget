@@ -120,6 +120,46 @@ final class FolderRepository
         );
     }
 
+    /**
+     * Top-level budget categories used to scaffold a fiscal year's vault
+     * (งบบุคลากร, งบดำเนินงาน, …). Ports the legacy
+     * App\Models\BudgetCategory::getTopLevelCategories() query: the named root
+     * (code GOVT_PERSONNEL_EXP, level 0) → its active children, with a level-1
+     * fallback when that root row is absent.
+     */
+    public function topLevelCategories(): array
+    {
+        $root = Database::queryOne(
+            "SELECT id FROM budget_categories WHERE code = ? AND level = 0",
+            ['GOVT_PERSONNEL_EXP']
+        );
+
+        if ($root === null) {
+            return Database::query(
+                "SELECT * FROM budget_categories
+                 WHERE level = 1 AND is_active = 1
+                 ORDER BY sort_order ASC, id ASC"
+            );
+        }
+
+        return Database::query(
+            "SELECT * FROM budget_categories
+             WHERE parent_id = ? AND is_active = 1
+             ORDER BY sort_order ASC, id ASC",
+            [(int) $root['id']]
+        );
+    }
+
+    /** Existing root (system) folder for a (year, category) pair, or null. */
+    public function findRootByCategory(int $fiscalYear, int $categoryId): ?array
+    {
+        return Database::queryOne(
+            "SELECT id FROM folders
+             WHERE fiscal_year = ? AND budget_category_id = ? AND parent_id IS NULL",
+            [$fiscalYear, $categoryId]
+        );
+    }
+
     public function create(array $data): int
     {
         // Build a human-readable folder_path (parent path / name, or year / name).
