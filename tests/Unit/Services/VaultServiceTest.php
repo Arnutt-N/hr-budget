@@ -233,4 +233,110 @@ final class VaultServiceTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertNull(Database::queryOne("SELECT id FROM files WHERE id = ?", [$id]));
     }
+
+    // ── initializeYear (fiscal-year scaffold) ────────────────────────────────
+
+    /** Named root (level 0) + two active top-level children + one inactive. */
+    private function seedCategories(): void
+    {
+        $this->pdo->exec("
+            CREATE TABLE budget_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT,
+                name_th TEXT NOT NULL,
+                parent_id INTEGER,
+                level INTEGER DEFAULT 0,
+                sort_order INTEGER DEFAULT 0,
+                is_active INTEGER DEFAULT 1
+            )
+        ");
+        $this->pdo->exec(
+            "INSERT INTO budget_categories (id, code, name_th, parent_id, level, sort_order, is_active) VALUES
+             (1, 'GOVT_PERSONNEL_EXP', 'รายการค่าใช้จ่ายบุคลากรภาครัฐ', NULL, 0, 0, 1),
+             (2, 'PERSONNEL', 'งบบุคลากร', 1, 1, 1, 1),
+             (3, 'OPERATION', 'งบดำเนินงาน', 1, 1, 2, 1),
+             (4, 'CLOSED', 'หมวดปิด', 1, 1, 3, 0)"
+        );
+    }
+
+    /** @test */
+    public function initialize_year_creates_one_system_folder_per_active_top_category(): void
+    {
+        $this->seedCategories();
+
+        $result = $this->service()->initializeYear(2569, 1, 'admin');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(2, $result['created']); // inactive category is skipped
+
+        $roots = $this->service()->listFolders(2569, null);
+        $this->assertCount(2, $roots);
+        foreach ($roots as $folder) {
+            $this->assertSame(1, (int) $folder['is_system']);
+            $this->assertNotNull($folder['budget_category_id']);
+        }
+        $names = array_map(static fn ($f) => $f['name'], $roots);
+        sort($names);
+        $this->assertSame(['งบดำเนินงาน', 'งบบุคลากร'], $names);
+    }
+
+    /** @test */
+    public function initialize_year_is_idempotent(): void
+    {
+        $this->seedCategories();
+        $svc = $this->service();
+
+        $first = $svc->initializeYear(2569, 1, 'admin');
+        $second = $svc->initializeYear(2569, 1, 'admin');
+
+        $this->assertSame(2, $first['created']);
+        $this->assertSame(0, $second['created']); // already scaffolded → no duplicates
+        $this->assertCount(2, $svc->listFolders(2569, null));
+    }
+
+    /** @test */
+    public function initialize_year_as_viewer_is_denied(): void
+    {
+        $this->seedCategories();
+
+        $result = $this->service()->initializeYear(2569, 1, 'viewer');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(403, $result['status']);
+        $this->assertCount(0, $this->service()->listFolders(2569, null));
+    }
+
+    /** @test */
+    public function initialize_year_rejects_invalid_year(): void
+    {
+        $this->seedCategories();
+
+        $result = $this->service()->initializeYear(0, 1, 'admin');
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(422, $result['status']);
+    }
+
+    /** @test */
+    public function initialize_year_falls_back_to_level_1_when_root_absent(): void
+    {
+        // No GOVT_PERSONNEL_EXP level-0 root → fall back to active level-1 rows.
+        $this->pdo->exec("
+            CREATE TABLE budget_categories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT, name_th TEXT NOT NULL, parent_id INTEGER,
+                level INTEGER DEFAULT 0, sort_order INTEGER DEFAULT 0, is_active INTEGER DEFAULT 1
+            )
+        ");
+        $this->pdo->exec(
+            "INSERT INTO budget_categories (name_th, level, is_active) VALUES
+             ('งบกลาง', 1, 1),
+             ('หมวดปิด', 1, 0)"
+        );
+
+        $result = $this->service()->initializeYear(2569, 1, 'admin');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame(1, $result['created']); // only the active level-1 row
+    }
 }

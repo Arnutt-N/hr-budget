@@ -56,6 +56,43 @@ final class VaultService
         return $this->folders->availableYears();
     }
 
+    /**
+     * Scaffold a fiscal year's vault with one system (is_system=1) root folder
+     * per top-level budget category. Idempotent: categories already scaffolded
+     * for the year are skipped, so re-running only fills gaps. Ports the legacy
+     * App\Models\Folder::initializeForYear() bootstrap (the `/files/init` route).
+     *
+     * @return array{success: bool, created?: int, error?: string, status?: int}
+     */
+    public function initializeYear(int $fiscalYear, int $userId, string $role): array
+    {
+        if (!$this->canMutate($role)) {
+            return ['success' => false, 'error' => 'ไม่มีสิทธิ์ดำเนินการ', 'status' => 403];
+        }
+        if ($fiscalYear <= 0) {
+            return ['success' => false, 'error' => 'ปีงบประมาณไม่ถูกต้อง', 'status' => 422];
+        }
+
+        $created = 0;
+        foreach ($this->folders->topLevelCategories() as $cat) {
+            $categoryId = (int) $cat['id'];
+            if ($this->folders->findRootByCategory($fiscalYear, $categoryId) !== null) {
+                continue;
+            }
+
+            $this->folders->create([
+                'name' => $cat['name_th'],
+                'fiscal_year' => $fiscalYear,
+                'budget_category_id' => $categoryId,
+                'is_system' => 1,
+                'created_by' => $userId,
+            ]);
+            $created++;
+        }
+
+        return ['success' => true, 'created' => $created];
+    }
+
     public function breadcrumb(?int $folderId): array
     {
         return $folderId !== null ? $this->folders->breadcrumb($folderId) : [];

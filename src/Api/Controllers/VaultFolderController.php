@@ -74,6 +74,50 @@ final class VaultFolderController
         }
     }
 
+    /**
+     * Scaffold a fiscal year's standard (system) folders. POSTs a JSON body
+     * `{ "fiscal_year": <int> }` (mirrors CreateFolderDto::fromRequest's
+     * php://input parsing). Mutation → admin|editor only (enforced in service).
+     */
+    public function initialize(): void
+    {
+        CorsMiddleware::apply();
+        $user = AuthMiddleware::require();
+
+        try {
+            $year = $this->readYearFromBody();
+            if ($year <= 0) {
+                ApiResponse::error('กรุณาระบุปีงบประมาณ', 400);
+                return;
+            }
+
+            $result = $this->service->initializeYear($year, (int) $user['id'], $user['role'] ?? 'viewer');
+            if (!$result['success']) {
+                ApiResponse::error($result['error'], $result['status'] ?? 422);
+                return;
+            }
+
+            ApiResponse::created(['fiscal_year' => $year, 'created' => $result['created']]);
+        } catch (\Throwable $e) {
+            error_log("[VaultFolderController::initialize] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
+        }
+    }
+
+    private function readYearFromBody(): int
+    {
+        $raw = file_get_contents('php://input');
+        if ($raw !== false && $raw !== '') {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded) && isset($decoded['fiscal_year']) && $decoded['fiscal_year'] !== '') {
+                return (int) $decoded['fiscal_year'];
+            }
+        }
+
+        // Form-encoded fallback.
+        return (int) ($_POST['fiscal_year'] ?? 0);
+    }
+
     public function create(): void
     {
         CorsMiddleware::apply();

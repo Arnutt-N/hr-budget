@@ -147,6 +147,7 @@ Router::delete('/api/v1/files/{id}', [ApiFileController::class, 'delete']);
 
 // Document Vault — static / more-specific routes BEFORE parameterized {id}
 Router::get('/api/v1/vault/years', [ApiVaultFolderController::class, 'years']);
+Router::post('/api/v1/vault/years', [ApiVaultFolderController::class, 'initialize']);
 Router::get('/api/v1/vault/folders/tree', [ApiVaultFolderController::class, 'tree']);
 Router::get('/api/v1/vault/folders', [ApiVaultFolderController::class, 'listFolders']);
 Router::post('/api/v1/vault/folders', [ApiVaultFolderController::class, 'create']);
