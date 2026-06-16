@@ -23,6 +23,7 @@ import {
   useDeleteFolder,
   useUploadVaultFile,
   useDeleteVaultFile,
+  useInitializeVaultYear,
 } from '@/queries/useVault'
 import type { VaultFolder, VaultFile, Breadcrumb } from '@/types/vault'
 
@@ -65,6 +66,25 @@ const createMutation = useCreateFolder()
 const deleteFolderMutation = useDeleteFolder()
 const uploadMutation = useUploadVaultFile()
 const deleteFileMutation = useDeleteVaultFile()
+const initMutation = useInitializeVaultYear()
+const initializing = computed(() => initMutation.isPending.value)
+
+// Scaffold the selected year's standard (system) folders from budget categories.
+// Replaces the legacy `/files/init` web action.
+async function onInitializeYear(): Promise<void> {
+  try {
+    const res = await initMutation.mutateAsync(year.value)
+    toast.add({
+      severity: 'success',
+      summary: 'สร้างโครงสร้างโฟลเดอร์สำเร็จ',
+      detail: `เพิ่ม ${res.created} โฟลเดอร์มาตรฐานสำหรับปีงบ ${year.value}`,
+      life: 4000,
+    })
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+    toast.add({ severity: 'error', summary: 'สร้างไม่สำเร็จ', detail: message, life: 5000 })
+  }
+}
 
 // ── Navigation ──────────────────────────────────────────────────────────
 function openFolder(id: number): void {
@@ -253,7 +273,20 @@ function formatSize(bytes: number): string {
       <div class="mb-6">
         <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-dark-muted">โฟลเดอร์</h2>
         <p v-if="foldersLoading" class="py-4 text-dark-muted">กำลังโหลด…</p>
-        <p v-else-if="folders.length === 0" class="py-4 text-dark-muted">ไม่มีโฟลเดอร์ในระดับนี้</p>
+        <div v-else-if="folders.length === 0" class="py-6 text-center">
+          <p class="text-dark-muted">
+            {{ currentFolderId === null ? `ปีงบ ${year} ยังไม่มีโฟลเดอร์` : 'ไม่มีโฟลเดอร์ในระดับนี้' }}
+          </p>
+          <Button
+            v-if="canMutate && currentFolderId === null"
+            label="สร้างโครงสร้างโฟลเดอร์มาตรฐาน"
+            icon="pi pi-sitemap"
+            severity="secondary"
+            class="mt-3"
+            :loading="initializing"
+            @click="onInitializeYear"
+          />
+        </div>
         <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div
             v-for="folder in folders"

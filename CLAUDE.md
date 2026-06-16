@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HR Budget Management System (ระบบจัดการงบประมาณทรัพยากรบุคคล) — a Thai-language budgeting app for a government HR division. Stack: **PHP 8.3 custom MVC** backend exposing a **JSON API (`/api/v1/*`)** + a **Vue 3 SPA** (`frontend/`, PrimeVue + TanStack Query, JWT-cookie auth) as the only user-facing frontend. MySQL/MariaDB. Deployed under Laragon at the subdirectory `/hr_budget/public/`.
 
-> **Phase 6 cutover (2026-06-15):** the SPA replaced the server-rendered web/MVC pages. PHP now serves only `/api/v1/*` plus the compiled SPA shell (`public/app/index.html`, via the `Router::notFound()` catch-all). A small set of **legacy web remnants** with no SPA equivalent are still wired up: ThaID login (`/thaid/login`) and the document vault (`/files`, `/folders`). Budget-execution reporting (`/budgets`, `/budgets/export`) was retired post-cutover once the SPA reached parity (recover from the `pre-budgets-retire` tag). The retired controllers/views are recoverable from the annotated git tag `pre-spa-cutover`.
+> **Phase 6 cutover (2026-06-15):** the SPA replaced the server-rendered web/MVC pages. PHP now serves only `/api/v1/*` plus the compiled SPA shell (`public/app/index.html`, via the `Router::notFound()` catch-all). A single **legacy web remnant** with no SPA equivalent is still wired up: ThaID login (`/thaid/login`, a 302 alias to the SPA-facing API flow). Budget-execution reporting (`/budgets`, `/budgets/export`) and the document vault (`/files`, `/folders`) were both retired post-cutover once the SPA reached parity (recover from the `pre-budgets-retire` / `pre-files-retire` tags). Other retired controllers/views are recoverable from the annotated git tag `pre-spa-cutover`.
 
 ## Commands
 
@@ -53,7 +53,7 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 - Route params are regex-extracted and passed positionally to the handler
 - `POST` with `_method=PUT|DELETE` field is treated as the actual method (still used by the legacy remnant routes)
 - `dispatch()` strips the script directory prefix from the URI, so the same routes work whether accessed via `/hr_budget/public/foo` or `/foo` (script prefix awareness is critical — do not hardcode leading `/hr_budget/public` in route definitions)
-- `routes/web.php` = the `/api/v1/*` block (the live app surface) + a short **legacy web remnant** block (ThaID login, document vault). Everything else the SPA replaced was retired in the Phase 6 cutover.
+- `routes/web.php` = the `/api/v1/*` block (the live app surface) + a tiny **legacy web remnant** block (ThaID login alias + `/logout` only). Everything else the SPA replaced was retired in the Phase 6 cutover and afterwards.
 - Unmatched, non-API paths → the SPA shell via `notFound()`; unmatched `/api/*` paths → JSON 404.
 
 ### Data layer (`src/Core/Database.php`, `Model.php`, `SimpleQueryBuilder.php`)
@@ -65,7 +65,7 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 
 ### Views (`src/Core/View.php` + `resources/views/`)
 
-**The primary UI is the Vue SPA in `frontend/`.** `resources/views/**` is now a **legacy remnant** rendered only by the kept web routes: `errors/*` (the `notFound()` build-missing fallback), `files/**` (document vault), `layouts/main.php` + `layouts/auth.php` + shared `components/**`. Do not build new server-rendered pages here — add SPA pages instead. Views are plain PHP templates with `<?= ... ?>` — no Blade, no Twig.
+**The primary UI is the Vue SPA in `frontend/`.** `resources/views/**` is now a **legacy remnant**. The only view still rendered is `errors/*` (the `notFound()` build-missing fallback). `layouts/main.php` + `layouts/auth.php` + shared `components/**` are now orphaned (their last consumers — `budgets/execution.php` and `files/**` — were retired) and are candidates for a final sweep. Do not build new server-rendered pages here — add SPA pages instead. Views are plain PHP templates with `<?= ... ?>` — no Blade, no Twig.
 
 **Two non-obvious rules** (apply to the remaining legacy views) documented in `.agents/workflows/view-template-guide.md`:
 
@@ -82,10 +82,11 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 
 These are now **SPA modules over the `/api/v1/*` API** (pages in `frontend/src/pages/`, queries in `frontend/src/queries/`): budget-request workflow (create → submit → approve/reject), disbursement/tracking wizard, dashboard + notifications, and all admin master-data CRUD (organizations, fiscal years, categories/items, divisions, plans, target types, targets, users). The legacy web controllers that served these (`DashboardController`, `BudgetRequestController`, `BudgetController`, `DisbursementController`, `Admin*Controller`, `BudgetTargetController`, `DivisionController`, `BudgetPlanController`) were **retired** in the Phase 6 cutover — recover them from the `pre-spa-cutover` git tag if needed.
 
-Two legacy web remnants remain after the Phase 6 cutover (budget-execution reporting was retired once the SPA reached parity — see PR #17 + the `pre-budgets-retire` tag):
+One legacy web remnant remains after the Phase 6 cutover. Budget-execution reporting and the document vault were both retired once the SPA reached parity (PR #17 / `pre-budgets-retire`; SPA vault PR #16 + fiscal-year init, `pre-files-retire`). The vault now lives entirely in the SPA over `/api/v1/vault/*` (folders/files CRUD + `POST /api/v1/vault/years` to scaffold a year's system folders):
 
-- **Document vault** (`FileController` + `File`/`Folder` models → `/files`, `/folders`, `/files/init`) — per-fiscal-year file vault; `/files/init` bootstraps folder structure for a new year. The SPA only has request-attachment upload (`/api/v1/requests/{id}/files`).
 - **ThaID login** (`/thaid/login` → 302 alias to `/api/v1/auth/thaid/login`, handled by `App\Api\Controllers\ThaIdController`).
+
+> Not a remnant: **request-attachment** upload (`/api/v1/requests/{id}/files`) is a live SPA feature served by `App\Api\Controllers\FileController` + `App\Services\FileService` (distinct from the retired web `App\Controllers\FileController`).
 
 ### REST API layer (`/api/v1/*`)
 
