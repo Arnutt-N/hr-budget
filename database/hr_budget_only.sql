@@ -1723,6 +1723,15 @@ INSERT INTO `users` VALUES (1,'admin@hrbudget.com','$2y$10$92IXUNpkjO0rOQ5byMi.Y
 UNLOCK TABLES;
 
 --
+-- ThaID OAuth link column (added AFTER the positional INSERT above so the
+-- dumped VALUES keep matching the original column count). Mirrors local
+-- migration 065_add_thaid_sub_to_users.sql.
+--
+ALTER TABLE `users`
+  ADD COLUMN `thaid_sub` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  ADD UNIQUE KEY `uniq_thaid_sub` (`thaid_sub`);
+
+--
 -- Temporary view structure for view `v_kpi_dashboard`
 --
 

@@ -7,11 +7,11 @@
 
 use App\Core\Router;
 // Legacy web controllers kept for documented parity-gap routes only
-// (ThaID login + budget-execution reporting). All other web controllers were
-// retired in the Phase 6 SPA cutover — recover from the `pre-spa-cutover` tag.
-use App\Controllers\AuthController;
+// (budget-execution reporting). All other web controllers were retired in the
+// Phase 6 SPA cutover — recover from the `pre-spa-cutover` tag.
 use App\Controllers\BudgetExecutionController;
 use App\Api\Controllers\AuthController as ApiAuthController;
+use App\Api\Controllers\ThaIdController as ApiThaIdController;
 use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
 use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
@@ -42,6 +42,12 @@ Router::get('/api/v1/health', function () {
 Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);
 Router::post('/api/v1/auth/logout', [ApiAuthController::class, 'logout']);
 Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
+
+// ThaID (DOPA) OAuth2 — config-gated; status is XHR-JSON, login/callback are
+// browser redirects. Dormant unless THAID_* credentials are configured.
+Router::get('/api/v1/auth/thaid/status',   [ApiThaIdController::class, 'status']);
+Router::get('/api/v1/auth/thaid/login',    [ApiThaIdController::class, 'login']);
+Router::get('/api/v1/auth/thaid/callback', [ApiThaIdController::class, 'callback']);
 
 // Fiscal Year CRUD
 Router::get('/api/v1/fiscal-years', [ApiFiscalYearController::class, 'list']);
@@ -170,8 +176,9 @@ Router::put('/api/v1/disbursement-records/{id}', [ApiDisbursementRecordControlle
 //   - Document vault (per-fiscal-year file/folder management)
 // All other paths fall through to the SPA shell via Router::notFound().
 
-// ThaID login (parity gap — SPA login has no ThaID flow)
-Router::get('/thaid/login', [AuthController::class, 'thaidLogin']);
+// ThaID login — superseded by the SPA-facing /api/v1/auth/thaid/* flow.
+// Kept as a backward-compatible 302 alias to the new entry point.
+Router::get('/thaid/login', fn() => Router::redirect('/api/v1/auth/thaid/login'));
 
 // Logout (kept session remnants — ThaID, /budgets, /files — still use PHP
 // session auth, so users need a way to end it). NOT web login, which stays
