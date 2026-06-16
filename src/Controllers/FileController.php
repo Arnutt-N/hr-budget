@@ -1,8 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * File Controller (Document Archive)
- * 
+ *
  * Handles document management organized by fiscal year and budget categories
+ *
+ * Note: the `int $id` route-handler params below are fed string captures by
+ * Router::dispatch, which has no strict_types, so PHP coerces them to int at
+ * the call site. Keep Router non-strict (or cast route params there) before
+ * relying on these hints — under strict_types the coercion would become fatal.
  */
 
 namespace App\Controllers;

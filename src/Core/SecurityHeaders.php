@@ -88,6 +88,8 @@ final class SecurityHeaders
 
     private static function isHttps(): bool
     {
-        return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        // Single source of truth — also covers X-Forwarded-Proto behind a
+        // trusted reverse proxy (TRUST_PROXY=true) so HSTS is emitted there too.
+        return Request::isHttps();
     }
 }

@@ -43,6 +43,13 @@ return [
         'scope'         => $_ENV['THAID_SCOPE'] ?? 'pid name',
         'pkce'          => filter_var($_ENV['THAID_PKCE'] ?? true, FILTER_VALIDATE_BOOLEAN),
         'client_auth'   => $_ENV['THAID_CLIENT_AUTH'] ?? 'basic', // basic | post
+        // OIDC id_token verification (defense-in-depth) — OFF unless jwks_url is
+        // set. When configured, a returned id_token is signature-verified against
+        // the JWKS and its sub is cross-checked with userinfo. audience defaults
+        // to client_id when left blank.
+        'jwks_url'      => $_ENV['THAID_JWKS_URL'] ?? '',
+        'issuer'        => $_ENV['THAID_ISSUER'] ?? '',
+        'audience'      => $_ENV['THAID_AUDIENCE'] ?? '',
         // DOPA userinfo claim names are the one external unknown — overridable
         // without code changes when onboarding confirms the real field names.
         'field_map'     => [
