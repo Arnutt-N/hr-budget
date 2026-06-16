@@ -65,14 +65,9 @@ The root-level `index.php` simply `require`s `public/index.php` so the app runs 
 
 ### Views (`src/Core/View.php` + `resources/views/`)
 
-**The primary UI is the Vue SPA in `frontend/`.** `resources/views/**` is now a **legacy remnant**. The only view still rendered is `errors/*` (the `notFound()` build-missing fallback). `layouts/main.php` + `layouts/auth.php` + shared `components/**` are now orphaned (their last consumers — `budgets/execution.php` and `files/**` — were retired) and are candidates for a final sweep. Do not build new server-rendered pages here — add SPA pages instead. Views are plain PHP templates with `<?= ... ?>` — no Blade, no Twig.
+**The primary UI is the Vue SPA in `frontend/`.** The server-rendered view layer is essentially gone — the only views left are `resources/views/errors/*`: standalone HTML error pages (403/404/500/502/503/504/505) rendered by `App\Core\Auth` (403 on authz failure), `Router::notFound()` (404 when the SPA build is missing), and `App\Core\ErrorHandler` (500/{code}). The legacy layouts (`layouts/main.php`, `layouts/auth.php`), shared `components/**`, and `auth/login.php` were removed once their last consumers (the budget-execution + document-vault pages) were retired — recover from the `pre-views-sweep` tag. Do not add server-rendered pages — add SPA pages instead.
 
-**Two non-obvious rules** (apply to the remaining legacy views) documented in `.agents/workflows/view-template-guide.md`:
-
-1. **Do NOT use `View::section()` / `View::endSection()` in new views.** It produces blank pages in this project. Write HTML/PHP directly in the view body; the layout captures output via `ob_start()`.
-2. **Always wrap internal URLs with `View::url()`**: `href="<?= \App\Core\View::url('/files') ?>"`. A hardcoded `/files` breaks when deployed under a subdirectory (which is the default for this app).
-
-`View::render('viewname', $data, 'main')` renders a view into a layout; `$data` is `extract()`ed so keys become local variables. `Auth::user()` and `config/app.php` are auto-injected as `$auth` and `$config`.
+`View::render('errors/404', $data)` renders a view; `$data` is `extract()`ed so keys become local variables, and `Auth::user()` + `config/app.php` are auto-injected as `$auth` and `$config`. A layout arg is still accepted but is now always a no-op: `View::render` degrades to standalone output when the named `layouts/*.php` is absent (so `ErrorHandler`'s `'error'` layout arg just renders the error view bare). One rule still applies to error views: wrap internal URLs with `View::url()` (e.g. `href="<?= \App\Core\View::url('/') ?>"`) so links stay correct under the `/hr_budget/public/` subdirectory deployment.
 
 ### Authentication
 
