@@ -1,9 +1,27 @@
 ---
 name: frontend_assistant
-description: Guide for standardizing frontend development using Vanilla JS, Tailwind CSS, and PHP View Templates.
+description: "[HISTORICAL — RETIRED 2026-06-15] Former guide for the server-rendered frontend (Vanilla JS + Tailwind + PHP view templates). The live frontend is now the Vue 3 SPA in frontend/. Kept for historical reference only — do NOT follow for new work. Source of truth: CLAUDE.md."
 ---
 
 # Frontend Assistant
+
+> ## ⛔ เอกสารนี้เป็น HISTORICAL — เลิกใช้แล้ว (Phase 6 SPA cutover, 2026-06-15)
+>
+> ทุกอย่าง **ใต้บรรทัดนี้** อธิบาย **frontend แบบเดิม** (Vanilla JS + PHP view
+> templates ใน `resources/views/`) ซึ่ง **ถูก retire ไปแล้ว** — อย่าใช้เป็นแนวทาง
+> สำหรับงานใหม่
+>
+> **Frontend จริงในปัจจุบัน = Vue 3 SPA** ใน `frontend/`:
+> - PrimeVue + Tailwind, TanStack Query, Vue Router, JWT-cookie auth
+> - คุยกับ backend ผ่าน `/api/v1/*` เท่านั้น (ไม่มี server-rendered form/CSRF อีกต่อไป)
+> - dev server: `cd frontend && npm run dev` (Vite บน `:5174`)
+> - หน้าใหม่ → เพิ่มใน `frontend/src/pages/`, query ใน `frontend/src/queries/`
+> - server-rendered view ที่เหลือมีแค่ `resources/views/errors/*` (standalone HTML)
+>
+> **Source of truth:** `CLAUDE.md` (สถาปัตยกรรม) · `frontend/` (โค้ดจริง) ·
+> `.agents/workflows/view-template-guide.md` (กฎ error view ที่เหลือ)
+>
+> _เนื้อหาเดิมคงไว้เพื่ออ้างอิงประวัติศาสตร์เท่านั้น_
 
 Guide for creating consistent and high-quality UI/UX in the HR Budget project.
 
