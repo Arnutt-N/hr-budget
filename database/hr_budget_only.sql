@@ -1704,13 +1704,11 @@ CREATE TABLE `users` (
   `role` enum('admin','editor','viewer') COLLATE utf8mb4_unicode_ci DEFAULT 'viewer',
   `is_active` tinyint(1) DEFAULT '1',
   `department` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `thaid_sub` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `last_login_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `uniq_thaid_sub` (`thaid_sub`)
+  UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=190 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1723,6 +1721,15 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (1,'admin@hrbudget.com','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Administrator',NULL,'admin',1,'IT','2025-12-12 14:52:00','2025-12-12 14:52:00',NULL),(2,'admin@moj.go.th','$2y$10$EOT5yECB0sAZXYb9M7ez1ep8ZLZC4s/5ma/UCDySeV1fx7.zD/MeS','Admin User',NULL,'admin',1,'IT','2025-12-13 04:13:56','2026-01-17 03:12:10','2026-01-17 03:12:10'),(3,'viewer@moj.go.th','$2y$10$AUOll9s5YC2eeRKCsn.sa.aaoI2j0hzwvB9TbDtSQ0lpoHqrXfxhi','Viewer User',NULL,'viewer',1,'Finance','2025-12-13 04:13:57','2025-12-14 03:59:16',NULL),(5,'editor@moj.go.th','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi','Editor User',NULL,'editor',1,'เธเธฃเธกเธเธธเธกเธเธฃเธฐเธเธคเธเธด','2025-12-14 03:59:16','2025-12-14 03:59:16',NULL),(189,'thaid.user@moj.go.th','$2y$10$hT6j7Hu6gre5QZb.PO1Nk.GAKWjwDwdWSIEYNwgPWBkFn3.AwJlzS','ผู้ใช้ ThaID (Mock)',NULL,'viewer',1,'กระทรวงยุติธรรม','2025-12-18 11:30:51','2025-12-18 11:30:51',NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- ThaID OAuth link column (added AFTER the positional INSERT above so the
+-- dumped VALUES keep matching the original column count). Mirrors local
+-- migration 065_add_thaid_sub_to_users.sql.
+--
+ALTER TABLE `users`
+  ADD COLUMN `thaid_sub` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  ADD UNIQUE KEY `uniq_thaid_sub` (`thaid_sub`);
 
 --
 -- Temporary view structure for view `v_kpi_dashboard`
