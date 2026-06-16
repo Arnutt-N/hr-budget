@@ -9,119 +9,27 @@ namespace App\Core;
 
 class View
 {
-    private static string $layoutPath = '';
-    private static array $sections = [];
-    private static ?string $currentSection = null;
-    private static array $sharedData = [];
-
     /**
-     * Set layout for views
+     * Render a standalone view (the error pages are the only remaining
+     * server-rendered views). The legacy layout / section / partial / share
+     * templating API was removed along with the server-rendered pages it served
+     * — the Vue SPA is the UI now, so there is no layout wrapping: a view echoes
+     * its own complete HTML document.
      */
-    public static function setLayout(string $layout): void
-    {
-        self::$layoutPath = $layout;
-    }
-
-    /**
-     * Share data with all views
-     */
-    public static function share(string $key, mixed $value): void
-    {
-        self::$sharedData[$key] = $value;
-    }
-
-    /**
-     * Render a view
-     */
-    public static function render(string $view, array $data = [], ?string $layout = null): void
+    public static function render(string $view, array $data = []): void
     {
         $viewPath = self::getViewPath($view);
-        
+
         if (!file_exists($viewPath)) {
             throw new \RuntimeException("View not found: {$view}");
         }
 
-        // Set layout if provided
-        if ($layout !== null) {
-            self::$layoutPath = $layout;
-        }
-
-        // Merge shared data with view data
-        $data = array_merge(self::$sharedData, $data);
-        
-        // Add common helpers to data
+        // Auto-injected helpers, then expose $data keys as local variables.
         $data['auth'] = Auth::user();
         $data['config'] = require __DIR__ . '/../../config/app.php';
-        
-        // Extract data to variables
         extract($data);
 
-        // Start output buffering
-        ob_start();
-        
-        // Include the view
         require $viewPath;
-        
-        $content = ob_get_clean();
-
-        // If layout is set, wrap content in layout
-        if (self::$layoutPath) {
-            self::$sections['content'] = $content;
-            
-            $layoutPath = self::getViewPath('layouts/' . self::$layoutPath);
-            
-            if (file_exists($layoutPath)) {
-                ob_start();
-                require $layoutPath;
-                $content = ob_get_clean();
-            }
-            
-            self::$layoutPath = '';
-            self::$sections = [];
-        }
-
-        echo $content;
-    }
-
-    /**
-     * Start a section
-     */
-    public static function section(string $name): void
-    {
-        self::$currentSection = $name;
-        ob_start();
-    }
-
-    /**
-     * End current section
-     */
-    public static function endSection(): void
-    {
-        if (self::$currentSection) {
-            self::$sections[self::$currentSection] = ob_get_clean();
-            self::$currentSection = null;
-        }
-    }
-
-    /**
-     * Yield a section
-     */
-    public static function yield(string $name, string $default = ''): string
-    {
-        return self::$sections[$name] ?? $default;
-    }
-
-    /**
-     * Include a partial view
-     */
-    public static function partial(string $view, array $data = []): void
-    {
-        $viewPath = self::getViewPath($view);
-        
-        if (file_exists($viewPath)) {
-            extract(array_merge(self::$sharedData, $data));
-            require $viewPath;
-        }
     }
 
     /**

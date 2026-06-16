@@ -61,11 +61,11 @@ class ErrorHandler
                 'message' => self::getErrorMessage($exception)
             ]);
         } else {
-            // Render error page
+            // Render standalone error page (no layout — see View::render).
             if ($code >= 500) {
-                 View::render('errors/500', ['exception' => $exception], 'error');
+                View::render('errors/500', ['exception' => $exception]);
             } else {
-                 View::render("errors/{$code}", ['exception' => $exception], 'error');
+                View::render("errors/{$code}", ['exception' => $exception]);
             }
         }
     }
