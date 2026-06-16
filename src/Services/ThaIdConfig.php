@@ -34,6 +34,12 @@ final class ThaIdConfig
         if (!$this->pkce() && $this->isRealEnabled()) {
             error_log('[thaid] WARNING: PKCE disabled — code-interception protection off; do not run this way in production');
         }
+
+        // id_token verification without a configured issuer silently skips the
+        // iss check — a token from another service sharing the keyset would pass.
+        if ($this->jwksUrl() !== '' && $this->issuer() === '') {
+            error_log('[thaid] WARNING: jwks_url set but issuer empty — iss claim is not validated; set THAID_ISSUER');
+        }
     }
 
     public function isMock(): bool
@@ -76,6 +82,14 @@ final class ThaIdConfig
     public function scope(): string        { return (string) ($this->cfg['scope'] ?? 'pid name'); }
     public function pkce(): bool           { return filter_var($this->cfg['pkce'] ?? true, FILTER_VALIDATE_BOOLEAN); }
     public function clientAuth(): string   { return (string) ($this->cfg['client_auth'] ?? 'basic'); }
+    public function jwksUrl(): string      { return (string) ($this->cfg['jwks_url'] ?? ''); }
+    public function issuer(): string       { return (string) ($this->cfg['issuer'] ?? ''); }
+    /** Expected id_token audience; falls back to client_id when unset. */
+    public function audience(): string
+    {
+        $aud = (string) ($this->cfg['audience'] ?? '');
+        return $aud !== '' ? $aud : $this->clientId();
+    }
 
     /** @return array<string,string> */
     public function fieldMap(): array

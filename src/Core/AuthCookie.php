@@ -37,11 +37,12 @@ final class AuthCookie
             return;
         }
 
-        // `secure` follows COOKIE_SECURE (.env), defaulting to "on in production".
-        // Laragon dev runs plain http and a Secure cookie would never be stored.
+        // `secure` follows COOKIE_SECURE (.env) when set; otherwise it tracks the
+        // actual request scheme (incl. X-Forwarded-Proto behind a trusted proxy),
+        // so it is correct on HTTPS and never set on Laragon's plain-http dev.
         $secure = isset($_ENV['COOKIE_SECURE'])
             ? $_ENV['COOKIE_SECURE'] === 'true'
-            : ($_ENV['APP_ENV'] ?? '') === 'production';
+            : Request::isHttps();
 
         setcookie(AuthMiddleware::COOKIE_NAME, $value, [
             'expires'  => $expires,

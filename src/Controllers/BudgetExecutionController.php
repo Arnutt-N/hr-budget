@@ -1,7 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Budget Execution Controller
- * 
+ *
  * Dimensional budget execution tracking - Uses fact_budget_execution table
  */
 

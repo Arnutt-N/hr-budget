@@ -52,12 +52,12 @@ final class ThaIdProvider
     }
 
     /**
-     * Exchange the authorization code for an access token.
+     * Exchange the authorization code for tokens.
      *
-     * @return string access_token
-     * @throws \RuntimeException on transport/HTTP error or missing token
+     * @return array{access_token:string, id_token:?string}
+     * @throws \RuntimeException on transport/HTTP error or missing access token
      */
-    public function exchangeCode(string $code, ?string $codeVerifier): string
+    public function exchangeCode(string $code, ?string $codeVerifier): array
     {
         $form = [
             'grant_type'   => 'authorization_code',
@@ -87,12 +87,59 @@ final class ThaIdProvider
             throw new \RuntimeException("token_exchange_failed: HTTP {$resp->status}");
         }
 
-        $token = (string) ($resp->json()['access_token'] ?? '');
+        $body = $resp->json();
+        $token = (string) ($body['access_token'] ?? '');
         if ($token === '') {
             throw new \RuntimeException('token_exchange_failed: no access_token in response');
         }
 
-        return $token;
+        $idToken = isset($body['id_token']) && $body['id_token'] !== ''
+            ? (string) $body['id_token']
+            : null;
+
+        return ['access_token' => $token, 'id_token' => $idToken];
+    }
+
+    /**
+     * Verify a DOPA-signed id_token against the configured JWKS (defense-in-
+     * depth on top of the TLS-authenticated userinfo call). Confirms signature
+     * + expiry (via JWT::decode), then issuer/audience when configured.
+     *
+     * @return array<string,mixed> the verified claims
+     * @throws \RuntimeException on fetch/parse/signature/claim failure
+     */
+    public function verifyIdToken(string $idToken): array
+    {
+        $resp = $this->http->request('GET', $this->cfg->jwksUrl(), [
+            'headers' => ['Accept: application/json'],
+        ]);
+        if (!$resp->isOk()) {
+            throw new \RuntimeException("jwks_fetch_failed: HTTP {$resp->status}");
+        }
+
+        try {
+            $keys = \Firebase\JWT\JWK::parseKeySet($resp->json());
+            $claims = (array) \Firebase\JWT\JWT::decode($idToken, $keys);
+        } catch (\Throwable $e) {
+            // Generic message — never echo the token or raw exception detail.
+            throw new \RuntimeException('id_token_invalid: ' . $e::class);
+        }
+
+        $iss = $this->cfg->issuer();
+        if ($iss !== '' && (string) ($claims['iss'] ?? '') !== $iss) {
+            throw new \RuntimeException('id_token_iss_mismatch');
+        }
+
+        $aud = $this->cfg->audience();
+        if ($aud !== '') {
+            $tokenAud = $claims['aud'] ?? '';
+            $auds = is_array($tokenAud) ? array_map('strval', $tokenAud) : [(string) $tokenAud];
+            if (!in_array($aud, $auds, true)) {
+                throw new \RuntimeException('id_token_aud_mismatch');
+            }
+        }
+
+        return $claims;
     }
 
     /**

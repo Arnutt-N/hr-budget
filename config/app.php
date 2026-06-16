@@ -17,7 +17,7 @@ return [
         'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 120),
         'secure' => isset($_ENV['SESSION_SECURE'])
             ? filter_var($_ENV['SESSION_SECURE'], FILTER_VALIDATE_BOOLEAN)
-            : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            : \App\Core\Request::isHttps(),
         'http_only' => true,
         'same_site' => 'Lax'
     ],

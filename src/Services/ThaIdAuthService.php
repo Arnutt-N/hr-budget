@@ -68,8 +68,22 @@ final class ThaIdAuthService
             throw new \RuntimeException('state_mismatch');
         }
 
-        $accessToken = $this->provider()->exchangeCode($code, $codeVerifier);
-        $identity    = $this->provider()->fetchUserInfo($accessToken);
+        $tokens   = $this->provider()->exchangeCode($code, $codeVerifier);
+        $identity = $this->provider()->fetchUserInfo($tokens['access_token']);
+
+        // OIDC defense-in-depth: when JWKS is configured, verify the id_token
+        // signature/claims and confirm its subject matches the userinfo subject.
+        // (Dormant by default — no jwks_url means current TLS-userinfo behavior.)
+        if ($this->cfg->jwksUrl() !== '') {
+            if ($tokens['id_token'] !== null) {
+                $claims = $this->provider()->verifyIdToken($tokens['id_token']);
+                if ((string) ($claims['sub'] ?? '') !== $identity->sub) {
+                    throw new \RuntimeException('id_token_sub_mismatch');
+                }
+            } else {
+                error_log('[thaid] WARNING: jwks configured but provider returned no id_token');
+            }
+        }
 
         return $this->resolveUser($identity);
     }
