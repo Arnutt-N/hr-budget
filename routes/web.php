@@ -26,6 +26,7 @@ use App\Api\Controllers\PlanController as ApiPlanController;
 use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
 use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
 use App\Api\Controllers\DashboardController as ApiDashboardController;
+use App\Api\Controllers\BudgetExecutionController as ApiBudgetExecutionController;
 use App\Api\Controllers\DisbursementSessionController as ApiDisbursementSessionController;
 use App\Api\Controllers\DisbursementRecordController as ApiDisbursementRecordController;
 use App\Api\Responses\ApiResponse;
@@ -109,6 +110,11 @@ Router::delete('/api/v1/targets/{id}', [ApiBudgetTargetController::class, 'delet
 // Dashboard (read-only, any authenticated user)
 Router::get('/api/v1/dashboard/summary', [ApiDashboardController::class, 'summary']);
 Router::get('/api/v1/dashboard/chart-data', [ApiDashboardController::class, 'chartData']);
+
+// Budget Execution reporting (read-only, any authenticated user)
+Router::get('/api/v1/budget-execution/years', [ApiBudgetExecutionController::class, 'years']);
+Router::get('/api/v1/budget-execution/export', [ApiBudgetExecutionController::class, 'export']);
+Router::get('/api/v1/budget-execution', [ApiBudgetExecutionController::class, 'report']);
 
 // Budget Request CRUD + Approval
 Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);

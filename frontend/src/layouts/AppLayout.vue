@@ -16,6 +16,7 @@ import {
   Users,
   Bell,
   FolderArchive,
+  BarChart3,
   LogOut,
   Menu,
 } from '@lucide/vue'
@@ -88,6 +89,11 @@ async function onLogout(): Promise<void> {
         <RouterLink to="/disbursements" class="nav-link" @click="sidebarOpen = false">
           <Wallet class="h-5 w-5" />
           <span class="ml-3">บันทึกการเบิกจ่าย</span>
+        </RouterLink>
+
+        <RouterLink to="/budget-execution" class="nav-link" @click="sidebarOpen = false">
+          <BarChart3 class="h-5 w-5" />
+          <span class="ml-3">ผลการเบิกจ่าย</span>
         </RouterLink>
 
         <RouterLink to="/notifications" class="nav-link" @click="sidebarOpen = false">

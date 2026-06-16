@@ -57,6 +57,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/DisbursementListPage.vue'),
         meta: { title: 'บันทึกการเบิกจ่าย' },
       },
+      // Budget execution report (authed staff — read-only overview + export)
+      {
+        path: 'budget-execution',
+        name: 'budget-execution',
+        component: () => import('@/pages/BudgetExecutionPage.vue'),
+        meta: { title: 'ผลการเบิกจ่ายงบประมาณ' },
+      },
       {
         path: 'notifications',
         name: 'notifications',
