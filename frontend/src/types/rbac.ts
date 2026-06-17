@@ -27,6 +27,25 @@ export interface Permission {
   resource: string | null
 }
 
+/** Body for POST /roles (CreateRoleDto). */
+export interface CreateRolePayload {
+  code: string
+  name_th: string
+  name_en?: string | null
+  description?: string | null
+  permissions?: string[]
+}
+
+/** Body for PUT /roles/{id} (UpdateRoleDto); every field optional/partial. */
+export interface UpdateRolePayload {
+  name_th?: string
+  name_en?: string | null
+  description?: string | null
+  is_active?: boolean
+  sort_order?: number
+  permissions?: string[]
+}
+
 /** A user's role-scope grant (AccessGrantRepository::findByUser). */
 export interface AccessGrant {
   id: number

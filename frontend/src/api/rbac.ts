@@ -5,6 +5,8 @@ import type {
   Permission,
   AccessGrant,
   AssignGrantPayload,
+  CreateRolePayload,
+  UpdateRolePayload,
   MyPermissions,
 } from '@/types/rbac'
 
@@ -23,11 +25,19 @@ export async function fetchRoles(): Promise<ApiResponse<Role[]>> {
   return apiFetch<Role[]>('/roles')
 }
 
+export async function createRole(data: CreateRolePayload): Promise<ApiResponse<Role>> {
+  return apiFetch<Role>('/roles', { method: 'POST', body: JSON.stringify(data) })
+}
+
 export async function updateRole(
   id: number,
-  data: Partial<{ name_th: string; is_active: boolean; sort_order: number }>,
+  data: UpdateRolePayload,
 ): Promise<ApiResponse<Role>> {
   return apiFetch<Role>(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) })
+}
+
+export async function deleteRole(id: number): Promise<ApiResponse<void>> {
+  return apiFetch<void>(`/roles/${id}`, { method: 'DELETE' })
 }
 
 // --- Per-user access grants ---

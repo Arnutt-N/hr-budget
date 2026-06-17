@@ -3,7 +3,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import {
   fetchMyPermissions,
   fetchRoles,
+  createRole,
   updateRole,
+  deleteRole,
   fetchUserGrants,
   createGrant,
   deleteGrant,
@@ -45,12 +47,40 @@ describe('rbac api request shapes', () => {
     expect(lastCall()[0]).toBe('/api/v1/roles')
   })
 
+  test('createRole POSTs the role with code + permissions', async () => {
+    await createRole({ code: 'regional_supervisor', name_th: 'ผู้ดูแลภาค', permissions: ['request.view'] })
+    const [url, init] = lastCall()
+    expect(url).toBe('/api/v1/roles')
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body as string)).toEqual({
+      code: 'regional_supervisor',
+      name_th: 'ผู้ดูแลภาค',
+      permissions: ['request.view'],
+    })
+  })
+
   test('updateRole PUTs the role with a JSON body', async () => {
     await updateRole(7, { is_active: false })
     const [url, init] = lastCall()
     expect(url).toBe('/api/v1/roles/7')
     expect(init.method).toBe('PUT')
     expect(JSON.parse(init.body as string)).toEqual({ is_active: false })
+  })
+
+  test('updateRole can rewrite the permission set', async () => {
+    await updateRole(7, { name_th: 'ใหม่', permissions: ['request.view', 'request.approve'] })
+    const [, init] = lastCall()
+    expect(JSON.parse(init.body as string)).toEqual({
+      name_th: 'ใหม่',
+      permissions: ['request.view', 'request.approve'],
+    })
+  })
+
+  test('deleteRole DELETEs the role by id', async () => {
+    await deleteRole(7)
+    const [url, init] = lastCall()
+    expect(url).toBe('/api/v1/roles/7')
+    expect(init.method).toBe('DELETE')
   })
 
   test('fetchUserGrants GETs the per-user grants path', async () => {
