@@ -1,10 +1,21 @@
 name: CI
 
+# Cost-optimized triggers (GitHub Actions minutes):
+#  - Only on pull_request (the merge-to-main `push` run was redundant for
+#    squash merges — same code as the already-tested PR).
+#  - Skip entirely for docs/data-only PRs (nothing to compile or test).
+#  - workflow_dispatch allows a manual full run (incl. E2E) on demand.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'PRPs/**'
+      - 'docs/**'
+      - 'research/**'
+      - 'project-log-md/**'
+      - 'database/migrations/**'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -154,6 +165,10 @@ jobs:
     name: E2E (Playwright)
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    # E2E is the heaviest job (MySQL + PHP + build + browser). Run it only on
+    # demand: a manual dispatch, or a PR labelled `run-e2e`. PHP + Frontend
+    # still gate every code PR.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
 
     services:
       mysql:
