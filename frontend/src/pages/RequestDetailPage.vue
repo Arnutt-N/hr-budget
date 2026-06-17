@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FileUploader from '@/components/FileUploader.vue'
+import ApprovalChainPanel from '@/components/ApprovalChainPanel.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -192,6 +193,9 @@ async function handleReject() {
           </div>
         </div>
       </div>
+
+      <!-- Multi-step approval chain (กอง → กรม → กระทรวง) -->
+      <ApprovalChainPanel :request-id="req.id" />
 
       <!-- Items -->
       <div v-if="req.items && req.items.length > 0" class="mb-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
