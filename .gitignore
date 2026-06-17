@@ -62,6 +62,15 @@ archives/data/*.sql
 *.tmp
 *.temp
 
+# Confidential source documents (real government budget PDFs/Excel — never commit)
+/docs/documents/
+# Extracted dumps of the above (analysis scratchpads, same sensitive data)
+/python/extract_docs_output.txt
+/python/summary_budget_docs.txt
+
+# Full local data dump (overrides the !database/*.sql exception above — data, not schema)
+/database/hr_budget.sql
+
 # Crash dumps & one-shot debug scratchpads
 *.stackdump
 /storage/debug_*.txt
