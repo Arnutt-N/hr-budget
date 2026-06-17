@@ -34,6 +34,7 @@ use App\Api\Controllers\RoleController as ApiRoleController;
 use App\Api\Controllers\PermissionController as ApiPermissionController;
 use App\Api\Controllers\AccessGrantController as ApiAccessGrantController;
 use App\Api\Controllers\MeController as ApiMeController;
+use App\Api\Controllers\ApprovalChainController as ApiApprovalChainController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -84,6 +85,12 @@ Router::delete('/api/v1/roles/{id}', [ApiRoleController::class, 'delete']);
 Router::get('/api/v1/users/{id}/access-grants', [ApiAccessGrantController::class, 'listForUser']);
 Router::post('/api/v1/users/{id}/access-grants', [ApiAccessGrantController::class, 'create']);
 Router::delete('/api/v1/access-grants/{id}', [ApiAccessGrantController::class, 'delete']);
+
+// ====== Multi-step approval chain (Phase 4): กอง → กรม → กระทรวง ======
+Router::get('/api/v1/approval-levels', [ApiApprovalChainController::class, 'levels']);
+Router::get('/api/v1/requests/{id}/approval', [ApiApprovalChainController::class, 'status']);
+Router::post('/api/v1/requests/{id}/approval/approve', [ApiApprovalChainController::class, 'approve']);
+Router::post('/api/v1/requests/{id}/approval/reject', [ApiApprovalChainController::class, 'reject']);
 
 // Budget Category CRUD
 Router::get('/api/v1/categories', [ApiBudgetCategoryController::class, 'list']);

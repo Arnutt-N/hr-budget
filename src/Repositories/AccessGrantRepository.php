@@ -67,4 +67,17 @@ class AccessGrantRepository
         );
         return array_map(static fn ($r) => $r['code'], $rows);
     }
+
+    /** True if the user has an active grant of an active role with the given code. */
+    public function userHasActiveRole(int $userId, string $roleCode): bool
+    {
+        $row = Database::queryOne(
+            "SELECT 1 FROM user_access_grants g
+             JOIN roles r ON r.id = g.role_id
+             WHERE g.user_id = ? AND g.is_active = 1 AND r.is_active = 1 AND r.code = ?
+             LIMIT 1",
+            [$userId, $roleCode]
+        );
+        return $row !== null;
+    }
 }
