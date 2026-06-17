@@ -30,6 +30,10 @@ use App\Api\Controllers\DashboardController as ApiDashboardController;
 use App\Api\Controllers\BudgetExecutionController as ApiBudgetExecutionController;
 use App\Api\Controllers\DisbursementSessionController as ApiDisbursementSessionController;
 use App\Api\Controllers\DisbursementRecordController as ApiDisbursementRecordController;
+use App\Api\Controllers\RoleController as ApiRoleController;
+use App\Api\Controllers\PermissionController as ApiPermissionController;
+use App\Api\Controllers\AccessGrantController as ApiAccessGrantController;
+use App\Api\Controllers\MeController as ApiMeController;
 use App\Api\Responses\ApiResponse;
 
 // ====== REST API v1 Routes ======
@@ -64,6 +68,22 @@ Router::post('/api/v1/organizations', [ApiOrganizationController::class, 'create
 Router::get('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'show']);
 Router::put('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'update']);
 Router::delete('/api/v1/organizations/{id}', [ApiOrganizationController::class, 'delete']);
+
+// ====== RBAC: roles / permissions / access grants (Phase 1) ======
+// Effective permissions + org scope of the current user (drives SPA UI).
+Router::get('/api/v1/me/permissions', [ApiMeController::class, 'permissions']);
+// Permission catalogue (role.manage)
+Router::get('/api/v1/permissions', [ApiPermissionController::class, 'list']);
+// Role management (role.manage)
+Router::get('/api/v1/roles', [ApiRoleController::class, 'list']);
+Router::post('/api/v1/roles', [ApiRoleController::class, 'create']);
+Router::get('/api/v1/roles/{id}', [ApiRoleController::class, 'show']);
+Router::put('/api/v1/roles/{id}', [ApiRoleController::class, 'update']);
+Router::delete('/api/v1/roles/{id}', [ApiRoleController::class, 'delete']);
+// Per-user access grants (user.manage; org_admin limited to own subtree)
+Router::get('/api/v1/users/{id}/access-grants', [ApiAccessGrantController::class, 'listForUser']);
+Router::post('/api/v1/users/{id}/access-grants', [ApiAccessGrantController::class, 'create']);
+Router::delete('/api/v1/access-grants/{id}', [ApiAccessGrantController::class, 'delete']);
 
 // Budget Category CRUD
 Router::get('/api/v1/categories', [ApiBudgetCategoryController::class, 'list']);
