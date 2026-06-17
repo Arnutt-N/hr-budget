@@ -1,30 +1,128 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Textarea from 'primevue/textarea'
+import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
-import type { Role } from '@/types/rbac'
-import { useRoleList, useUpdateRole } from '@/queries/useRoles'
+import type { Role, Permission } from '@/types/rbac'
+import {
+  useRoleList,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+} from '@/queries/useRoles'
+import { usePermissionCatalogue } from '@/queries/usePermissions'
 import { activeSeverity } from '@/lib/rbac'
 
 const confirm = useConfirm()
 const toast = useToast()
 
 const { data: roles, isLoading, isError, error } = useRoleList()
+const { data: permissions } = usePermissionCatalogue()
+const createMutation = useCreateRole()
 const updateMutation = useUpdateRole()
+const deleteMutation = useDeleteRole()
 
-// Permission-list dialog
-const showPerms = ref(false)
-const selectedRole = ref<Role | null>(null)
+// Permission catalogue grouped by resource for the picker.
+const ROOT_GROUP = 'อื่น ๆ'
+const permGroups = computed<Record<string, Permission[]>>(() => {
+  const groups: Record<string, Permission[]> = {}
+  for (const p of permissions.value ?? []) {
+    const key = p.resource ?? ROOT_GROUP
+    ;(groups[key] ??= []).push(p)
+  }
+  return groups
+})
 
-function openPermissions(role: Role): void {
-  selectedRole.value = role
-  showPerms.value = true
+// --- Create / edit dialog state ---
+const showDialog = ref(false)
+const editingRole = ref<Role | null>(null)
+const formCode = ref('')
+const formNameTh = ref('')
+const formNameEn = ref('')
+const formDescription = ref('')
+const selectedPerms = ref<string[]>([])
+const formError = ref('')
+
+const isEditing = computed(() => editingRole.value !== null)
+const isSystem = computed(() => !!editingRole.value?.is_system)
+const dialogTitle = computed(() =>
+  !isEditing.value ? 'เพิ่มบทบาท' : isSystem.value ? 'ดูบทบาทระบบ' : 'แก้ไขบทบาท',
+)
+const saving = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
+
+function openCreate(): void {
+  editingRole.value = null
+  formCode.value = ''
+  formNameTh.value = ''
+  formNameEn.value = ''
+  formDescription.value = ''
+  selectedPerms.value = []
+  formError.value = ''
+  showDialog.value = true
+}
+
+function openEdit(role: Role): void {
+  editingRole.value = role
+  formCode.value = role.code
+  formNameTh.value = role.name_th
+  formNameEn.value = role.name_en ?? ''
+  formDescription.value = role.description ?? ''
+  selectedPerms.value = [...role.permissions]
+  formError.value = ''
+  showDialog.value = true
+}
+
+const CODE_RE = /^[a-z][a-z0-9_]{1,49}$/
+
+async function onSave(): Promise<void> {
+  formError.value = ''
+  if (isSystem.value) {
+    // System roles are view-only here (backend rejects edits).
+    showDialog.value = false
+    return
+  }
+  if (!isEditing.value && !CODE_RE.test(formCode.value)) {
+    formError.value = 'รหัสบทบาทต้องเป็น a-z, 0-9, _ ขึ้นต้นด้วยตัวอักษร (≤50)'
+    return
+  }
+  if (!formNameTh.value.trim()) {
+    formError.value = 'กรุณาระบุชื่อบทบาท'
+    return
+  }
+  try {
+    if (isEditing.value && editingRole.value) {
+      await updateMutation.mutateAsync({
+        id: editingRole.value.id,
+        data: {
+          name_th: formNameTh.value.trim(),
+          name_en: formNameEn.value.trim() || null,
+          description: formDescription.value.trim() || null,
+          permissions: selectedPerms.value,
+        },
+      })
+      toast.add({ severity: 'success', summary: 'แก้ไขบทบาทสำเร็จ', life: 3000 })
+    } else {
+      await createMutation.mutateAsync({
+        code: formCode.value.trim(),
+        name_th: formNameTh.value.trim(),
+        name_en: formNameEn.value.trim() || null,
+        description: formDescription.value.trim() || null,
+        permissions: selectedPerms.value,
+      })
+      toast.add({ severity: 'success', summary: 'สร้างบทบาทสำเร็จ', life: 3000 })
+    }
+    showDialog.value = false
+  } catch (e: unknown) {
+    formError.value = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+  }
 }
 
 function confirmToggle(role: Role): void {
@@ -49,6 +147,26 @@ function confirmToggle(role: Role): void {
     },
   })
 }
+
+function confirmDelete(role: Role): void {
+  confirm.require({
+    message: `ลบบทบาท "${role.name_th}" อย่างถาวร? ผู้ใช้ที่ถูกมอบบทบาทนี้จะถูกถอนสิทธิ์`,
+    header: 'ยืนยันลบบทบาท',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ลบ',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await deleteMutation.mutateAsync(role.id)
+        toast.add({ severity: 'success', summary: 'ลบบทบาทสำเร็จ', life: 3000 })
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+        toast.add({ severity: 'error', summary: 'ลบไม่สำเร็จ', detail: message, life: 5000 })
+      }
+    },
+  })
+}
 </script>
 
 <template>
@@ -57,9 +175,10 @@ function confirmToggle(role: Role): void {
       <div>
         <h1 class="text-2xl font-bold text-white">บทบาทและสิทธิ์</h1>
         <p class="mt-1 text-sm text-dark-muted">
-          เปิด/ปิดการใช้งานบทบาท และดูชุดสิทธิ์ของแต่ละบทบาท
+          สร้าง/แก้บทบาท กำหนดชุดสิทธิ์ และเปิด/ปิดการใช้งาน
         </p>
       </div>
+      <Button label="เพิ่มบทบาท" icon="pi pi-plus" @click="openCreate" />
     </div>
 
     <Message v-if="isError" severity="error" :closable="false">
@@ -99,13 +218,7 @@ function confirmToggle(role: Role): void {
 
       <Column header="สิทธิ์">
         <template #body="{ data }">
-          <Button
-            :label="`${data.permissions.length} สิทธิ์`"
-            size="small"
-            text
-            icon="pi pi-key"
-            @click="openPermissions(data)"
-          />
+          <span class="text-sm text-dark-muted">{{ data.permissions.length }} สิทธิ์</span>
         </template>
       </Column>
 
@@ -120,35 +233,110 @@ function confirmToggle(role: Role): void {
 
       <Column header="จัดการ" class="text-right">
         <template #body="{ data }">
-          <Button
-            :label="data.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
-            size="small"
-            text
-            :severity="data.is_active ? 'danger' : 'success'"
-            :disabled="!!data.is_system || updateMutation.isPending.value"
-            @click="confirmToggle(data)"
-          />
-          <!-- System roles cannot be disabled (backend rejects); toggle hidden via disabled -->
-          <span v-if="data.is_system" class="ml-1 text-xs text-dark-muted">บทบาทระบบ</span>
+          <div class="flex justify-end gap-1">
+            <Button
+              :label="data.is_system ? 'ดู' : 'แก้ไข'"
+              size="small"
+              text
+              icon="pi pi-pencil"
+              @click="openEdit(data)"
+            />
+            <Button
+              :label="data.is_active ? 'ปิด' : 'เปิด'"
+              size="small"
+              text
+              :severity="data.is_active ? 'danger' : 'success'"
+              :disabled="!!data.is_system || updateMutation.isPending.value"
+              @click="confirmToggle(data)"
+            />
+            <Button
+              v-if="!data.is_system"
+              label="ลบ"
+              size="small"
+              text
+              severity="danger"
+              icon="pi pi-trash"
+              @click="confirmDelete(data)"
+            />
+          </div>
         </template>
       </Column>
     </DataTable>
 
-    <Dialog
-      v-model:visible="showPerms"
-      :header="`สิทธิ์ของบทบาท: ${selectedRole?.name_th ?? ''}`"
-      modal
-      class="w-full max-w-lg"
-    >
-      <div v-if="selectedRole && selectedRole.permissions.length" class="flex flex-wrap gap-2">
-        <Tag
-          v-for="perm in selectedRole.permissions"
-          :key="perm"
-          :value="perm"
-          severity="secondary"
-        />
-      </div>
-      <p v-else class="text-sm text-dark-muted">บทบาทนี้ยังไม่มีสิทธิ์ที่กำหนด</p>
+    <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-2xl">
+      <form class="space-y-4" @submit.prevent="onSave">
+        <Message v-if="formError" severity="error" :closable="false">{{ formError }}</Message>
+        <Message v-if="isSystem" severity="warn" :closable="false">
+          บทบาทระบบ — ดูได้อย่างเดียว แก้ไข/ลบไม่ได้
+        </Message>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="flex flex-col gap-1">
+            <label for="role-code" class="text-sm font-medium text-dark-muted">รหัสบทบาท</label>
+            <InputText
+              id="role-code"
+              v-model.trim="formCode"
+              :disabled="isEditing"
+              placeholder="เช่น regional_supervisor"
+              fluid
+            />
+            <small v-if="isEditing" class="text-dark-muted">รหัสบทบาทแก้ไขไม่ได้</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="role-name-th" class="text-sm font-medium text-dark-muted">ชื่อ (ไทย)</label>
+            <InputText id="role-name-th" v-model="formNameTh" :disabled="isSystem" fluid />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="role-name-en" class="text-sm font-medium text-dark-muted">ชื่อ (อังกฤษ)</label>
+            <InputText id="role-name-en" v-model.trim="formNameEn" :disabled="isSystem" fluid />
+          </div>
+          <div class="flex flex-col gap-1 sm:col-span-2">
+            <label for="role-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย</label>
+            <Textarea id="role-desc" v-model="formDescription" :disabled="isSystem" rows="2" fluid />
+          </div>
+        </div>
+
+        <div>
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-medium text-dark-muted">ชุดสิทธิ์</span>
+            <span class="text-xs text-dark-muted">เลือกแล้ว {{ selectedPerms.length }} สิทธิ์</span>
+          </div>
+          <div class="max-h-72 space-y-4 overflow-y-auto rounded-lg border border-dark-border p-3">
+            <div v-for="(perms, resource) in permGroups" :key="resource">
+              <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-dark-muted">
+                {{ resource }}
+              </p>
+              <div class="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <label
+                  v-for="perm in perms"
+                  :key="perm.code"
+                  class="flex items-center gap-2 text-sm"
+                >
+                  <Checkbox
+                    v-model="selectedPerms"
+                    :value="perm.code"
+                    :disabled="isSystem"
+                    :input-id="`perm-${perm.code}`"
+                  />
+                  <span>{{ perm.name_th }}</span>
+                  <span class="text-xs text-dark-muted">{{ perm.code }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <Button
+            :label="isSystem ? 'ปิด' : 'ยกเลิก'"
+            severity="secondary"
+            text
+            :disabled="saving"
+            @click="showDialog = false"
+          />
+          <Button v-if="!isSystem" type="submit" label="บันทึก" :loading="saving" />
+        </div>
+      </form>
     </Dialog>
   </div>
 </template>

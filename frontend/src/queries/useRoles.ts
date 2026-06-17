@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
-import { fetchRoles, updateRole } from '@/api/rbac'
+import { fetchRoles, createRole, updateRole, deleteRole } from '@/api/rbac'
+import type { CreateRolePayload, UpdateRolePayload } from '@/types/rbac'
 
 const QUERY_KEY = ['roles'] as const
 
@@ -14,19 +15,36 @@ export function useRoleList() {
   })
 }
 
+export function useCreateRole() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: CreateRolePayload) => {
+      const res = await createRole(data)
+      if (!res.success) throw new Error(res.error ?? 'สร้างบทบาทไม่สำเร็จ')
+      return res.data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+  })
+}
+
 export function useUpdateRole() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number
-      data: Partial<{ name_th: string; is_active: boolean; sort_order: number }>
-    }) => {
+    mutationFn: async ({ id, data }: { id: number; data: UpdateRolePayload }) => {
       const res = await updateRole(id, data)
       if (!res.success) throw new Error(res.error ?? 'แก้ไขบทบาทไม่สำเร็จ')
       return res.data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+  })
+}
+
+export function useDeleteRole() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await deleteRole(id)
+      if (!res.success) throw new Error(res.error ?? 'ลบบทบาทไม่สำเร็จ')
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
   })
