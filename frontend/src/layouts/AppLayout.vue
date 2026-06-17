@@ -14,6 +14,7 @@ import {
   Target,
   Goal,
   Users,
+  ShieldCheck,
   Bell,
   FolderArchive,
   BarChart3,
@@ -150,6 +151,11 @@ async function onLogout(): Promise<void> {
           <RouterLink to="/users" class="nav-link" @click="sidebarOpen = false">
             <Users class="h-5 w-5" />
             <span class="ml-3">จัดการผู้ใช้</span>
+          </RouterLink>
+
+          <RouterLink to="/roles" class="nav-link" @click="sidebarOpen = false">
+            <ShieldCheck class="h-5 w-5" />
+            <span class="ml-3">บทบาท/สิทธิ์</span>
           </RouterLink>
         </div>
       </nav>

@@ -103,6 +103,18 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAdmin: true, title: 'จัดการผู้ใช้' },
       },
       {
+        path: 'users/:id/access-grants',
+        name: 'user-access-grants',
+        component: () => import('@/pages/UserAccessGrantsPage.vue'),
+        meta: { requiresAdmin: true, title: 'สิทธิ์การเข้าถึงของผู้ใช้' },
+      },
+      {
+        path: 'roles',
+        name: 'roles',
+        component: () => import('@/pages/RoleListPage.vue'),
+        meta: { requiresAdmin: true, title: 'บทบาทและสิทธิ์' },
+      },
+      {
         path: 'divisions',
         name: 'divisions',
         component: () => import('@/pages/DivisionListPage.vue'),

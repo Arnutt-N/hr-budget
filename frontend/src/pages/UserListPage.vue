@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
@@ -20,6 +21,7 @@ import { useUserList, useCreateUser, useUpdateUser, useDeleteUser } from '@/quer
 
 const confirm = useConfirm()
 const toast = useToast()
+const router = useRouter()
 
 const { data: users, isLoading, isError, error } = useUserList()
 const createMutation = useCreateUser()
@@ -176,6 +178,13 @@ function roleSeverity(r: string): string {
       <Column header="จัดการ" class="text-right">
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
+            <Button
+              label="สิทธิ์"
+              size="small"
+              text
+              icon="pi pi-shield"
+              @click="router.push(`/users/${data.id}/access-grants`)"
+            />
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
             <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
           </div>
