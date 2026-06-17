@@ -8,7 +8,8 @@
 -- which is an admin classification).
 --
 -- Region grouping follows the ราชบัณฑิตยสภา / NGC 6-region standard and matches
--- the PROV-RGN-* org grouping seeded in Phase 6.
+-- the PROV-RGN-* org grouping seeded in Phase 6. name_en uses RTGS with "Buri"
+-- written as a separate word (consistent with Sing Buri / Suphan Buri).
 -- Idempotent: provinces.code is UNIQUE → INSERT IGNORE de-dupes; the Bangkok
 -- UPDATE re-applies the same values on re-run.
 -- ============================================================================
@@ -21,26 +22,26 @@ WHERE name_th = 'กรุงเทพมหานคร';
 -- The remaining 76 provinces.
 INSERT IGNORE INTO provinces (code, name_th, name_en, region, sort_order, is_active) VALUES
 ('11','สมุทรปราการ','Samut Prakan','central',11,1),
-('12','นนทบุรี','Nonthaburi','central',12,1),
+('12','นนทบุรี','Nontha Buri','central',12,1),
 ('13','ปทุมธานี','Pathum Thani','central',13,1),
 ('14','พระนครศรีอยุธยา','Phra Nakhon Si Ayutthaya','central',14,1),
 ('15','อ่างทอง','Ang Thong','central',15,1),
-('16','ลพบุรี','Lopburi','central',16,1),
+('16','ลพบุรี','Lop Buri','central',16,1),
 ('17','สิงห์บุรี','Sing Buri','central',17,1),
 ('18','ชัยนาท','Chai Nat','central',18,1),
-('19','สระบุรี','Saraburi','central',19,1),
-('20','ชลบุรี','Chonburi','east',20,1),
+('19','สระบุรี','Sara Buri','central',19,1),
+('20','ชลบุรี','Chon Buri','east',20,1),
 ('21','ระยอง','Rayong','east',21,1),
-('22','จันทบุรี','Chanthaburi','east',22,1),
+('22','จันทบุรี','Chantha Buri','east',22,1),
 ('23','ตราด','Trat','east',23,1),
 ('24','ฉะเชิงเทรา','Chachoengsao','east',24,1),
-('25','ปราจีนบุรี','Prachinburi','east',25,1),
+('25','ปราจีนบุรี','Prachin Buri','east',25,1),
 ('26','นครนายก','Nakhon Nayok','central',26,1),
 ('27','สระแก้ว','Sa Kaeo','east',27,1),
 ('30','นครราชสีมา','Nakhon Ratchasima','northeast',30,1),
-('31','บุรีรัมย์','Buriram','northeast',31,1),
+('31','บุรีรัมย์','Buri Ram','northeast',31,1),
 ('32','สุรินทร์','Surin','northeast',32,1),
-('33','ศรีสะเกษ','Sisaket','northeast',33,1),
+('33','ศรีสะเกษ','Si Sa Ket','northeast',33,1),
 ('34','อุบลราชธานี','Ubon Ratchathani','northeast',34,1),
 ('35','ยโสธร','Yasothon','northeast',35,1),
 ('36','ชัยภูมิ','Chaiyaphum','northeast',36,1),
@@ -74,13 +75,13 @@ INSERT IGNORE INTO provinces (code, name_th, name_en, region, sort_order, is_act
 ('65','พิษณุโลก','Phitsanulok','central',65,1),
 ('66','พิจิตร','Phichit','central',66,1),
 ('67','เพชรบูรณ์','Phetchabun','central',67,1),
-('70','ราชบุรี','Ratchaburi','west',70,1),
-('71','กาญจนบุรี','Kanchanaburi','west',71,1),
+('70','ราชบุรี','Ratcha Buri','west',70,1),
+('71','กาญจนบุรี','Kanchana Buri','west',71,1),
 ('72','สุพรรณบุรี','Suphan Buri','central',72,1),
 ('73','นครปฐม','Nakhon Pathom','central',73,1),
 ('74','สมุทรสาคร','Samut Sakhon','central',74,1),
 ('75','สมุทรสงคราม','Samut Songkhram','central',75,1),
-('76','เพชรบุรี','Phetchaburi','west',76,1),
+('76','เพชรบุรี','Phetcha Buri','west',76,1),
 ('77','ประจวบคีรีขันธ์','Prachuap Khiri Khan','west',77,1),
 ('80','นครศรีธรรมราช','Nakhon Si Thammarat','south',80,1),
 ('81','กระบี่','Krabi','south',81,1),
