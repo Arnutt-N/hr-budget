@@ -52,6 +52,7 @@ build/
 *.backup
 *.sql
 !database/*.sql
+!database/migrations/*.sql
 *.dump
 archives/
 archives/backup/*.zip
