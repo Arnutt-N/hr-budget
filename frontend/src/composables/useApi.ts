@@ -1,9 +1,10 @@
 import { useAuthStore } from '@/stores/auth'
+import { apiUrl } from '@/api/base'
 import type { ApiResponse } from '@/types/api'
 
 /**
  * Typed fetch wrapper. Automatically:
- *  - Prepends /api/v1
+ *  - Prepends VITE_API_BASE_URL + /api/v1 (see @/api/base)
  *  - Sends the httpOnly auth cookie (credentials) + CSRF header
  *  - Drops local auth state on 401
  */
@@ -20,7 +21,7 @@ export async function apiFetch<T = unknown>(
   // CSRF guard: backend rejects cookie-authed mutations without this header.
   headers.set('X-Requested-With', 'XMLHttpRequest')
 
-  const res = await fetch(`/api/v1${path.startsWith('/') ? path : '/' + path}`, {
+  const res = await fetch(apiUrl(path), {
     ...options,
     credentials: 'same-origin',
     headers,
