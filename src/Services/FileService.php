@@ -14,7 +14,33 @@ final class FileService
 
     public function __construct(
         private readonly FileRepository $repo = new FileRepository(),
+        private readonly AccessScopeResolver $scopeResolver = new AccessScopeResolver(),
     ) {}
+
+    /**
+     * Additive READ visibility for a request's attachments, mirroring the
+     * budget-request scoping from Phase 9 (BudgetRequestService::canViewRequest):
+     * admin, the request owner, an org-wide 'all' grant, or a viewer whose
+     * granted org subtree contains the request's org. Keeps file listing/download
+     * consistent with which requests the viewer can already see.
+     *
+     * @param array<string,mixed> $request a budget_requests row with created_by + org_id
+     */
+    private function canReadRequest(int $userId, string $role, array $request): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+        if ((int) $request['created_by'] === $userId) {
+            return true;
+        }
+        $scope = $this->scopeResolver->resolve(['id' => $userId, 'role' => $role]);
+        if ($scope['hasAll']) {
+            return true;
+        }
+        $orgId = isset($request['org_id']) && $request['org_id'] !== null ? (int) $request['org_id'] : null;
+        return $orgId !== null && in_array($orgId, $scope['orgIds'], true);
+    }
 
     /** @return array{success: bool, file?: array, error?: string} */
     public function upload(int $requestId, CreateFileDto $dto, int $userId, string $role): array
@@ -61,12 +87,12 @@ final class FileService
 
     public function listByRequest(int $requestId, int $userId, string $role): array
     {
-        $request = Database::queryOne("SELECT created_by FROM budget_requests WHERE id = ?", [$requestId]);
+        $request = Database::queryOne("SELECT created_by, org_id FROM budget_requests WHERE id = ?", [$requestId]);
         if ($request === null) {
             return [];
         }
 
-        if ($role !== 'admin' && (int) $request['created_by'] !== $userId) {
+        if (!$this->canReadRequest($userId, $role, $request)) {
             return [];
         }
 
@@ -82,8 +108,8 @@ final class FileService
         }
 
         if ((int) $file['request_id'] > 0) {
-            $request = Database::queryOne("SELECT created_by FROM budget_requests WHERE id = ?", [(int) $file['request_id']]);
-            if ($request !== null && $role !== 'admin' && (int) $request['created_by'] !== $userId) {
+            $request = Database::queryOne("SELECT created_by, org_id FROM budget_requests WHERE id = ?", [(int) $file['request_id']]);
+            if ($request !== null && !$this->canReadRequest($userId, $role, $request)) {
                 return null;
             }
         }
