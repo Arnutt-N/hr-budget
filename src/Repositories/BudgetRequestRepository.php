@@ -125,6 +125,18 @@ class BudgetRequestRepository
             $params[] = $filters['created_by'];
         }
 
+        // RBAC additive scope: a request is visible if the viewer created it OR
+        // it belongs to an organization within the viewer's granted subtree.
+        if (isset($filters['owner_or_orgs'])) {
+            $orgIds = array_values($filters['owner_or_orgs']['org_ids']);
+            $placeholders = implode(',', array_fill(0, count($orgIds), '?'));
+            $sql .= " AND (br.created_by = ? OR br.org_id IN ($placeholders))";
+            $params[] = $filters['owner_or_orgs']['user_id'];
+            foreach ($orgIds as $orgId) {
+                $params[] = $orgId;
+            }
+        }
+
         if (!empty($filters['search'])) {
             $sql .= " AND br.request_title LIKE ?";
             $params[] = "%" . $filters['search'] . "%";

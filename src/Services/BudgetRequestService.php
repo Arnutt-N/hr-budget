@@ -22,19 +22,37 @@ final class BudgetRequestService
         private readonly BudgetRequestItemRepository $itemRepo = new BudgetRequestItemRepository(),
         private readonly BudgetRequestApprovalRepository $approvalRepo = new BudgetRequestApprovalRepository(),
         private readonly NotificationService $notificationService = new NotificationService(),
+        private readonly AccessScopeResolver $scopeResolver = new AccessScopeResolver(),
     ) {}
 
     /**
      * List requests with filters and pagination.
      *
+     * Visibility is ADDITIVE: super admin sees all; otherwise a viewer sees the
+     * requests they created, PLUS — if they hold RBAC grants — any request whose
+     * organization falls within their granted scope. Grants only widen what is
+     * visible, so a user without grants keeps the legacy "own requests" view.
+     *
+     * @param array<string,mixed> $user the authenticated user (id + role + …)
      * @return array{data: array[], meta: array{total: int, page: int, per_page: int}}
      */
-    public function list(int $userId, string $role, BudgetRequestListQueryDto $query): array
+    public function list(array $user, BudgetRequestListQueryDto $query): array
     {
         $filters = $query->toFilters();
+        $userId = (int) ($user['id'] ?? 0);
+        $role = $user['role'] ?? 'staff';
 
         if ($role !== 'admin') {
-            $filters['created_by'] = $userId;
+            $scope = $this->scopeResolver->resolve($user);
+            if ($scope['hasAll']) {
+                // Org-wide grant (scope=all): no ownership restriction.
+            } elseif (!empty($scope['orgIds'])) {
+                // Own requests OR requests within the granted org subtree.
+                $filters['owner_or_orgs'] = ['user_id' => $userId, 'org_ids' => $scope['orgIds']];
+            } else {
+                // No grants → legacy behaviour: only the user's own requests.
+                $filters['created_by'] = $userId;
+            }
         }
 
         $total = $this->requestRepo->count($filters);
@@ -99,7 +117,11 @@ final class BudgetRequestService
             return null;
         }
 
-        if ($role !== 'admin' && (int) $request['created_by'] !== $userId) {
+        // READ scope mirrors list(): own request, or within the granted org
+        // subtree, or an org-wide (all) grant, or super admin. Keeps the detail
+        // view consistent with what list() shows (no "visible in list but 404 on
+        // open"). WRITE paths (update/delete) stay owner-only below.
+        if (!$this->canViewRequest($userId, $role, $request)) {
             return null;
         }
 
@@ -107,6 +129,27 @@ final class BudgetRequestService
         $request['approvals'] = $this->approvalRepo->findByRequestId($id);
 
         return $request;
+    }
+
+    /**
+     * Additive READ visibility for a single request, consistent with list().
+     *
+     * @param array<string,mixed> $request
+     */
+    private function canViewRequest(int $userId, string $role, array $request): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+        if ((int) $request['created_by'] === $userId) {
+            return true;
+        }
+        $scope = $this->scopeResolver->resolve(['id' => $userId, 'role' => $role]);
+        if ($scope['hasAll']) {
+            return true;
+        }
+        $orgId = isset($request['org_id']) && $request['org_id'] !== null ? (int) $request['org_id'] : null;
+        return $orgId !== null && in_array($orgId, $scope['orgIds'], true);
     }
 
     /**

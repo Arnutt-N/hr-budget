@@ -77,7 +77,22 @@ class BudgetRequestServiceTest extends TestCase
 {
     protected function setUp(): void
     {
-        Database::setInstance(new \PDO('sqlite::memory:'));
+        $pdo = new \PDO('sqlite::memory:');
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        // findById() now resolves RBAC scope (additive read visibility), so the
+        // resolver's tables must exist. Empty tables → empty scope → the
+        // owner/admin checks below still decide visibility as before.
+        $pdo->exec(
+            "CREATE TABLE organizations (id INTEGER PRIMARY KEY, parent_id INTEGER);
+             CREATE TABLE roles (id INTEGER PRIMARY KEY, code TEXT, name_th TEXT, is_active INTEGER DEFAULT 1);
+             CREATE TABLE permissions (id INTEGER PRIMARY KEY, code TEXT);
+             CREATE TABLE role_permissions (role_id INTEGER, permission_id INTEGER);
+             CREATE TABLE user_access_grants (
+                id INTEGER PRIMARY KEY, user_id INTEGER, role_id INTEGER,
+                scope_type TEXT, scope_ref_id INTEGER, is_active INTEGER DEFAULT 1
+             );"
+        );
+        Database::setInstance($pdo);
     }
 
     protected function tearDown(): void
