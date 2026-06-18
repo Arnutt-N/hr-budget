@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { apiUrl } from '@/api/base'
 import type { User, LoginRequest, AuthResponse, ApiResponse } from '@/types/api'
 
 /**
@@ -21,7 +22,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function bootstrap(): Promise<void> {
     if (initialized.value) return
     try {
-      const res = await fetch('/api/v1/auth/me', {
+      const res = await fetch(apiUrl('/auth/me'), {
         credentials: 'same-origin',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
       })
@@ -35,7 +36,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(payload: LoginRequest): Promise<{ ok: boolean; error?: string }> {
-    const res = await fetch('/api/v1/auth/login', {
+    const res = await fetch(apiUrl('/auth/login'), {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
@@ -65,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout(): Promise<void> {
     if (user.value !== null) {
       try {
-        await fetch('/api/v1/auth/logout', {
+        await fetch(apiUrl('/auth/logout'), {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'X-Requested-With': 'XMLHttpRequest' },
