@@ -30,7 +30,57 @@ final class DisbursementService
         private readonly DisbursementSessionRepository $sessionRepo = new DisbursementSessionRepository(),
         private readonly DisbursementRecordRepository $recordRepo = new DisbursementRecordRepository(),
         private readonly ExpenseStructureRepository $expenseRepo = new ExpenseStructureRepository(),
+        private readonly AccessScopeResolver $scopeResolver = new AccessScopeResolver(),
     ) {}
+
+    /**
+     * Org ids a non-admin user may READ (Phase 10 additive scope): their own org
+     * UNION any org inside a granted subtree. Returns null when there is no
+     * restriction at all (super admin, or an org-wide 'all' grant). Returns an
+     * empty array when the user may read nothing.
+     *
+     * READ-only — write paths keep the stricter own-org rule (resolveOrgId /
+     * canAccessOrg) so a subtree viewer can see but not mutate child-org data.
+     *
+     * @param array<string,mixed> $user
+     * @return array<int,int>|null
+     */
+    private function readableOrgIds(string $role, array $user): ?array
+    {
+        if ($role === 'admin') {
+            return null;
+        }
+
+        $scope = $this->scopeResolver->resolve($user);
+        if ($scope['hasAll']) {
+            return null;
+        }
+
+        $ids = $scope['orgIds'];
+        $ownOrg = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
+        if ($ownOrg > 0) {
+            $ids[] = $ownOrg;
+        }
+
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    /**
+     * Object-level READ guard mirroring readableOrgIds(): true when the target
+     * org is within the user's readable set (own org ∪ granted subtree), or when
+     * there is no restriction (admin / 'all' grant).
+     *
+     * @param array<string,mixed> $user
+     */
+    private function canReadOrg(string $role, array $user, int $targetOrgId): bool
+    {
+        $readable = $this->readableOrgIds($role, $user);
+        if ($readable === null) {
+            return true;
+        }
+
+        return in_array($targetOrgId, $readable, true);
+    }
 
     /**
      * Resolve the organization a non-admin user is allowed to act on.
@@ -51,8 +101,8 @@ final class DisbursementService
      *
      * Admins may act on any organization. A non-admin may only act on rows
      * belonging to their own organization; a non-admin with no resolvable org
-     * (own org 0) is always denied. Mirrors the deleteSession/listSessions
-     * scoping already used elsewhere in this service.
+     * (own org 0) is always denied. This is the WRITE guard (own-org only) used
+     * by create/save paths; READ paths use canReadOrg (subtree-aware, Phase 10).
      */
     private function canAccessOrg(string $role, array $user, int $targetOrgId): bool
     {
@@ -77,8 +127,11 @@ final class DisbursementService
     {
         $filters = $query->toFilters();
 
-        if ($role !== 'admin') {
-            $filters['organization_id'] = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
+        // Phase 10: scope reads to the viewer's own org ∪ granted subtree
+        // (additive). null = no restriction (admin / 'all'); [] = deny-all.
+        $readable = $this->readableOrgIds($role, $user);
+        if ($readable !== null) {
+            $filters['organization_ids'] = $readable;
         }
 
         $total = $this->sessionRepo->count($filters);
@@ -124,9 +177,9 @@ final class DisbursementService
     }
 
     /**
-     * Fetch a single session. Non-admin may only read own-org sessions.
-     * Returns null when the session is missing OR ownership is denied
-     * (callers map null → notFound, never leaking existence to other orgs).
+     * Fetch a single session. Non-admin may read sessions in their own org or a
+     * granted subtree (Phase 10). Returns null when the session is missing OR
+     * access is denied (callers map null → notFound, never leaking existence).
      */
     public function getSession(string $role, array $user, int $id): ?array
     {
@@ -135,7 +188,7 @@ final class DisbursementService
             return null;
         }
 
-        if (!$this->canAccessOrg($role, $user, (int) $session['organization_id'])) {
+        if (!$this->canReadOrg($role, $user, (int) $session['organization_id'])) {
             return null;
         }
 
@@ -181,7 +234,8 @@ final class DisbursementService
 
     /**
      * Activities selectable for this session (with has-record markers).
-     * Non-admin may only list activities for an own-org session.
+     * Non-admin may list activities for a session in their own org or a granted
+     * subtree (Phase 10).
      *
      * @return array<int,array<string,mixed>>|null null if session missing or denied
      */
@@ -192,7 +246,7 @@ final class DisbursementService
             return null;
         }
 
-        if (!$this->canAccessOrg($role, $user, (int) $session['organization_id'])) {
+        if (!$this->canReadOrg($role, $user, (int) $session['organization_id'])) {
             return null;
         }
 
@@ -234,8 +288,8 @@ final class DisbursementService
     /**
      * Full record detail: record + session + activity + existing tracking
      * amounts keyed by expense_item_id (each with computed `remaining`).
-     * Non-admin may only read a record whose parent session is own-org.
-     * Returns null when the record is missing OR ownership is denied.
+     * Non-admin may read a record whose parent session is in their own org or a
+     * granted subtree (Phase 10). Returns null when missing OR access is denied.
      */
     public function getRecordDetail(string $role, array $user, int $recordId): ?array
     {
@@ -249,7 +303,7 @@ final class DisbursementService
             return null;
         }
 
-        if (!$this->canAccessOrg($role, $user, (int) $session['organization_id'])) {
+        if (!$this->canReadOrg($role, $user, (int) $session['organization_id'])) {
             return null;
         }
 

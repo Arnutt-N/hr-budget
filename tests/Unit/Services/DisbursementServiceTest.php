@@ -152,6 +152,29 @@ class DisbursementServiceTest extends TestCase
             )
         ");
 
+        // Phase 10: disbursement READ paths resolve RBAC scope via
+        // AccessScopeResolver, which queries these tables. Created empty so an
+        // ungranted viewer resolves to no grants → readable = [own org],
+        // preserving the original own-org behaviour the tests below assert.
+        $this->pdo->exec("
+            CREATE TABLE roles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT, name_th TEXT, is_active INTEGER DEFAULT 1
+            );
+            CREATE TABLE permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, code TEXT
+            );
+            CREATE TABLE role_permissions (
+                role_id INTEGER, permission_id INTEGER
+            );
+            CREATE TABLE user_access_grants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER, role_id INTEGER,
+                scope_type TEXT DEFAULT 'organization', scope_ref_id INTEGER,
+                is_active INTEGER DEFAULT 1
+            );
+        ");
+
         $this->seed();
     }
 

@@ -9,7 +9,7 @@ use App\Core\Database;
 class DisbursementSessionRepository
 {
     /**
-     * @param array<string,int> $filters
+     * @param array<string,mixed> $filters
      * @return array<int,array<string,mixed>>
      */
     public function findAll(array $filters, int $limit, int $offset): array
@@ -29,7 +29,7 @@ class DisbursementSessionRepository
     }
 
     /**
-     * @param array<string,int> $filters
+     * @param array<string,mixed> $filters
      */
     public function count(array $filters): int
     {
@@ -129,7 +129,7 @@ class DisbursementSessionRepository
 
     /**
      * @param string &$sql
-     * @param array<string,int> $filters
+     * @param array<string,mixed> $filters
      * @return array<int,int>
      */
     private function applyFilters(string &$sql, array $filters): array
@@ -144,6 +144,22 @@ class DisbursementSessionRepository
         if (isset($filters['organization_id'])) {
             $sql .= " AND ds.organization_id = ?";
             $params[] = $filters['organization_id'];
+        }
+
+        // RBAC additive scope (Phase 10): constrain to the set of org ids the
+        // viewer may read. An empty set denies all rows (1=0) — never an empty
+        // IN(), which is a SQL syntax error.
+        if (isset($filters['organization_ids'])) {
+            $ids = array_values($filters['organization_ids']);
+            if ($ids === []) {
+                $sql .= " AND 1=0";
+            } else {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $sql .= " AND ds.organization_id IN ($placeholders)";
+                foreach ($ids as $id) {
+                    $params[] = $id;
+                }
+            }
         }
 
         if (isset($filters['record_month'])) {
