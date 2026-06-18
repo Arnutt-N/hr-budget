@@ -25,8 +25,16 @@ RewriteRule ^ index.php [L]
 # Disable directory browsing
 Options -Indexes
 
-# Protect sensitive files
+# Protect sensitive (dot) files. Use Apache 2.4 syntax (mod_authz_core) with a
+# 2.2 fallback. The bare `Order`/`Deny` directives throw HTTP 500
+# ("Invalid command 'Order'") on Apache 2.4 servers that lack mod_access_compat,
+# so they MUST stay guarded by <IfModule>.
 <FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
 </FilesMatch>
