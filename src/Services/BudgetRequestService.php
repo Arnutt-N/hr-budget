@@ -117,7 +117,11 @@ final class BudgetRequestService
             return null;
         }
 
-        if ($role !== 'admin' && (int) $request['created_by'] !== $userId) {
+        // READ scope mirrors list(): own request, or within the granted org
+        // subtree, or an org-wide (all) grant, or super admin. Keeps the detail
+        // view consistent with what list() shows (no "visible in list but 404 on
+        // open"). WRITE paths (update/delete) stay owner-only below.
+        if (!$this->canViewRequest($userId, $role, $request)) {
             return null;
         }
 
@@ -125,6 +129,27 @@ final class BudgetRequestService
         $request['approvals'] = $this->approvalRepo->findByRequestId($id);
 
         return $request;
+    }
+
+    /**
+     * Additive READ visibility for a single request, consistent with list().
+     *
+     * @param array<string,mixed> $request
+     */
+    private function canViewRequest(int $userId, string $role, array $request): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+        if ((int) $request['created_by'] === $userId) {
+            return true;
+        }
+        $scope = $this->scopeResolver->resolve(['id' => $userId, 'role' => $role]);
+        if ($scope['hasAll']) {
+            return true;
+        }
+        $orgId = isset($request['org_id']) && $request['org_id'] !== null ? (int) $request['org_id'] : null;
+        return $orgId !== null && in_array($orgId, $scope['orgIds'], true);
     }
 
     /**

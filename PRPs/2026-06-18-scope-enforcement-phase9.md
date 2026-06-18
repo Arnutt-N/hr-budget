@@ -28,23 +28,31 @@ In `BudgetRequestService::list(array $user, …)`:
 `(br.created_by = ? OR br.org_id IN (…))`. The controller now passes the full `$user` array
 to the service (was `id` + `role`); it is the only caller of this method.
 
+`findById` (the detail/show path) is widened the SAME way via a `canViewRequest()` helper
+(own OR subtree OR `all` OR admin), so a request visible in `list()` also opens in detail —
+no "visible in list but 404 on open". The helper builds a minimal `['id','role']` array so no
+public signature changes. **WRITE paths (`update`/`delete`) stay owner-only** — read widens
+with scope, write does not.
+
 ## 3. Scope (out / deferred)
 
-- `findById` / `show` (single request) still does not deny by scope — Phase 9 is purely the
-  **additive list-widening** (the user-facing "approvers can see their queue" win). Tightening
-  direct-id access (a *restrictive* change) is a deliberate, separate follow-up.
-- Disbursements, files, and other list surfaces — same pattern can follow later.
+- Disbursements, files, and other list surfaces — same additive pattern can follow later.
 - Strict deny-by-default (`orgScopeFilter`'s `1=0`) is intentionally NOT used here, to avoid
   locking out ungranted users.
+- The list does not yet gate on the `request.view` permission specifically (visibility is
+  keyed on grant scope, consistent with the pre-existing model) — a possible later tightening.
 
 ## 4. Testing / Acceptance
 
-`tests/Unit/Services/BudgetRequestScopeTest.php` (SQLite, CI-compatible), 4 cases:
-- admin sees all; ungranted sees only own; org-granted sees own + parent/child subtree but
-  not unrelated orgs; `all`-scope sees everything.
+`tests/Unit/Services/BudgetRequestScopeTest.php` (SQLite, CI-compatible), 6 cases:
+- list: admin sees all; ungranted sees only own; org-granted sees own + parent/child subtree
+  but not unrelated orgs; `all`-scope sees everything.
+- findById: org-granted user can open a subtree request (consistent with list); ungranted
+  user gets null for another user's request.
 
-Verified locally: the 4 new tests pass; the CI-gated suites
-(`tests/Unit/{Api,Dtos,Services,Core}`) stay green at 332 tests. (The 4 errors in
+Verified locally: the 6 new tests pass; the CI-gated suites
+(`tests/Unit/{Api,Dtos,Services,Core}`) stay green at 334 tests (the existing
+`BudgetRequestServiceTest` fixture gained the RBAC tables `findById` now resolves against). (The 4 errors in
 `tests/Unit/Models/BudgetTrackingTest` are pre-existing and unrelated — Models is not run in
 CI.) No frontend change (the SPA consumes the same endpoint). Shipped via PR with CI paused.
 

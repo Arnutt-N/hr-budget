@@ -25,6 +25,16 @@ abstract class BudgetRequestScopeTestCase extends RbacSqliteTestCase
                 created_by INTEGER,
                 org_id INTEGER,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
+             );
+             CREATE TABLE budget_request_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                budget_request_id INTEGER, item_name TEXT,
+                quantity REAL DEFAULT 0, unit_price REAL DEFAULT 0, amount REAL DEFAULT 0
+             );
+             CREATE TABLE budget_request_approvals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                budget_request_id INTEGER, action TEXT, user_id INTEGER,
+                note TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
              );"
         );
     }

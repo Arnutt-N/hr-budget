@@ -83,6 +83,35 @@ class BudgetRequestScopeTest extends BudgetRequestScopeTestCase
     }
 
     /** @test */
+    public function findById_is_consistent_with_list_for_subtree_requests(): void
+    {
+        // A request visible in list() must also open in detail (no "404 on open").
+        $parent = $this->makeOrg(null, 0);
+        $child = $this->makeOrg($parent, 1);
+        $approver = $this->makeUser('viewer');
+        $other = $this->makeUser('viewer');
+        $this->grant($approver['id'], 'org_admin', 'organization', $parent);
+
+        $inSubtree = $this->makeRequest($child, $other['id']);
+        $detail = $this->service->findById($approver['id'], $approver['role'], $inSubtree);
+
+        $this->assertNotNull($detail);
+        $this->assertSame($inSubtree, (int) $detail['id']);
+    }
+
+    /** @test */
+    public function findById_hides_out_of_scope_request_from_ungranted_user(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $owner = $this->makeUser('viewer');
+        $other = $this->makeUser('viewer');
+        $theirs = $this->makeRequest($org, $other['id']);
+
+        // No grant + not the owner → not visible.
+        $this->assertNull($this->service->findById($owner['id'], $owner['role'], $theirs));
+    }
+
+    /** @test */
     public function all_scope_grant_sees_every_request(): void
     {
         $p = $this->makeOrg(null, 0);
