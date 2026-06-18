@@ -31,11 +31,7 @@ final class BudgetRequestController
             return;
         }
 
-        $result = $this->service->list(
-            (int) $user['id'],
-            $user['role'] ?? 'staff',
-            $query
-        );
+        $result = $this->service->list($user, $query);
 
         ApiResponse::ok($result['data'], $result['meta']);
     }
