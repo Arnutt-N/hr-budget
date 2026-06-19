@@ -13,7 +13,8 @@ composer.phar
 .env.local
 .env.*.local
 !.env.example
-config/database.php
+# NOTE: config/database.php is now tracked — it only reads $_ENV (no secrets),
+# so it must ship for git-based deploys (Plesk pull) to resolve Database.php's require.
 
 # IDE / Editor
 .idea/
