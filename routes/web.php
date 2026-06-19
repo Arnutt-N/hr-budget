@@ -28,6 +28,7 @@ use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
 use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
 use App\Api\Controllers\DashboardController as ApiDashboardController;
 use App\Api\Controllers\BudgetExecutionController as ApiBudgetExecutionController;
+use App\Api\Controllers\AnalyticsController as ApiAnalyticsController;
 use App\Api\Controllers\DisbursementSessionController as ApiDisbursementSessionController;
 use App\Api\Controllers\DisbursementRecordController as ApiDisbursementRecordController;
 use App\Api\Controllers\RoleController as ApiRoleController;
@@ -149,6 +150,11 @@ Router::get('/api/v1/dashboard/chart-data', [ApiDashboardController::class, 'cha
 Router::get('/api/v1/budget-execution/years', [ApiBudgetExecutionController::class, 'years']);
 Router::get('/api/v1/budget-execution/export', [ApiBudgetExecutionController::class, 'export']);
 Router::get('/api/v1/budget-execution', [ApiBudgetExecutionController::class, 'report']);
+
+// Analytics reporting (read-only, org-scoped per the caller's RBAC grants)
+Router::get('/api/v1/analytics/comparison', [ApiAnalyticsController::class, 'comparison']);
+Router::get('/api/v1/analytics/forecast', [ApiAnalyticsController::class, 'forecast']);
+Router::get('/api/v1/analytics/request-vs-approved', [ApiAnalyticsController::class, 'requestVsApproved']);
 
 // Budget Request CRUD + Approval
 Router::get('/api/v1/requests', [ApiBudgetRequestController::class, 'list']);
