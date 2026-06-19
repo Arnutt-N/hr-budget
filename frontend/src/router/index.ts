@@ -64,6 +64,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/BudgetExecutionPage.vue'),
         meta: { title: 'ผลการเบิกจ่ายงบประมาณ' },
       },
+      // Analytics: comparison / forecast vs actual / request vs approved
+      // (authed staff — read-only, org-scoped by the backend)
+      {
+        path: 'analytics',
+        name: 'analytics',
+        component: () => import('@/pages/AnalyticsPage.vue'),
+        meta: { title: 'รายงานวิเคราะห์' },
+      },
       {
         path: 'notifications',
         name: 'notifications',
