@@ -45,7 +45,7 @@ CI exists (`.github/workflows/ci.yml`) — **CLAUDE.md's "no CI config checked i
 
 - **`README.md` mentions `/budgets`, `/files`, `/folders` as live legacy remnants — they are retired** (per CLAUDE.md + git tags). The only live server-rendered remnant is ThaID login (`/thaid/login` → 302 alias).
 - **`CLAUDE.md` says "no CI config checked in" — false; see ci.yml above.**
-- **`CLAUDE.md` says `composer audit` / `vendor/bin/phpstan` aren't wired — still true** (not in CI, not in composer scripts).
+- **`composer audit` is still not wired** (not in CI, not in composer scripts). `vendor/bin/phpstan` **is** wired now — added to CI as a DB-independent step and exposed via `composer analyse` (see PR #39).
 
 ## Migration gotchas
 
