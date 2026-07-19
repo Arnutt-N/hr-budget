@@ -2,7 +2,7 @@
 
 namespace App\Core;
 
-use App\Models\Auth;
+use App\Core\Auth;
 use Exception;
 use Throwable;
 
@@ -18,14 +18,22 @@ class ErrorHandler
     }
 
     /**
-     * Convert PHP errors to Exceptions
+     * Convert PHP errors to Exceptions.
+     *
+     * Returns true to swallow the error when it was suppressed with `@`
+     * (error_reporting() is 0 in that case) — otherwise PHP would fall through
+     * to its default handler, which is inconsistent with this handler's job of
+     * converting everything to an exception.
      */
     public static function handleError($level, $message, $file = null, $line = null): bool
     {
-        if (error_reporting() & $level) {
-            throw new \ErrorException($message, 0, $level, $file, $line);
+        // `@`-suppressed errors: error_reporting() returns 0. Swallow them so
+        // PHP does not also invoke its default handler (which would print the
+        // message despite the @).
+        if ((error_reporting() & $level) === 0) {
+            return true;
         }
-        return false;
+        throw new \ErrorException($message, 0, $level, $file, $line);
     }
 
     /**
@@ -46,11 +54,11 @@ class ErrorHandler
             ob_clean();
         }
 
+        // No HttpException type exists in this codebase — every uncaught
+        // exception is treated as a 500. (Previous code checked an
+        // \App\Exceptions\HttpException class that was never defined.)
         $code = 500;
-        if ($exception instanceof \App\Exceptions\HttpException) {
-            $code = $exception->getCode();
-        }
-        
+
         http_response_code($code);
 
         if ($isApi) {
@@ -71,7 +79,10 @@ class ErrorHandler
     }
 
     /**
-     * Log exception to database
+     * Log exception to database. Falls back to PHP's error_log when the
+     * `error_logs` table is missing (notably in CI, where the snapshot in
+     * `database/hr_budget_only.sql` does not include it — see
+     * `scripts/migrate_error_logs.php` for the production bootstrap).
      */
     public static function log(Throwable $exception): void
     {
@@ -91,9 +102,12 @@ class ErrorHandler
                 'ip_address' => $ip
             ]);
         } catch (Throwable $e) {
-            // Fallback to file log if database fails
-            error_log("Failed to log error to DB: " . $e->getMessage());
-            error_log($exception);
+            // Fallback to file log if database fails (missing table, connection
+            // down, etc.). Always also log the original exception so it is not
+            // silently lost when the DB write fails.
+            error_log("[ErrorHandler] DB log failed: " . $e->getMessage());
+            error_log("[ErrorHandler] Original exception: " . $exception->getMessage()
+                . " in " . $exception->getFile() . ":" . $exception->getLine());
         }
     }
 

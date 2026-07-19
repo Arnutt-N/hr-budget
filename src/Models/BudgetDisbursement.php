@@ -2,7 +2,7 @@
 namespace App\Models;
 
 use PDO;
-use App\Database;
+use App\Core\Database;
 
 class BudgetDisbursement {
     protected $pdo;

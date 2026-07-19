@@ -83,6 +83,19 @@ archives/data/*.sql
 /public/inspect_*.php
 /public/analyze_*.php
 
+# Local deploy seeds (Plesk seeds + bundled vendor.zip — too large and
+# environment-specific to track; regenerate locally when seeding a deploy).
+/.deploy-seed/
+
+# Repo-root scratch files left by editor/shell mishaps (empty files named
+# after shell tokens, stray numeric files, one-shot copy helpers).
+/120
+/140
+/220
+/exec($sql)
+/getMessage()
+/copy_script.py
+
 # Web-accessible one-shot admin/debug/test scripts in public/
 # (these should never be deployed; use CLI for migrations and admin tasks)
 /public/audit_*.php

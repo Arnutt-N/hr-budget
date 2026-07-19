@@ -1847,6 +1847,30 @@ CREATE TABLE IF NOT EXISTS `budget_targets` (
   CONSTRAINT `fk_budget_targets_type` FOREIGN KEY (`target_type_id`) REFERENCES `target_types` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Table structure for table `error_logs`
+--
+-- Mirrors scripts/migrate_error_logs.php so ErrorHandler::log() works in CI
+-- (where this snapshot is the only schema source). Kept out of the numbered
+-- migrations directory on purpose — it is a standalone bootstrap table, not
+-- part of the application's evolving schema.
+--
+
+DROP TABLE IF EXISTS `error_logs`;
+CREATE TABLE `error_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `error_type` varchar(50) DEFAULT NULL,
+  `message` text,
+  `file` varchar(255) DEFAULT NULL,
+  `line` int DEFAULT NULL,
+  `trace` text,
+  `url` varchar(255) DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 /*!50606 SET GLOBAL INNODB_STATS_AUTO_RECALC=@OLD_INNODB_STATS_AUTO_RECALC */;
 
