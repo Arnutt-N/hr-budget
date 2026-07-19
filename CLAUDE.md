@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **`AGENTS.md`** is a compact supplement for Kilo/other agents — it captures only what this file omits, gets stale, or where defaults mislead (CI prerequisites, two-`package.json` toolchain split, build-gate quirks, migration number collisions). Read it alongside this file.
+
 ## Project Overview
 
 HR Budget Management System (ระบบจัดการงบประมาณทรัพยากรบุคคล) — a Thai-language budgeting app for a government HR division. Stack: **PHP 8.3 custom MVC** backend exposing a **JSON API (`/api/v1/*`)** + a **Vue 3 SPA** (`frontend/`, PrimeVue + TanStack Query, JWT-cookie auth) as the only user-facing frontend. MySQL/MariaDB. Deployed under Laragon at the subdirectory `/hr_budget/public/`.
@@ -119,4 +121,4 @@ One-shot PHP debug scripts drop into the repo root or `public/` (e.g. `inspect_s
 - **Retirement is via git history + the `pre-spa-cutover` tag, NOT `archives/`** (`archives/` is git-ignored, so moving code there would delete it from version control). Restore a retired file with `git checkout pre-spa-cutover -- <path>`.
 - Email/session/DB env vars are loaded with `Dotenv::safeLoad()`, so a missing `.env` won't throw — config fallbacks in `config/*.php` apply instead
 - Test bootstrap calls `Auth::init()` which starts a session; `ob_start()` is also called to swallow header output during test runs — any test that asserts on response headers must account for this
-- `composer audit` and `vendor/bin/phpstan` are not wired up; there is no CI config checked in
+- `composer audit` and `vendor/bin/phpstan` are not wired up (not in CI, not in composer scripts). **CI does exist** — `.github/workflows/ci.yml` gates every PR (PHP unit/integration + frontend typecheck/build); E2E is opt-in via the `run-e2e` label or `workflow_dispatch`. See `AGENTS.md` for CI prerequisites (git-ignored `config/database.php` materialized from env, schema loaded from `database/hr_budget_only.sql`, `PDO::ATTR_EMULATE_PREPARES => false`, docs/data/migration-only PRs skipped via `paths-ignore`).
