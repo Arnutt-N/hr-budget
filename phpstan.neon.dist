@@ -1,0 +1,13 @@
+parameters:
+    level: 3
+    paths:
+        - src
+    # Scan public/index.php first so the BASE_PATH / BASE_URL constants it
+    # defines are known to phpstan when analysing src/ files that reference them.
+    scanFiles:
+        - public/index.php
+    excludePaths:
+        - src/Core/Http/*
+
+includes:
+    - phpstan-baseline.neon

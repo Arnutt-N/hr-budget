@@ -122,6 +122,14 @@ jobs:
           DB_PASS: root
         run: vendor/bin/phpunit tests/Unit/Api/ tests/Unit/Dtos/ tests/Unit/Services/ tests/Unit/Core/
 
+      - name: Run PHPStan static analysis
+        # Static analysis runs WITHOUT a database — it must not depend on the
+        # MySQL service. Level 3 is intentionally conservative; bump it after
+        # the legacy `App\Core\Model` static property access is consolidated.
+        # Pre-existing issues are captured in phpstan-baseline.neon so CI only
+        # fails on NEW static-analysis regressions.
+        run: vendor/bin/phpstan analyse --memory-limit=512M --no-progress
+
   # -------------------------------------------------------------------
   # Frontend: typecheck + production build
   # -------------------------------------------------------------------
