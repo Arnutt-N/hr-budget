@@ -17,7 +17,7 @@ Compact agent guide. **`CLAUDE.md` is the primary instruction file** — read it
 
 ## CI prerequisites CLAUDE.md doesn't mention
 
-CI exists (`.github/workflows/ci.yml`) — **CLAUDE.md's "no CI config checked in" is stale.** Key facts:
+CI config exists (`.github/workflows/ci.yml`) — **CLAUDE.md's "no CI config checked in" is stale.** However, **the GitHub Actions CI workflow is currently `disabled_manually` to conserve free Actions minutes** — verification runs locally instead (see "Local verification gate" below). Key facts about the CI config (still accurate if/when re-enabled):
 
 - **`config/database.php` is git-ignored** (contains local dev creds). CI materializes it inline from env. Locally, seed it from `.env` (DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD).
 - **CI loads schema from `database/hr_budget_only.sql`**, not the numbered migrations. Migrations are for local/sequential DB evolution; the consolidated SQL is the CI snapshot.
@@ -25,6 +25,21 @@ CI exists (`.github/workflows/ci.yml`) — **CLAUDE.md's "no CI config checked i
 - **E2E seeds `e2e@hr.local` / `pass1234`** (role `viewer`). Tests read `E2E_USER_EMAIL` / `E2E_USER_PASSWORD` env.
 - **Backend in CI:** `php -S 127.0.0.1:18080 -t public/ public/index.php`. Frontend: `npx vite preview --port 5174` after `npm run build`. `BASE_URL` + `API_URL` env switch Playwright target.
 - **CI skips docs/data/migration-only PRs** via `paths-ignore`. Don't expect CI runs on `*.md`/`PRPs/**`/`database/migrations/**`-only changes.
+
+## Local verification gate (replaces disabled GitHub CI)
+
+The GitHub Actions CI is disabled to save free quota. Verification runs locally via:
+
+- **`composer verify`** (repo root) — runs PHPStan + PHPUnit Unit suite (`@analyse` then `@test:unit`).
+- **`npm run verify`** (`frontend/`) — runs `typecheck` (`vue-tsc --noEmit`) + `build` (`vue-tsc -b && vite build`).
+- **git `pre-push` hook** (local-only, lives in `.git/hooks/pre-push`, NOT committed) — auto-runs before every `git push`:
+  - Gate 1 (blocks): PHPStan static analysis
+  - Gate 2 (blocks): Frontend typecheck + build
+  - Advisory (prints, does NOT block): PHPUnit Unit suite — has 4 pre-existing errors in `BudgetTracking::find()/delete()` and `BudgetRequestItemTest`; fix before promoting to a gate.
+  - Bypass with `git push --no-verify` when intentional.
+  - Resolves Laragon PHP 8.3 automatically; no PATH setup needed.
+
+Run `composer verify` and `npm run verify` manually for full local CI parity. The hook covers the push moment; the scripts cover ad-hoc runs.
 
 ## Test env quirks (verified in `tests/bootstrap.php`)
 
