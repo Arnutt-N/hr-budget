@@ -13,7 +13,12 @@
         "phpstan/phpstan": "^2.0"
     },
     "scripts": {
-        "analyse": "phpstan analyse --memory-limit=512M"
+        "analyse": "phpstan analyse --memory-limit=512M",
+        "test:unit": "phpunit --testsuite Unit",
+        "verify": [
+            "@analyse",
+            "@test:unit"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
