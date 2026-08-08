@@ -117,9 +117,12 @@ class BudgetTrackingTest extends TestCase
     public function it_can_delete_tracking_record()
     {
         $fiscalYear = 2568;
-        $itemId = 99;
+        // Must be an expense_items row that exists: upsert() resolves the item's
+        // group/type first and returns false for unknown ids. Asserting the
+        // upsert keeps a broken fixture from failing silently further down.
+        $itemId = 1;
 
-        BudgetTracking::upsert($fiscalYear, $itemId, ['allocated' => 50000]);
+        $this->assertTrue(BudgetTracking::upsert($fiscalYear, $itemId, ['allocated' => 50000]));
 
         $deleted = BudgetTracking::delete($fiscalYear, $itemId);
 

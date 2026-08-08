@@ -15,6 +15,15 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <!-- What CI runs: everything in Unit except the model tests, which need
+             seeded reference rows (expense items, categories) that
+             database/hr_budget_only.sql does not guarantee. Declared here rather
+             than as a directory list in ci.yml so a new tests/Unit/<X>/ is
+             covered automatically instead of being silently skipped. -->
+        <testsuite name="UnitCI">
+            <directory>tests/Unit</directory>
+            <exclude>tests/Unit/Models</exclude>
+        </testsuite>
         <testsuite name="Integration">
             <directory>tests/Integration</directory>
         </testsuite>

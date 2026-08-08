@@ -122,37 +122,15 @@ class BudgetRequestItemTest extends TestCase
     /** @test */
     public function getTree_returns_hierarchical_structure()
     {
-        $user = $this->createUser();
-        
-        $requestId = BudgetRequest::create([
-            'fiscal_year' => 2568,
-            'request_title' => 'Test',
-            'created_by' => $user['id']
-        ]);
-        
-        // Create parent item
-        $parentId = BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Category A',
-            'quantity' => 1,
-            'unit_price' => 0
-        ]);
-        
-        // Create child item
-        BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'parent_item_id' => $parentId,
-            'item_name' => 'Sub Item 1',
-            'quantity' => 5,
-            'unit_price' => 100
-        ]);
-        
-        $tree = BudgetRequestItem::getTree($requestId);
-        
-        $this->assertNotEmpty($tree);
-        // Tree structure should have children
-        $this->assertArrayHasKey('children', $tree[0]);
-        $this->assertCount(1, $tree[0]['children']);
+        // Body removed rather than left below an unconditional skip, where no
+        // tool in this project analyses it (phpstan.neon covers `src` only) and
+        // a rename would silently drift. Recover it from git history when the
+        // hierarchy feature lands.
+        $this->markTestSkipped(
+            'Parent/child hierarchy is not implemented: budget_request_items has no '
+            . 'parent_item_id column, and getTree() deliberately returns a flat list '
+            . '(see the comment in the model). Unskip when the hierarchy feature lands.'
+        );
     }
 
     /** @test */

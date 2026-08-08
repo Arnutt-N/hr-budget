@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS disbursement_details (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    header_id INT NOT NULL,
+    plan_id INT NULL,
+    output_id INT NULL,
+    activity_id INT NULL,
+    expense_type_id INT NULL,
+    item_0 DECIMAL(18,2) NULL,
+    item_1 DECIMAL(18,2) NULL,
+    item_2 DECIMAL(18,2) NULL,
+    item_3 DECIMAL(18,2) NULL,
+    item_4 DECIMAL(18,2) NULL,
+    item_5 DECIMAL(18,2) NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (header_id) REFERENCES disbursement_headers(id) ON DELETE CASCADE,
+    FOREIGN KEY (plan_id) REFERENCES budget_plans(id),
+    FOREIGN KEY (expense_type_id) REFERENCES expense_types(id)
+);
