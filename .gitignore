@@ -136,3 +136,5 @@ secrets/
 
 
 project-log-md/
+# One-off analysis/dump error logs from python/ scratch work
+python/*_err*.txt
