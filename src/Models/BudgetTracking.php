@@ -56,25 +56,38 @@ class BudgetTracking
     }
 
     /**
-     * Find a single tracking row by its natural key.
+     * Build the WHERE clause identifying a single tracking row.
      *
-     * Rows are identified by (fiscal_year, expense_item_id, organization_id) —
-     * the same key upsert() writes against — not by a surrogate id.
-     * A null $orgId matches the central budget row (organization_id IS NULL).
+     * Rows are identified by the natural key (fiscal_year, expense_item_id,
+     * organization_id), not by a surrogate id. A null $orgId targets the
+     * central budget row (organization_id IS NULL).
+     *
+     * @return array{0: string, 1: array} [$where, $params]
      */
-    public static function find(int $fiscalYear, int $itemId, ?int $orgId = null): ?array
+    private static function naturalKey(int $fiscalYear, int $itemId, ?int $orgId): array
     {
-        $sql = "SELECT * FROM " . self::$table . " WHERE fiscal_year = ? AND expense_item_id = ?";
+        $where = 'fiscal_year = ? AND expense_item_id = ?';
         $params = [$fiscalYear, $itemId];
 
         if (is_null($orgId)) {
-            $sql .= " AND organization_id IS NULL";
+            $where .= ' AND organization_id IS NULL';
         } else {
-            $sql .= " AND organization_id = ?";
+            $where .= ' AND organization_id = ?';
             $params[] = $orgId;
         }
 
-        return Database::queryOne($sql, $params);
+        return [$where, $params];
+    }
+
+    /**
+     * Find a single tracking row by its natural key — the same key upsert()
+     * writes against.
+     */
+    public static function find(int $fiscalYear, int $itemId, ?int $orgId = null): ?array
+    {
+        [$where, $params] = self::naturalKey($fiscalYear, $itemId, $orgId);
+
+        return Database::queryOne('SELECT * FROM ' . self::$table . ' WHERE ' . $where, $params);
     }
 
     /**
@@ -102,11 +115,14 @@ class BudgetTracking
         ];
 
         // Look the row up explicitly instead of relying on ON DUPLICATE KEY
-        // UPDATE. This table's only matching unique key is
-        // unique_tracking(fiscal_year, budget_category_item_id), a column this
-        // method never writes — so it stayed NULL, MySQL treated every NULL as
-        // distinct, and the "upsert" silently inserted a duplicate row on every
-        // save. Same select-then-write shape as BudgetRequestItem::upsert().
+        // UPDATE. Neither unique key on this table can fire for this write
+        // path: unique_tracking(fiscal_year, budget_category_item_id) and
+        // uidx_record_item(disbursement_record_id, expense_item_id) both lead
+        // with a column this method never sets, so it stays NULL, MySQL treats
+        // every NULL as distinct, and the "upsert" silently inserted a
+        // duplicate row on every save. DisbursementRecordRepository::
+        // upsertTracking() dodges the same keys the same way; if either key is
+        // ever fixed, revisit both.
         $existing = self::find($fiscalYear, $itemId, $orgId);
 
         if ($existing) {
@@ -117,13 +133,13 @@ class BudgetTracking
             return true;
         }
 
-        return Database::insert(self::$table, $amounts + [
+        return Database::insert(self::$table, array_merge($amounts, [
             'fiscal_year'      => $fiscalYear,
             'expense_item_id'  => $itemId,
             'expense_group_id' => $itemInfo['expense_group_id'],
             'expense_type_id'  => $itemInfo['expense_type_id'],
             'organization_id'  => $orgId,
-        ]) > 0;
+        ])) > 0;
     }
 
     /**
@@ -143,20 +159,11 @@ class BudgetTracking
     /**
      * Delete a tracking row by its natural key.
      *
-     * Mirrors find(): a null $orgId targets the central budget row.
      * Returns the number of rows removed (0 when nothing matched).
      */
     public static function delete(int $fiscalYear, int $itemId, ?int $orgId = null): int
     {
-        $where = 'fiscal_year = ? AND expense_item_id = ?';
-        $params = [$fiscalYear, $itemId];
-
-        if (is_null($orgId)) {
-            $where .= ' AND organization_id IS NULL';
-        } else {
-            $where .= ' AND organization_id = ?';
-            $params[] = $orgId;
-        }
+        [$where, $params] = self::naturalKey($fiscalYear, $itemId, $orgId);
 
         return Database::delete(self::$table, $where, $params);
     }

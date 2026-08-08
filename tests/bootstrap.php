@@ -17,11 +17,6 @@ require BASE_PATH . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
 $dotenv->safeLoad();
 
-// Default the test database name when phpunit.xml did not supply one.
-if (getenv('DB_NAME') === false) {
-    putenv('DB_NAME=hr_budget_test');
-}
-
 // Mirror phpunit.xml <env> values (which use putenv) into $_ENV so config files
 // that read $_ENV (e.g. config/api.php, config/database.php) see them.
 //
@@ -37,7 +32,8 @@ foreach (['JWT_SECRET', 'JWT_TTL', 'CORS_ORIGINS', 'APP_ENV', 'DB_HOST', 'DB_NAM
 
 // config/database.php uses DB_DATABASE/DB_USERNAME/DB_PASSWORD naming but
 // phpunit.xml uses short DB_NAME/DB_USER/DB_PASS. Bridge the gap.
-// Assign unconditionally: the short names are the single source of truth here.
+// Assign unconditionally: the short names are the single source of truth here,
+// and these three lines are the only place the defaults live.
 $_ENV['DB_DATABASE'] = $_ENV['DB_NAME'] ?? 'hr_budget_test';
 $_ENV['DB_USERNAME'] = $_ENV['DB_USER'] ?? 'root';
 $_ENV['DB_PASSWORD'] = $_ENV['DB_PASS'] ?? '';

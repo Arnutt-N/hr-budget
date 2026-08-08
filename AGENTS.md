@@ -22,7 +22,7 @@ CI config exists (`.github/workflows/ci.yml`) — **CLAUDE.md's "no CI config ch
 - **`config/database.php` is git-ignored** (contains local dev creds). CI materializes it inline from env. Locally, seed it from `.env` (DB_HOST/DB_PORT/DB_DATABASE/DB_USERNAME/DB_PASSWORD).
 - **CI loads schema from `database/hr_budget_only.sql`**, not the numbered migrations. Migrations are for local/sequential DB evolution; the consolidated SQL is the CI snapshot.
 - **`database/hr_budget_only.sql` embeds `CREATE DATABASE hr_budget` + `USE hr_budget`** (dumped with `--databases`) and also contains INSERT data despite the "only" in its name. Piping it at a database name does NOT work — the embedded `USE` wins and the import lands in `hr_budget`, silently leaving the intended target empty. CI strips those lines with `sed` before importing; locally use `scripts/setup_test_db.sh`.
-- **CI runs only `tests/Unit/Api|Dtos|Services|Core`, NOT `tests/Unit/Models/`.** Model tests need seeded reference rows the snapshot doesn't guarantee, so they are covered locally (`composer verify`) but not in CI. Treat CI green as partial coverage.
+- **CI runs `--testsuite UnitCI` = the `Unit` suite minus `tests/Unit/Models/`** (declared in `phpunit.xml`, not as a directory list in `ci.yml`, so a new `tests/Unit/<X>/` is picked up automatically). Model tests need seeded reference rows the snapshot doesn't guarantee, so they are covered locally (`composer verify`) but not in CI. Treat CI green as partial coverage.
 - **CI's materialized DB config sets `PDO::ATTR_EMULATE_PREPARES => false`.** Local `config/database.php` is user-supplied — if you hit edge cases with `LIMIT ? OFFSET ?`, check this flag.
 - **E2E seeds `e2e@hr.local` / `pass1234`** (role `viewer`). Tests read `E2E_USER_EMAIL` / `E2E_USER_PASSWORD` env.
 - **Backend in CI:** `php -S 127.0.0.1:18080 -t public/ public/index.php`. Frontend: `npx vite preview --port 5174` after `npm run build`. `BASE_URL` + `API_URL` env switch Playwright target.
@@ -37,7 +37,7 @@ The GitHub Actions CI is disabled to save free quota. Verification runs locally 
 - **git `pre-push` hook** (local-only, lives in `.git/hooks/pre-push`, NOT committed) — auto-runs before every `git push`:
   - Gate 1 (blocks): PHPStan static analysis
   - Gate 2 (blocks): Frontend typecheck + build
-  - Advisory (prints, does NOT block): PHPUnit Unit suite — 1 known error remains (`BudgetRequestItemTest::getTree_returns_hierarchical_structure`, which asserts a parent/child hierarchy the schema and `getTree()` never implemented); fix or skip it before promoting to a gate.
+  - Advisory (prints, does NOT block): PHPUnit Unit suite — currently clean; `BudgetRequestItemTest::getTree_returns_hierarchical_structure` is skipped because it asserts a parent/child hierarchy the schema and `getTree()` never implemented.
   - Bypass with `git push --no-verify` when intentional.
   - Resolves Laragon PHP 8.3 automatically; no PATH setup needed.
 

@@ -89,9 +89,10 @@ jobs:
           mysql -h127.0.0.1 -P3306 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS hr_budget_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
           sed '/^CREATE DATABASE/d; /^USE /d' database/hr_budget_only.sql \
             | mysql -h127.0.0.1 -P3306 -uroot -proot hr_budget_test
-          echo "Tables loaded into hr_budget_test:"
-          mysql -h127.0.0.1 -P3306 -uroot -proot -N -B \
-            -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='hr_budget_test';"
+          tables=$(mysql -h127.0.0.1 -P3306 -uroot -proot -N -B \
+            -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='hr_budget_test';")
+          echo "Tables loaded into hr_budget_test: $tables"
+          [ "$tables" -gt 0 ] || { echo "Schema import produced 0 tables." >&2; exit 1; }
 
       - name: Materialize config/database.php from env
         # config/database.php is gitignored (user-specific creds in local dev),
@@ -123,18 +124,17 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'ci-test-secret-min-32-chars-01234567' }}
           DB_HOST: 127.0.0.1
           DB_PORT: 3306
-          DB_DATABASE: hr_budget_test
+          # Short names only: tests/bootstrap.php derives DB_DATABASE /
+          # DB_USERNAME / DB_PASSWORD from these and overwrites any long-form
+          # value, so setting both spellings here would just be dead weight.
           DB_NAME: hr_budget_test
-          DB_USERNAME: root
           DB_USER: root
-          DB_PASSWORD: root
           DB_PASS: root
-        # NOTE: tests/Unit/Models/ is deliberately excluded here and therefore
-        # NOT covered by CI. Those tests need seeded reference rows (expense
-        # items, categories) that database/hr_budget_only.sql does not
-        # guarantee. Run them locally with `composer verify`. Widening this to
-        # `--testsuite Unit` requires a seed step first.
-        run: vendor/bin/phpunit tests/Unit/Api/ tests/Unit/Dtos/ tests/Unit/Services/ tests/Unit/Core/
+        # NOTE: the `UnitCI` suite (phpunit.xml) is `Unit` minus
+        # tests/Unit/Models/, which needs seeded reference rows the schema
+        # snapshot does not guarantee — so model tests are covered locally
+        # (`composer verify`) but NOT in CI. Treat CI green as partial coverage.
+        run: vendor/bin/phpunit --testsuite UnitCI
 
       - name: Run PHPStan static analysis
         # Static analysis runs WITHOUT a database — it must not depend on the
@@ -242,6 +242,10 @@ jobs:
             fi
             sleep 1
           done
+          # No sed-strip needed here only because the target name matches the
+          # `USE hr_budget` embedded in the dump. Rename this target and the
+          # import silently lands in `hr_budget` instead — strip the header the
+          # way the "Create test schema" step does if you ever change it.
           mysql -h127.0.0.1 -P3306 -uroot -proot hr_budget < database/hr_budget_only.sql
 
       - name: Materialize config/database.php from env
