@@ -56,12 +56,45 @@ class BudgetTracking
     }
 
     /**
+     * Build the WHERE clause identifying a single tracking row.
+     *
+     * Rows are identified by the natural key (fiscal_year, expense_item_id,
+     * organization_id), not by a surrogate id. A null $orgId targets the
+     * central budget row (organization_id IS NULL).
+     *
+     * @return array{0: string, 1: array} [$where, $params]
+     */
+    private static function naturalKey(int $fiscalYear, int $itemId, ?int $orgId): array
+    {
+        $where = 'fiscal_year = ? AND expense_item_id = ?';
+        $params = [$fiscalYear, $itemId];
+
+        if (is_null($orgId)) {
+            $where .= ' AND organization_id IS NULL';
+        } else {
+            $where .= ' AND organization_id = ?';
+            $params[] = $orgId;
+        }
+
+        return [$where, $params];
+    }
+
+    /**
+     * Find a single tracking row by its natural key — the same key upsert()
+     * writes against.
+     */
+    public static function find(int $fiscalYear, int $itemId, ?int $orgId = null): ?array
+    {
+        [$where, $params] = self::naturalKey($fiscalYear, $itemId, $orgId);
+
+        return Database::queryOne('SELECT * FROM ' . self::$table . ' WHERE ' . $where, $params);
+    }
+
+    /**
      * Update or Insert tracking data (Upsert)
      */
     public static function upsert(int $fiscalYear, int $itemId, array $data, ?int $orgId = null): bool
     {
-        $db = Database::getInstance();
-        
         // Fetch expense_group_id and expense_type_id from expense_item
         $itemQuery = "SELECT ei.expense_group_id, eg.expense_type_id 
                       FROM expense_items ei 
@@ -73,29 +106,40 @@ class BudgetTracking
             return false; // Invalid expense item ID
         }
         
-        $sql = "INSERT INTO " . self::$table . " 
-                (fiscal_year, expense_item_id, expense_group_id, expense_type_id, organization_id, allocated, transfer, disbursed, pending, po) 
-                VALUES (:year, :item_id, :group_id, :type_id, :org_id, :alloc, :trans, :disb, :pend, :po)
-                ON DUPLICATE KEY UPDATE
-                allocated = VALUES(allocated),
-                transfer = VALUES(transfer),
-                disbursed = VALUES(disbursed),
-                pending = VALUES(pending),
-                po = VALUES(po)";
-        
-        $stmt = $db->prepare($sql);
-        return $stmt->execute([
-            ':year' => $fiscalYear,
-            ':item_id' => $itemId,
-            ':group_id' => $itemInfo['expense_group_id'],
-            ':type_id' => $itemInfo['expense_type_id'],
-            ':org_id' => $orgId,
-            ':alloc' => (float)($data['allocated'] ?? 0),
-            ':trans' => (float)($data['transfer'] ?? 0),
-            ':disb' => (float)($data['disbursed'] ?? 0),
-            ':pend' => (float)($data['pending'] ?? 0),
-            ':po' => (float)($data['po'] ?? 0)
-        ]);
+        $amounts = [
+            'allocated' => (float)($data['allocated'] ?? 0),
+            'transfer'  => (float)($data['transfer'] ?? 0),
+            'disbursed' => (float)($data['disbursed'] ?? 0),
+            'pending'   => (float)($data['pending'] ?? 0),
+            'po'        => (float)($data['po'] ?? 0),
+        ];
+
+        // Look the row up explicitly instead of relying on ON DUPLICATE KEY
+        // UPDATE. Neither unique key on this table can fire for this write
+        // path: unique_tracking(fiscal_year, budget_category_item_id) and
+        // uidx_record_item(disbursement_record_id, expense_item_id) both lead
+        // with a column this method never sets, so it stays NULL, MySQL treats
+        // every NULL as distinct, and the "upsert" silently inserted a
+        // duplicate row on every save. DisbursementRecordRepository::
+        // upsertTracking() dodges the same keys the same way; if either key is
+        // ever fixed, revisit both.
+        $existing = self::find($fiscalYear, $itemId, $orgId);
+
+        if ($existing) {
+            Database::update(self::$table, $amounts, 'id = ?', [$existing['id']]);
+
+            // rowCount() is 0 when the submitted values equal the stored ones,
+            // which is a successful no-op write, not a failure.
+            return true;
+        }
+
+        return Database::insert(self::$table, array_merge($amounts, [
+            'fiscal_year'      => $fiscalYear,
+            'expense_item_id'  => $itemId,
+            'expense_group_id' => $itemInfo['expense_group_id'],
+            'expense_type_id'  => $itemInfo['expense_type_id'],
+            'organization_id'  => $orgId,
+        ])) > 0;
     }
 
     /**
@@ -110,6 +154,18 @@ class BudgetTracking
             }
         }
         return $count;
+    }
+
+    /**
+     * Delete a tracking row by its natural key.
+     *
+     * Returns the number of rows removed (0 when nothing matched).
+     */
+    public static function delete(int $fiscalYear, int $itemId, ?int $orgId = null): int
+    {
+        [$where, $params] = self::naturalKey($fiscalYear, $itemId, $orgId);
+
+        return Database::delete(self::$table, $where, $params);
     }
 
     /**

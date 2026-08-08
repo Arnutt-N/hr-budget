@@ -34,6 +34,17 @@ class BudgetRequestItem
     }
 
     /**
+     * Update an existing item by id.
+     *
+     * Returns false when no row matched, so callers can tell "nothing to
+     * update" apart from a successful write.
+     */
+    public static function update(int $id, array $data): bool
+    {
+        return Database::update('budget_request_items', $data, 'id = ?', [$id]) > 0;
+    }
+
+    /**
      * Delete item
      */
     public static function delete(int $id): bool
