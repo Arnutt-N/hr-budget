@@ -1,6 +1,6 @@
 ---
 name: hr_budget_assistant
-description: "Coding context for the HR Budget project. PARTLY HISTORICAL after the 2026-06-15 SPA cutover — DB schema/models/SOLID/security concepts still apply, but the Overview, Routes Reference, Views, and server-rendered-controller sections are retired. Source of truth: CLAUDE.md."
+description: "Coding context for the HR Budget project. PARTLY HISTORICAL after the 2026-06-15 SPA cutover — DB schema/models/SOLID/security concepts still apply, but the Overview, Routes Reference, Views, and server-rendered-controller sections are retired. Source of truth: AGENTS.md."
 ---
 
 # HR Budget Project Assistant
@@ -24,7 +24,7 @@ This skill provides comprehensive context and guidelines for developing the HR B
 > shell (`public/app/index.html` ผ่าน `Router::notFound()` catch-all). legacy web
 > remnant เหลือแค่ `/thaid/login` (302 alias) + `/logout` + `errors/*`
 >
-> **Source of truth:** `CLAUDE.md` · `routes/web.php` (route จริง) · `frontend/` (UI จริง)
+> **Source of truth:** `AGENTS.md` · `routes/web.php` (route จริง) · `frontend/` (UI จริง)
 
 ## 📑 Table of Contents
 

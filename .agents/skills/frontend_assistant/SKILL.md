@@ -1,6 +1,6 @@
 ---
 name: frontend_assistant
-description: "[HISTORICAL — RETIRED 2026-06-15] Former guide for the server-rendered frontend (Vanilla JS + Tailwind + PHP view templates). The live frontend is now the Vue 3 SPA in frontend/. Kept for historical reference only — do NOT follow for new work. Source of truth: CLAUDE.md."
+description: "[HISTORICAL — RETIRED 2026-06-15] Former guide for the server-rendered frontend (Vanilla JS + Tailwind + PHP view templates). The live frontend is now the Vue 3 SPA in frontend/. Kept for historical reference only — do NOT follow for new work. Source of truth: AGENTS.md."
 ---
 
 # Frontend Assistant
@@ -18,7 +18,7 @@ description: "[HISTORICAL — RETIRED 2026-06-15] Former guide for the server-re
 > - หน้าใหม่ → เพิ่มใน `frontend/src/pages/`, query ใน `frontend/src/queries/`
 > - server-rendered view ที่เหลือมีแค่ `resources/views/errors/*` (standalone HTML)
 >
-> **Source of truth:** `CLAUDE.md` (สถาปัตยกรรม) · `frontend/` (โค้ดจริง) ·
+> **Source of truth:** `AGENTS.md` (สถาปัตยกรรม) · `frontend/` (โค้ดจริง) ·
 > `.agents/workflows/view-template-guide.md` (กฎ error view ที่เหลือ)
 >
 > _เนื้อหาเดิมคงไว้เพื่ออ้างอิงประวัติศาสตร์เท่านั้น_
