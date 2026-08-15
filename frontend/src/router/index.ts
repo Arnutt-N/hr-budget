@@ -146,6 +146,31 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/TargetListPage.vue'),
         meta: { requiresAdmin: true, title: 'จัดการเป้าหมายงบประมาณ' },
       },
+      // Phase 9 — อัตรากำลังและงบบุคลากร
+      {
+        path: 'positions',
+        name: 'positions',
+        component: () => import('@/pages/PositionListPage.vue'),
+        meta: { requiresAdmin: true, title: 'อัตรากำลัง' },
+      },
+      {
+        path: 'allowance-types',
+        name: 'allowance-types',
+        component: () => import('@/pages/AllowanceTypeListPage.vue'),
+        meta: { requiresAdmin: true, title: 'แคตตาล็อกเงินเพิ่ม' },
+      },
+      {
+        path: 'salary-scales',
+        name: 'salary-scales',
+        component: () => import('@/pages/SalaryScaleListPage.vue'),
+        meta: { requiresAdmin: true, title: 'อัตราเงินเดือนขั้นต่ำ–ขั้นสูง' },
+      },
+      {
+        path: 'salary-raise-rounds',
+        name: 'salary-raise-rounds',
+        component: () => import('@/pages/SalaryRaisePage.vue'),
+        meta: { requiresAdmin: true, title: 'รอบเลื่อนเงินเดือน' },
+      },
     ],
   },
   {
