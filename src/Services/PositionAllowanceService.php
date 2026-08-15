@@ -31,6 +31,9 @@ final class PositionAllowanceService
         if ($role !== 'admin') {
             return null;
         }
+        if (!empty($dto->validate())) {
+            return null;
+        }
         if ($this->positionRepo->findById($dto->positionId) === null) {
             return null;
         }
@@ -48,7 +51,7 @@ final class PositionAllowanceService
         ]);
     }
 
-    public function update(string $role, int $id, UpdatePositionAllowanceDto $dto): bool
+    public function update(string $role, int $positionId, int $id, UpdatePositionAllowanceDto $dto): bool
     {
         if ($role !== 'admin') {
             return false;
@@ -56,19 +59,21 @@ final class PositionAllowanceService
         if (!empty($dto->validate())) {
             return false;
         }
-        if ($this->repo->findById($id) === null) {
-            return false;
+        $row = $this->repo->findById($id);
+        if ($row === null || (int) $row['position_id'] !== $positionId) {
+            return false; // ไม่พบ หรือไม่ใช่สิทธิ์ของอัตรานี้ (กัน cross-position)
         }
         return $this->repo->update($id, $dto->toUpdateData());
     }
 
-    public function delete(string $role, int $id): bool
+    public function delete(string $role, int $positionId, int $id): bool
     {
         if ($role !== 'admin') {
             return false;
         }
-        if ($this->repo->findById($id) === null) {
-            return false;
+        $row = $this->repo->findById($id);
+        if ($row === null || (int) $row['position_id'] !== $positionId) {
+            return false; // ไม่พบ หรือไม่ใช่สิทธิ์ของอัตรานี้ (กัน cross-position)
         }
         return $this->repo->softDelete($id);
     }

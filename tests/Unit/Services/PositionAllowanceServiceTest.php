@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use App\Core\Database;
 use App\Dtos\CreatePositionAllowanceDto;
+use App\Dtos\UpdatePositionAllowanceDto;
 use App\Services\PositionAllowanceService;
 
 class PositionAllowanceServiceTest extends TestCase
@@ -121,7 +122,26 @@ class PositionAllowanceServiceTest extends TestCase
         $id = $service->create('admin', $this->makeDto());
         $this->assertNotNull($id);
 
-        $this->assertTrue($service->delete('admin', $id));
+        $this->assertTrue($service->delete('admin', 1, $id));
         $this->assertCount(0, $service->listByPosition(1));
+    }
+
+    /** @test */
+    public function update_and_delete_are_scoped_to_the_position_in_url(): void
+    {
+        $service = new PositionAllowanceService();
+        $id = $service->create('admin', $this->makeDto());
+        $this->assertNotNull($id);
+
+        // อัตรา 2 (ยังไม่มีใน test schema — เพิ่ม)
+        $this->pdo->exec("INSERT INTO positions (pay_no, employee_category) VALUES ('1002', 'civil_servant')");
+
+        // พยายามแก้/ลบสิทธิ์ของอัตรา 1 ผ่าน URL ของอัตรา 2 ⇒ ต้องถูกปฏิเสธ
+        $dto = new UpdatePositionAllowanceDto(effectiveFrom: '2026-01-01', effectiveTo: null, docNo: null);
+        $this->assertFalse($service->update('admin', 2, $id, $dto));
+        $this->assertFalse($service->delete('admin', 2, $id));
+
+        // ผ่าน URL ที่ถูกต้องยังทำงานปกติ
+        $this->assertTrue($service->update('admin', 1, $id, $dto));
     }
 }

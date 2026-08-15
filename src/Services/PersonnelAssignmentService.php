@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\Database;
 use App\Dtos\CreatePersonnelAssignmentDto;
 use App\Dtos\UpdatePersonnelAssignmentDto;
 use App\Repositories\PersonnelAssignmentRepository;
@@ -39,10 +40,13 @@ final class PersonnelAssignmentService
         if ($role !== 'admin') {
             return null;
         }
+        if (!empty($dto->validate())) {
+            return null;
+        }
         if ($this->positionRepo->findById($dto->positionId) === null) {
             return null;
         }
-        $org = \App\Core\Database::queryOne(
+        $org = Database::queryOne(
             "SELECT id FROM organizations WHERE id = ?",
             [$dto->servingOrganizationId]
         );

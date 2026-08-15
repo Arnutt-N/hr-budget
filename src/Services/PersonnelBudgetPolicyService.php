@@ -31,6 +31,9 @@ final class PersonnelBudgetPolicyService
         if ($role !== 'admin') {
             return null;
         }
+        if (!empty($dto->validate())) {
+            return null;
+        }
         $fy = Database::queryOne("SELECT id FROM fiscal_years WHERE id = ?", [$dto->fiscalYearId]);
         if ($fy === null) {
             return null;
