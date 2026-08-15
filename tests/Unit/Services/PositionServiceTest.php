@@ -9,6 +9,7 @@ use App\Core\Database;
 use App\Dtos\CreatePositionDto;
 use App\Dtos\CreatePositionVersionDto;
 use App\Dtos\UpdatePositionDto;
+use App\Dtos\UpdatePositionVersionDto;
 use App\Services\PositionService;
 
 class PositionServiceTest extends TestCase
@@ -196,8 +197,88 @@ class PositionServiceTest extends TestCase
         $versions = $service->listVersions($id);
         $versionId = (int) $versions[0]['id'];
 
-        $this->assertFalse($service->updateVersion('admin', $id, $versionId, ['months_counted' => 13]));
-        $this->assertTrue($service->updateVersion('admin', $id, $versionId, ['months_counted' => 6]));
+        $dto = new UpdatePositionVersionDto(
+            organizationId: null, posNo: null, levelCode: null, lineCode: null,
+            baseSalary: null, salaryBasis: null, salaryPreRaise: null,
+            occupancy: null, lifecycle: null, monthsCounted: 13,
+            approvalStatus: null, effectiveFrom: null, effectiveTo: null,
+            orderDocNo: null, orderDocDate: null,
+        );
+        $this->assertFalse($service->updateVersion('admin', $id, $versionId, $dto));
+
+        $dtoOk = new UpdatePositionVersionDto(
+            organizationId: null, posNo: null, levelCode: null, lineCode: null,
+            baseSalary: null, salaryBasis: null, salaryPreRaise: null,
+            occupancy: null, lifecycle: null, monthsCounted: 6,
+            approvalStatus: null, effectiveFrom: null, effectiveTo: null,
+            orderDocNo: null, orderDocDate: null,
+        );
+        $this->assertTrue($service->updateVersion('admin', $id, $versionId, $dtoOk));
+    }
+
+    /** @test */
+    public function create_version_in_the_past_cannot_overlap_closed_version(): void
+    {
+        $service = new PositionService();
+        $id = $service->create('admin', $this->makeCreateDto()); // 2025-10-01 → ปัจจุบัน
+
+        // เพิ่มเวอร์ชันที่สองปกติ → เวอร์ชันแรกถูกปิดที่ 2025-12-31
+        $dto = new CreatePositionVersionDto(
+            organizationId: 1, posNo: null, levelCode: 'เชี่ยวชาญ', lineCode: null,
+            baseSalary: 30000.0, salaryBasis: 'actual', salaryPreRaise: null,
+            occupancy: 'occupied', lifecycle: 'active', monthsCounted: 12,
+            approvalStatus: 'approved', effectiveFrom: '2026-01-01',
+            effectiveTo: null, orderDocNo: null, orderDocDate: null,
+        );
+        $this->assertNotNull($service->createVersion('admin', $id, $dto));
+
+        // พยายามแทรกย้อนหลังช่วง 2025-11-01..2025-11-30 — ตัดกับเวอร์ชันปิดแล้ว (2025-10-01..2025-12-31) ⇒ ปฏิเสธ
+        $overlap = new CreatePositionVersionDto(
+            organizationId: 1, posNo: null, levelCode: null, lineCode: null,
+            baseSalary: 28000.0, salaryBasis: 'estimated', salaryPreRaise: null,
+            occupancy: 'occupied', lifecycle: 'active', monthsCounted: 12,
+            approvalStatus: 'approved', effectiveFrom: '2025-11-01',
+            effectiveTo: '2025-11-30', orderDocNo: null, orderDocDate: null,
+        );
+        $this->assertNull($service->createVersion('admin', $id, $overlap));
+
+        // จำนวนเวอร์ชันยังเป็น 2 — แถวซ้อนไม่หลุดเข้าไป
+        $this->assertCount(2, $service->listVersions($id));
+    }
+
+    /** @test */
+    public function update_version_cannot_move_range_onto_sibling(): void
+    {
+        $service = new PositionService();
+        $id = $service->create('admin', $this->makeCreateDto());
+
+        $second = new CreatePositionVersionDto(
+            organizationId: 1, posNo: null, levelCode: null, lineCode: null,
+            baseSalary: 30000.0, salaryBasis: 'actual', salaryPreRaise: null,
+            occupancy: 'occupied', lifecycle: 'active', monthsCounted: 12,
+            approvalStatus: 'approved', effectiveFrom: '2026-01-01',
+            effectiveTo: null, orderDocNo: null, orderDocDate: null,
+        );
+        $service->createVersion('admin', $id, $second);
+
+        $versions = $service->listVersions($id);
+        $secondId = null;
+        foreach ($versions as $v) {
+            if ($v['effective_from'] === '2026-01-01') {
+                $secondId = (int) $v['id'];
+            }
+        }
+        $this->assertNotNull($secondId);
+
+        // ขยับเวอร์ชันที่สองย้อนไปช่วงที่ตัดกับเวอร์ชันแรก ⇒ ปฏิเสธ
+        $move = new UpdatePositionVersionDto(
+            organizationId: null, posNo: null, levelCode: null, lineCode: null,
+            baseSalary: null, salaryBasis: null, salaryPreRaise: null,
+            occupancy: null, lifecycle: null, monthsCounted: null,
+            approvalStatus: null, effectiveFrom: '2025-12-15', effectiveTo: null,
+            orderDocNo: null, orderDocDate: null,
+        );
+        $this->assertFalse($service->updateVersion('admin', $id, $secondId, $move));
     }
 
     /** @test */

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Dtos;
 
+use App\Dtos\Concerns\RequestHelpers;
+
 final class CreatePositionVersionDto
 {
+    use RequestHelpers;
+
     public function __construct(
         public readonly int $organizationId,
         public readonly ?string $posNo,
@@ -76,14 +80,7 @@ final class CreatePositionVersionDto
 
     public static function fromRequest(): self
     {
-        $raw = [];
-        $body = file_get_contents('php://input');
-        if ($body !== false && $body !== '') {
-            $decoded = json_decode($body, true);
-            if (is_array($decoded)) {
-                $raw = $decoded;
-            }
-        }
+        $raw = self::jsonBody();
 
         return new self(
             organizationId: (int) ($raw['organization_id'] ?? 0),
@@ -102,23 +99,5 @@ final class CreatePositionVersionDto
             orderDocNo: self::nullableString($raw['order_doc_no'] ?? null),
             orderDocDate: self::nullableString($raw['order_doc_date'] ?? null),
         );
-    }
-
-    private static function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-        $trimmed = trim((string) $value);
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    private function isValidDate(string $date): bool
-    {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return false;
-        }
-        $parts = explode('-', $date);
-        return checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0]);
     }
 }

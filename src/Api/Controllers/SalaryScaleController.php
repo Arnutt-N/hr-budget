@@ -8,6 +8,7 @@ use App\Api\Middleware\AuthMiddleware;
 use App\Api\Middleware\CorsMiddleware;
 use App\Api\Responses\ApiResponse;
 use App\Dtos\CreateSalaryScaleDto;
+use App\Dtos\UpdateSalaryScaleDto;
 use App\Services\SalaryScaleService;
 
 final class SalaryScaleController
@@ -61,13 +62,14 @@ final class SalaryScaleController
         $user = AuthMiddleware::require();
 
         try {
-            $raw = json_decode((string) file_get_contents('php://input'), true);
-            if (!is_array($raw) || $raw === []) {
-                ApiResponse::validationFailed(['body' => 'ไม่มีข้อมูลให้แก้ไข']);
+            $dto = UpdateSalaryScaleDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
                 return;
             }
 
-            $ok = $this->service->update($user['role'] ?? 'viewer', (int) $id, $raw);
+            $ok = $this->service->update($user['role'] ?? 'viewer', (int) $id, $dto);
             if (!$ok) {
                 ApiResponse::error('ไม่สามารถแก้ไขอัตราเงินเดือนได้', 422);
                 return;

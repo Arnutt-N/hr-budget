@@ -38,6 +38,27 @@ class AllowanceRateRepository
         );
     }
 
+    public function countActiveByType(int $allowanceTypeId): int
+    {
+        $result = Database::query(
+            "SELECT COUNT(*) AS total FROM allowance_rates
+             WHERE allowance_type_id = ? AND deleted_at IS NULL",
+            [$allowanceTypeId]
+        );
+        return (int) ($result[0]['total'] ?? 0);
+    }
+
+    /** มีอัตราตัวอื่นอ้างอิง type นี้อยู่หรือไม่ (ลบแม่แบบ derived = ลูกกลายเป็น 0 เงียบๆ) */
+    public function hasDerivedDependents(int $allowanceTypeId): bool
+    {
+        $result = Database::query(
+            "SELECT COUNT(*) AS total FROM allowance_rates
+             WHERE derives_from_type_id = ? AND deleted_at IS NULL",
+            [$allowanceTypeId]
+        );
+        return (int) ($result[0]['total'] ?? 0) > 0;
+    }
+
     public function insert(array $data): int
     {
         return Database::insert('allowance_rates', $data);

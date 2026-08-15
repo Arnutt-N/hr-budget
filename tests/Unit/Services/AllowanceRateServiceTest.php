@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use App\Core\Database;
 use App\Dtos\CreateAllowanceRateDto;
+use App\Dtos\UpdateAllowanceRateDto;
 use App\Services\AllowanceRateService;
 
 class AllowanceRateServiceTest extends TestCase
@@ -150,7 +151,12 @@ class AllowanceRateServiceTest extends TestCase
         $this->assertNotNull($cId);
 
         // แก้ A ให้อ้าง C ⇒ A→C→B→A วงจร ⇒ ปฏิเสธ
-        $this->assertFalse($service->update('admin', $bId, ['derives_from_type_id' => 3, 'fallback_amount' => 100]));
+        $dto = new UpdateAllowanceRateDto(
+            levelCode: null, lineCode: null, amount: null, percent: null,
+            derivesFromTypeId: 3, fallbackAmount: 100.0,
+            effectiveFrom: null, effectiveTo: null, docNo: null,
+        );
+        $this->assertFalse($service->update('admin', $bId, $dto));
     }
 
     /** @test */
@@ -161,7 +167,48 @@ class AllowanceRateServiceTest extends TestCase
         $this->assertNotNull($bId);
 
         // แก้ fallback ของแถวเดิมโดยยังอ้าง A เหมือนเดิม ต้องไม่ตีความเป็นวงจร
-        $this->assertTrue($service->update('admin', $bId, ['fallback_amount' => 4000.0]));
+        $dto = new UpdateAllowanceRateDto(
+            levelCode: null, lineCode: null, amount: null, percent: null,
+            derivesFromTypeId: null, fallbackAmount: 4000.0,
+            effectiveFrom: null, effectiveTo: null, docNo: null,
+        );
+        $this->assertTrue($service->update('admin', $bId, $dto));
+    }
+
+    /** @test */
+    public function deleting_last_rate_of_derived_parent_type_is_blocked(): void
+    {
+        $service = new AllowanceRateService();
+
+        // type 1 (เงินประจำตำแหน่ง) มีอัตราปกติ 1 แถว
+        $plain = new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการ', lineCode: null,
+            amount: 3500.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        );
+        $plainId = $service->create('admin', $plain);
+
+        // type 2 (ค.ต.น.) อ้างอิง type 1
+        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0));
+        $this->assertNotNull($plainId);
+        $this->assertNotNull($derivedId);
+
+        // ลบอัตราเดียวของ type 1 ที่มีลูกอ้างอิง ⇒ ต้องถูกบล็อก
+        $this->assertFalse($service->delete('admin', $plainId));
+
+        // เพิ่มอัตราอีกแถวให้ type 1 ⇒ ตอนนี้ลบแถวแรกได้ (ลูกยังมีที่อ้าง)
+        $another = new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'เชี่ยวชาญ', lineCode: null,
+            amount: 5600.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        );
+        $this->assertNotNull($service->create('admin', $another));
+        $this->assertTrue($service->delete('admin', $plainId));
+
+        // ลบแถวลูก (type 2) ได้ตามปกติ — ไม่มีใครอ้างอิงมัน
+        $this->assertTrue($service->delete('admin', $derivedId));
     }
 
     /** @test */

@@ -15,6 +15,10 @@ import {
   Goal,
   Users,
   ShieldCheck,
+  UserRound,
+  Coins,
+  Ruler,
+  ArrowUpCircle,
   Bell,
   FolderArchive,
   BarChart3,
@@ -142,6 +146,27 @@ async function onLogout(): Promise<void> {
           <RouterLink to="/categories" class="nav-link" @click="sidebarOpen = false">
             <List class="h-5 w-5" />
             <span class="ml-3">ประเภทรายจ่าย</span>
+          </RouterLink>
+
+          <!-- Phase 9 — อัตรากำลังและงบบุคลากร -->
+          <RouterLink to="/positions" class="nav-link" @click="sidebarOpen = false">
+            <UserRound class="h-5 w-5" />
+            <span class="ml-3">อัตรากำลัง</span>
+          </RouterLink>
+
+          <RouterLink to="/allowance-types" class="nav-link" @click="sidebarOpen = false">
+            <Coins class="h-5 w-5" />
+            <span class="ml-3">เงินเพิ่ม</span>
+          </RouterLink>
+
+          <RouterLink to="/salary-scales" class="nav-link" @click="sidebarOpen = false">
+            <Ruler class="h-5 w-5" />
+            <span class="ml-3">อัตราเงินเดือน</span>
+          </RouterLink>
+
+          <RouterLink to="/salary-raise-rounds" class="nav-link" @click="sidebarOpen = false">
+            <ArrowUpCircle class="h-5 w-5" />
+            <span class="ml-3">รอบเลื่อนเงินเดือน</span>
           </RouterLink>
 
           <RouterLink to="/target-types" class="nav-link" @click="sidebarOpen = false">
