@@ -15,6 +15,7 @@ use App\Api\Controllers\AuthController as ApiAuthController;
 use App\Api\Controllers\ThaIdController as ApiThaIdController;
 use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
 use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
+use App\Api\Controllers\PositionController as ApiPositionController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
@@ -63,6 +64,16 @@ Router::get('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'show'
 Router::put('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'update']);
 Router::delete('/api/v1/fiscal-years/{id}', [ApiFiscalYearController::class, 'delete']);
 Router::post('/api/v1/fiscal-years/{id}/set-current', [ApiFiscalYearController::class, 'setCurrent']);
+
+// Positions (Phase 9 — อัตรากำลังงบบุคลากร)
+Router::get('/api/v1/positions', [ApiPositionController::class, 'list']);
+Router::post('/api/v1/positions', [ApiPositionController::class, 'create']);
+Router::get('/api/v1/positions/{id}', [ApiPositionController::class, 'show']);
+Router::put('/api/v1/positions/{id}', [ApiPositionController::class, 'update']);
+Router::delete('/api/v1/positions/{id}', [ApiPositionController::class, 'delete']);
+Router::get('/api/v1/positions/{id}/versions', [ApiPositionController::class, 'listVersions']);
+Router::post('/api/v1/positions/{id}/versions', [ApiPositionController::class, 'createVersion']);
+Router::put('/api/v1/positions/{id}/versions/{versionId}', [ApiPositionController::class, 'updateVersion']);
 
 // Organization CRUD
 Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
