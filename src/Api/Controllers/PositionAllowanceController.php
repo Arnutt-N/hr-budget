@@ -79,7 +79,7 @@ final class PositionAllowanceController
                 return;
             }
 
-            $ok = $this->service->update($user['role'] ?? 'viewer', (int) $id, $dto);
+            $ok = $this->service->update($user['role'] ?? 'viewer', (int) $positionId, (int) $id, $dto);
             if (!$ok) {
                 ApiResponse::error('ไม่สามารถแก้ไขสิทธิ์ได้', 422);
                 return;
@@ -98,7 +98,7 @@ final class PositionAllowanceController
         $user = AuthMiddleware::require();
 
         try {
-            $ok = $this->service->delete($user['role'] ?? 'viewer', (int) $id);
+            $ok = $this->service->delete($user['role'] ?? 'viewer', (int) $positionId, (int) $id);
             if (!$ok) {
                 ApiResponse::error('ไม่สามารถลบสิทธิ์ได้', 422);
                 return;

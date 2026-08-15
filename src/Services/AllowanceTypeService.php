@@ -29,10 +29,14 @@ final class AllowanceTypeService
         if ($role !== 'admin') {
             return null;
         }
+        if (!empty($dto->validate())) {
+            return null;
+        }
         if ($this->repo->findByCode($dto->code) !== null) {
             return null; // รหัสซ้ำ
         }
 
+        $reportScope = implode(',', $dto->reportScope);
         return $this->repo->insert([
             'code' => $dto->code,
             'name_th' => $dto->nameTh,
@@ -40,7 +44,7 @@ final class AllowanceTypeService
             'expense_item_id' => $dto->expenseItemId,
             'scope' => $dto->scope,
             'vacant_eligible' => $dto->vacantEligible ? 1 : 0,
-            'report_scope' => implode(',', $dto->reportScope) !== '' ? implode(',', $dto->reportScope) : 'personnel',
+            'report_scope' => $reportScope !== '' ? $reportScope : 'personnel',
             'basis' => $dto->basis,
             'rate_kind' => $dto->rateKind,
             'budget_basis' => $dto->budgetBasis,

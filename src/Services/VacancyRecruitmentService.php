@@ -40,6 +40,9 @@ final class VacancyRecruitmentService
         if ($role !== 'admin') {
             return null;
         }
+        if (!empty($dto->validate())) {
+            return null;
+        }
         if ($this->positionRepo->findById($dto->positionId) === null) {
             return null;
         }
