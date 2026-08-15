@@ -8,6 +8,7 @@ use App\Core\Database;
 use App\Dtos\CreatePositionDto;
 use App\Dtos\CreatePositionVersionDto;
 use App\Dtos\UpdatePositionDto;
+use App\Dtos\UpdatePositionVersionDto;
 use App\Repositories\PositionRepository;
 use App\Repositories\PositionVersionRepository;
 
@@ -150,7 +151,11 @@ final class PositionService
         return $this->versionRepo->findByPosition($positionId);
     }
 
-    /** เพิ่มเวอร์ชันใหม่ — ปิดเวอร์ชันเดิมที่ยังเปิดอยู่ (effective_to = วันก่อนเริ่มเวอร์ชันใหม่) */
+    /**
+     * เพิ่มเวอร์ชันใหม่ — บังคับช่วงเวลา tile กันไม่ทับ:
+     * (1) ปิดเวอร์ชันเดิมที่ยังเปิดอยู่ (effective_to = วันก่อนเริ่มเวอร์ชันใหม่)
+     * (2) ตรวจช่วงใหม่ไม่ตัดกับเวอร์ชันปิดแล้วอื่นใด (แก้ช่องโหว่แทรกย้อนหลังซ้อนกัน)
+     */
     public function createVersion(string $role, int $positionId, CreatePositionVersionDto $dto): ?int
     {
         if ($role !== 'admin') {
@@ -163,8 +168,21 @@ final class PositionService
 
         Database::beginTransaction();
         try {
-            // ปิดเวอร์ชันเดิมที่ยังเปิดอยู่ก่อนวันเริ่มเวอร์ชันใหม่ (temporal chain)
+            // เวอร์ชันเปิดที่จะถูกปิดอัตโนมัติ — ไม่นับเป็นตัวตัดช่วง (หลังปิดแล้ว to = วันก่อนเริ่มใหม่)
             $open = $this->versionRepo->findOpenVersion($positionId, $dto->effectiveFrom);
+            $excludeId = $open !== null ? (int) $open['id'] : null;
+
+            $conflict = $this->versionRepo->findIntersecting(
+                $positionId,
+                $dto->effectiveFrom,
+                $dto->effectiveTo,
+                $excludeId
+            );
+            if ($conflict !== null) {
+                Database::rollback();
+                return null; // ช่วงซ้อนกับเวอร์ชันที่มีอยู่
+            }
+
             if ($open !== null) {
                 $closeDate = date('Y-m-d', strtotime($dto->effectiveFrom . ' -1 day'));
                 $this->versionRepo->update((int) $open['id'], ['effective_to' => $closeDate]);
@@ -197,9 +215,15 @@ final class PositionService
         }
     }
 
-    public function updateVersion(string $role, int $positionId, int $versionId, array $data): bool
+    public function updateVersion(string $role, int $positionId, int $versionId, UpdatePositionVersionDto $dto): bool
     {
         if ($role !== 'admin') {
+            return false;
+        }
+
+        // defense-in-depth: controller ตรวจแล้ว แต่ service รับประกันเองด้วย
+        // (caller ตรง เช่น เทสต์/job ในอนาคต ต้องไม่หลุดค่าไม่ valid)
+        if (!empty($dto->validate())) {
             return false;
         }
 
@@ -208,15 +232,24 @@ final class PositionService
             return false;
         }
 
-        if (isset($data['months_counted'])
-            && ((int) $data['months_counted'] < 1 || (int) $data['months_counted'] > 12)) {
-            return false;
+        // ถ้าขยับช่วงเวลา ต้องตรวจว่าไม่ไปตัดกับเวอร์ชันอื่น
+        $resolvedFrom = $dto->effectiveFrom ?? $version['effective_from'];
+        $resolvedTo = $dto->effectiveTo ?? $version['effective_to'];
+        if ($dto->effectiveFrom !== null || $dto->effectiveTo !== null) {
+            $conflict = $this->versionRepo->findIntersecting(
+                $positionId,
+                $resolvedFrom,
+                $resolvedTo,
+                $versionId
+            );
+            if ($conflict !== null) {
+                return false;
+            }
+            if ($resolvedTo !== null && $resolvedTo < $resolvedFrom) {
+                return false;
+            }
         }
 
-        if (isset($data['base_salary']) && (float) $data['base_salary'] < 0) {
-            return false;
-        }
-
-        return $this->versionRepo->update($versionId, $data);
+        return $this->versionRepo->update($versionId, $dto->toUpdateData());
     }
 }

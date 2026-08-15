@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Dtos\CreateSalaryScaleDto;
+use App\Dtos\UpdateSalaryScaleDto;
 use App\Repositories\SalaryScaleRepository;
 
 final class SalaryScaleService
@@ -51,9 +52,14 @@ final class SalaryScaleService
         ]);
     }
 
-    public function update(string $role, int $id, array $data): bool
+    public function update(string $role, int $id, UpdateSalaryScaleDto $dto): bool
     {
         if ($role !== 'admin') {
+            return false;
+        }
+
+        // defense-in-depth: controller ตรวจแล้ว แต่ service รับประกันเองด้วย
+        if (!empty($dto->validate())) {
             return false;
         }
 
@@ -62,13 +68,35 @@ final class SalaryScaleService
             return false;
         }
 
-        $min = isset($data['min_amount']) ? (float) $data['min_amount'] : (float) $scale['min_amount'];
-        $max = isset($data['max_amount']) ? (float) $data['max_amount'] : (float) $scale['max_amount'];
+        // ตรวจ min<=max แบบรวมค่าเดิม (แก้เฉพาะข้างเดียวก็ต้องยังสอดคล้อง)
+        $min = $dto->minAmount ?? (float) $scale['min_amount'];
+        $max = $dto->maxAmount ?? (float) $scale['max_amount'];
         if ($min < 0 || $max < $min) {
             return false;
         }
 
-        return $this->repo->update($id, $data);
+        $updateData = [];
+        if ($dto->minAmount !== null) {
+            $updateData['min_amount'] = $dto->minAmount;
+        }
+        if ($dto->maxAmount !== null) {
+            $updateData['max_amount'] = $dto->maxAmount;
+        }
+        if ($dto->effectiveFrom !== null) {
+            $updateData['effective_from'] = $dto->effectiveFrom;
+        }
+        if ($dto->effectiveTo !== null) {
+            $updateData['effective_to'] = $dto->effectiveTo;
+        }
+        if ($dto->docNo !== null) {
+            $updateData['doc_no'] = $dto->docNo;
+        }
+
+        if (empty($updateData)) {
+            return true;
+        }
+
+        return $this->repo->update($id, $updateData);
     }
 
     public function delete(string $role, int $id): bool

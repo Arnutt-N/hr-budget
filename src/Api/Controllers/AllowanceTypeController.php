@@ -8,6 +8,7 @@ use App\Api\Middleware\AuthMiddleware;
 use App\Api\Middleware\CorsMiddleware;
 use App\Api\Responses\ApiResponse;
 use App\Dtos\CreateAllowanceRateDto;
+use App\Dtos\UpdateAllowanceRateDto;
 use App\Dtos\UpdateAllowanceTypeDto;
 use App\Services\AllowanceRateService;
 use App\Services\AllowanceTypeService;
@@ -132,13 +133,14 @@ final class AllowanceTypeController
         $user = AuthMiddleware::require();
 
         try {
-            $raw = json_decode((string) file_get_contents('php://input'), true);
-            if (!is_array($raw) || $raw === []) {
-                ApiResponse::validationFailed(['body' => 'ไม่มีข้อมูลให้แก้ไข']);
+            $dto = UpdateAllowanceRateDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
                 return;
             }
 
-            $ok = $this->rateService->update($user['role'] ?? 'viewer', (int) $rateId, $raw);
+            $ok = $this->rateService->update($user['role'] ?? 'viewer', (int) $rateId, $dto);
             if (!$ok) {
                 ApiResponse::error('ไม่สามารถแก้ไขอัตราได้ (ไม่พบ หรือเกิดวงจร derived)', 422);
                 return;
@@ -159,7 +161,10 @@ final class AllowanceTypeController
         try {
             $ok = $this->rateService->delete($user['role'] ?? 'viewer', (int) $rateId);
             if (!$ok) {
-                ApiResponse::error('ไม่สามารถลบอัตราได้', 422);
+                ApiResponse::error(
+                    'ไม่สามารถลบอัตราได้ — เป็นอัตราเดียวของชนิดที่มีเงินเพิ่มตัวอื่นอ้างอิง (derived) อยู่ กรุณาปิดช่วงเวลาแทนการลบ หรือตรวจสอบเงินเพิ่มที่อ้างอิงก่อน',
+                    422,
+                );
                 return;
             }
             ApiResponse::noContent();

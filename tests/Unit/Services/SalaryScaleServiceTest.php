@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use App\Core\Database;
 use App\Dtos\CreateSalaryScaleDto;
+use App\Dtos\UpdateSalaryScaleDto;
 use App\Services\SalaryScaleService;
 
 class SalaryScaleServiceTest extends TestCase
@@ -94,7 +95,16 @@ class SalaryScaleServiceTest extends TestCase
         $id = $service->create('admin', $this->makeDto());
         $this->assertNotNull($id);
 
-        $this->assertFalse($service->update('admin', $id, ['max_amount' => 10000.0]));
-        $this->assertTrue($service->update('admin', $id, ['max_amount' => 60000.0]));
+        $bad = new UpdateSalaryScaleDto(
+            minAmount: null, maxAmount: 10000.0, effectiveFrom: null,
+            effectiveTo: null, docNo: null,
+        );
+        $this->assertFalse($service->update('admin', $id, $bad));
+
+        $good = new UpdateSalaryScaleDto(
+            minAmount: null, maxAmount: 60000.0, effectiveFrom: null,
+            effectiveTo: null, docNo: null,
+        );
+        $this->assertTrue($service->update('admin', $id, $good));
     }
 }

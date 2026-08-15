@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Dtos\CreateAllowanceRateDto;
+use App\Dtos\UpdateAllowanceRateDto;
 use App\Repositories\AllowanceRateRepository;
 use App\Repositories\AllowanceTypeRepository;
 
@@ -64,7 +65,40 @@ final class AllowanceRateService
         ]);
     }
 
-    public function update(string $role, int $id, array $data): bool
+    public function update(string $role, int $id, UpdateAllowanceRateDto $dto): bool
+    {
+        if ($role !== 'admin') {
+            return false;
+        }
+
+        // defense-in-depth: controller ตรวจแล้ว แต่ service รับประกันเองด้วย
+        if (!empty($dto->validate())) {
+            return false;
+        }
+
+        $rate = $this->repo->findById($id);
+        if ($rate === null) {
+            return false;
+        }
+
+        if ($dto->derivesFromTypeId !== null) {
+            if ($this->typeRepo->findById($dto->derivesFromTypeId) === null) {
+                return false;
+            }
+            if ($this->createsCycle((int) $rate['allowance_type_id'], $dto->derivesFromTypeId, $id)) {
+                return false;
+            }
+        }
+
+        return $this->repo->update($id, $dto->toUpdateData());
+    }
+
+    /**
+     * ลบอัตรา — บล็อกถ้าเป็น "อัตราสุดท้ายของ type ที่มีลูกอ้างอิง derived"
+     * (ลบแม่แบบเงียบๆ จะทำให้ลูกคำนวณกลายเป็น 0/fallback ทันทีโดยไม่มีใครรู้ —
+     * ถ้ายังมีอัตราอื่นของ type เดียวกันอยู่ ให้ลบได้เพราะลูกยังมีที่อ้างอิง)
+     */
+    public function delete(string $role, int $id): bool
     {
         if ($role !== 'admin') {
             return false;
@@ -75,36 +109,9 @@ final class AllowanceRateService
             return false;
         }
 
-        if (array_key_exists('derives_from_type_id', $data)) {
-            $newParent = $data['derives_from_type_id'] === null ? null : (int) $data['derives_from_type_id'];
-            if ($newParent !== null) {
-                if ($this->typeRepo->findById($newParent) === null) {
-                    return false;
-                }
-                if ($this->createsCycle((int) $rate['allowance_type_id'], $newParent, $id)) {
-                    return false;
-                }
-            }
-        }
-
-        if (isset($data['amount']) && (float) $data['amount'] < 0) {
-            return false;
-        }
-        if (isset($data['percent']) && ((float) $data['percent'] < 0 || (float) $data['percent'] > 100)) {
-            return false;
-        }
-
-        return $this->repo->update($id, $data);
-    }
-
-    public function delete(string $role, int $id): bool
-    {
-        if ($role !== 'admin') {
-            return false;
-        }
-
-        if ($this->repo->findById($id) === null) {
-            return false;
+        $typeId = (int) $rate['allowance_type_id'];
+        if ($this->repo->hasDerivedDependents($typeId) && $this->repo->countActiveByType($typeId) <= 1) {
+            return false; // เป็นแม่แบบเพียงตัวเดียวของ type ที่มีลูก — ห้ามลบ
         }
 
         return $this->repo->softDelete($id);

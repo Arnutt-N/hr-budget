@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Dtos;
 
+use App\Dtos\Concerns\RequestHelpers;
+
 final class CreateAllowanceRateDto
 {
+    use RequestHelpers;
+
     public function __construct(
         public readonly int $allowanceTypeId,
         public readonly ?string $levelCode,
@@ -64,16 +68,7 @@ final class CreateAllowanceRateDto
 
     public static function fromRequest(): self
     {
-        $raw = [];
-        $body = file_get_contents('php://input');
-        if ($body !== false && $body !== '') {
-            $decoded = json_decode($body, true);
-            if (is_array($decoded)) {
-                $raw = $decoded;
-            }
-        }
-
-        return self::fromArray($raw);
+        return self::fromArray(self::jsonBody());
     }
 
     /** @param array<string,mixed> $raw */
@@ -91,23 +86,5 @@ final class CreateAllowanceRateDto
             effectiveTo: self::nullableString($raw['effective_to'] ?? null),
             docNo: self::nullableString($raw['doc_no'] ?? null),
         );
-    }
-
-    private static function nullableString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-        $trimmed = trim((string) $value);
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    private function isValidDate(string $date): bool
-    {
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return false;
-        }
-        $parts = explode('-', $date);
-        return checkdate((int) $parts[1], (int) $parts[2], (int) $parts[0]);
     }
 }

@@ -10,6 +10,7 @@ use App\Api\Responses\ApiResponse;
 use App\Dtos\CreatePositionDto;
 use App\Dtos\CreatePositionVersionDto;
 use App\Dtos\UpdatePositionDto;
+use App\Dtos\UpdatePositionVersionDto;
 use App\Services\PositionService;
 
 final class PositionController
@@ -184,15 +185,16 @@ final class PositionController
         $user = AuthMiddleware::require();
 
         try {
-            $raw = json_decode((string) file_get_contents('php://input'), true);
-            if (!is_array($raw) || $raw === []) {
-                ApiResponse::validationFailed(['body' => 'ไม่มีข้อมูลให้แก้ไข']);
+            $dto = UpdatePositionVersionDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
                 return;
             }
 
-            $ok = $this->service->updateVersion($user['role'] ?? 'viewer', (int) $id, (int) $versionId, $raw);
+            $ok = $this->service->updateVersion($user['role'] ?? 'viewer', (int) $id, (int) $versionId, $dto);
             if (!$ok) {
-                ApiResponse::error('ไม่สามารถแก้ไขเวอร์ชันได้', 422);
+                ApiResponse::error('ไม่สามารถแก้ไขเวอร์ชันได้ (ช่วงเวลาอาจซ้อนกับเวอร์ชันอื่น)', 422);
                 return;
             }
 

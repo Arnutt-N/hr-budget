@@ -37,6 +37,24 @@ class PositionVersionRepository
         );
     }
 
+    /**
+     * เวอร์ชันที่ช่วงเวลาตัดกับ [from, to] (to = NULL = เปิดไม่มีที่สิ้นสุด)
+     * ใช้บังคับกติกา "มีช่วงเวลาทุกอย่าง และช่วง tile กันไม่ทับ"
+     */
+    public function findIntersecting(int $positionId, string $from, ?string $to, ?int $excludeId = null): ?array
+    {
+        $sql = "SELECT * FROM position_versions
+                WHERE position_id = ? AND deleted_at IS NULL
+                  AND (? IS NULL OR effective_from <= ?)
+                  AND (effective_to IS NULL OR effective_to >= ?)";
+        $params = [$positionId, $to, $to, $from];
+        if ($excludeId !== null) {
+            $sql .= " AND id <> ?";
+            $params[] = $excludeId;
+        }
+        return Database::queryOne($sql, $params);
+    }
+
     public function insert(array $data): int
     {
         return Database::insert('position_versions', $data);
