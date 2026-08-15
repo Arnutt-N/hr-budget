@@ -18,6 +18,7 @@ use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
 use App\Api\Controllers\PositionController as ApiPositionController;
 use App\Api\Controllers\AllowanceTypeController as ApiAllowanceTypeController;
 use App\Api\Controllers\SalaryScaleController as ApiSalaryScaleController;
+use App\Api\Controllers\SalaryRaiseController as ApiSalaryRaiseController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
@@ -91,6 +92,14 @@ Router::get('/api/v1/salary-scales', [ApiSalaryScaleController::class, 'list']);
 Router::post('/api/v1/salary-scales', [ApiSalaryScaleController::class, 'create']);
 Router::put('/api/v1/salary-scales/{id}', [ApiSalaryScaleController::class, 'update']);
 Router::delete('/api/v1/salary-scales/{id}', [ApiSalaryScaleController::class, 'delete']);
+
+// Salary raise rounds + progress (Phase 9 — ตัวตัดสิน actual/estimated)
+Router::get('/api/v1/salary-raise-rounds', [ApiSalaryRaiseController::class, 'listRounds']);
+Router::post('/api/v1/salary-raise-rounds', [ApiSalaryRaiseController::class, 'createRound']);
+Router::post('/api/v1/salary-raise-rounds/{id}/include-in-budget', [ApiSalaryRaiseController::class, 'setIncludeInBudget']);
+Router::get('/api/v1/salary-raise-rounds/{id}/progress', [ApiSalaryRaiseController::class, 'listProgress']);
+Router::put('/api/v1/salary-raise-rounds/{id}/progress', [ApiSalaryRaiseController::class, 'markProgress']);
+Router::post('/api/v1/salary-raise-rounds/{id}/progress/seed-all', [ApiSalaryRaiseController::class, 'seedProgress']);
 
 // Organization CRUD
 Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
