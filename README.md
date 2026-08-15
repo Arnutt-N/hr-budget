@@ -21,7 +21,6 @@ hr_budget/
 ├── examples/            # ตัวอย่างอ้างอิง, UI references
 ├── PRPs/                # แผนงานก่อนลงมือทำ (Pre-work Plans)
 ├── project-log-md/      # บันทึกการทำงาน
-├── research/            # วิจัย วิเคราะห์
 ├── scripts/             # Scripts สำหรับรันงานต่างๆ
 └── src/                 # Source code หลัก
 ```

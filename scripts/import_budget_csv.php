@@ -98,7 +98,7 @@ function getOrInsert($pdo, &$cache, $table, $criteria, $data) {
 }
 
 // Open CSV - Try Research file (likely cleaner)
-$csvFile = __DIR__ . '/../research/budget_structure_2569.csv';
+$csvFile = __DIR__ . '/../database/budget_structure_2569.csv';
 $handle = fopen($csvFile, 'r');
 if (!$handle) {
     // Fallback

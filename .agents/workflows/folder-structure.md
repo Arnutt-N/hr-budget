@@ -8,7 +8,7 @@ description: โครงสร้างโฟลเดอร์และกต�
 
 ```
 hr_budget/
-├── research/          # วิเคราะห์ วิจัย
+├── research/          # วิเคราะห์ วิจัย (local-only, git-ignored — ไม่อยู่ใน repo)
 ├── PRPs/              # สร้างแผน จากเอกสารวิจัย ก่อนลงมือทำ
 ├── examples/          # ตัวอย่างไฟล์อ้างอิง, UI design, references
 ├── project-log-md/    # เก็บล็อกจากการทำงาน
@@ -26,11 +26,12 @@ hr_budget/
 
 ## 📝 รายละเอียดแต่ละโฟลเดอร์
 
-### `research/`
-- เอกสารวิเคราะห์และวิจัย
+### `research/` (local-only, git-ignored)
+- เอกสารวิเคราะห์และวิจัย — อยู่เฉพาะเครื่องผู้ใช้ ไม่ถูก track ใน repo
 - Database schema documentation
 - Requirements analysis
 - Technical research
+- ผลงานที่ต้องส่งต่อ ให้ย้ายไป `PRPs/` หรือ `docs/` ก่อนถึงจะอยู่ใน repo ได้
 
 ### `PRPs/` (Project Request Proposals)
 - แผนงานที่สร้างจากเอกสารวิจัย

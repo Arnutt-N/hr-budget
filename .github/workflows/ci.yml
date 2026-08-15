@@ -12,7 +12,6 @@ on:
       - '**.md'
       - 'PRPs/**'
       - 'docs/**'
-      - 'research/**'
       - 'project-log-md/**'
       - 'database/migrations/**'
   workflow_dispatch:

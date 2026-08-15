@@ -136,5 +136,8 @@ secrets/
 
 
 project-log-md/
+# Local-only analysis scratchpad (untracked from the repo 2026-08-15;
+# history purged via filter-repo — never commit files here)
+research/
 # One-off analysis/dump error logs from python/ scratch work
 python/*_err*.txt
