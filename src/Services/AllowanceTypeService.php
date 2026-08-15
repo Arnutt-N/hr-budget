@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Dtos\CreateAllowanceTypeDto;
 use App\Dtos\UpdateAllowanceTypeDto;
 use App\Repositories\AllowanceTypeRepository;
 
@@ -21,6 +22,42 @@ final class AllowanceTypeService
     public function findById(int $id): ?array
     {
         return $this->repo->findById($id);
+    }
+
+    public function create(string $role, CreateAllowanceTypeDto $dto): ?int
+    {
+        if ($role !== 'admin') {
+            return null;
+        }
+        if ($this->repo->findByCode($dto->code) !== null) {
+            return null; // รหัสซ้ำ
+        }
+
+        return $this->repo->insert([
+            'code' => $dto->code,
+            'name_th' => $dto->nameTh,
+            'short_name' => $dto->shortName,
+            'expense_item_id' => $dto->expenseItemId,
+            'scope' => $dto->scope,
+            'vacant_eligible' => $dto->vacantEligible ? 1 : 0,
+            'report_scope' => implode(',', $dto->reportScope) !== '' ? implode(',', $dto->reportScope) : 'personnel',
+            'basis' => $dto->basis,
+            'rate_kind' => $dto->rateKind,
+            'budget_basis' => $dto->budgetBasis,
+            'legal_ref' => $dto->legalRef,
+            'is_active' => 1,
+        ]);
+    }
+
+    public function delete(string $role, int $id): bool
+    {
+        if ($role !== 'admin') {
+            return false;
+        }
+        if ($this->repo->findById($id) === null) {
+            return false;
+        }
+        return $this->repo->softDelete($id);
     }
 
     public function update(string $role, int $id, UpdateAllowanceTypeDto $dto): bool

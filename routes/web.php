@@ -20,6 +20,11 @@ use App\Api\Controllers\AllowanceTypeController as ApiAllowanceTypeController;
 use App\Api\Controllers\SalaryScaleController as ApiSalaryScaleController;
 use App\Api\Controllers\SalaryRaiseController as ApiSalaryRaiseController;
 use App\Api\Controllers\PersonnelBudgetController as ApiPersonnelBudgetController;
+use App\Api\Controllers\PositionAllowanceController as ApiPositionAllowanceController;
+use App\Api\Controllers\VacancyRecruitmentController as ApiVacancyRecruitmentController;
+use App\Api\Controllers\PersonnelBudgetPolicyController as ApiPersonnelBudgetPolicyController;
+use App\Api\Controllers\PersonnelAllowanceController as ApiPersonnelAllowanceController;
+use App\Api\Controllers\PersonnelAssignmentController as ApiPersonnelAssignmentController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
@@ -81,8 +86,10 @@ Router::put('/api/v1/positions/{id}/versions/{versionId}', [ApiPositionControlle
 
 // Allowance catalog + rates (Phase 9 — เงินเพิ่ม)
 Router::get('/api/v1/allowance-types', [ApiAllowanceTypeController::class, 'list']);
+Router::post('/api/v1/allowance-types', [ApiAllowanceTypeController::class, 'create']);
 Router::get('/api/v1/allowance-types/{id}', [ApiAllowanceTypeController::class, 'show']);
 Router::put('/api/v1/allowance-types/{id}', [ApiAllowanceTypeController::class, 'update']);
+Router::delete('/api/v1/allowance-types/{id}', [ApiAllowanceTypeController::class, 'delete']);
 Router::get('/api/v1/allowance-types/{id}/rates', [ApiAllowanceTypeController::class, 'listRates']);
 Router::post('/api/v1/allowance-types/{id}/rates', [ApiAllowanceTypeController::class, 'createRate']);
 Router::put('/api/v1/allowance-types/{id}/rates/{rateId}', [ApiAllowanceTypeController::class, 'updateRate']);
@@ -104,6 +111,35 @@ Router::post('/api/v1/salary-raise-rounds/{id}/progress/seed-all', [ApiSalaryRai
 
 // Personnel budget computation (Phase 9 — อัตรากำลัง *ผลิต* ยอดลง budget_line_items)
 Router::post('/api/v1/personnel-budget/compute', [ApiPersonnelBudgetController::class, 'compute']);
+
+// Position allowances (Phase 9 — สิทธิ์เงินเพิ่มระดับตำแหน่ง)
+Router::get('/api/v1/positions/{id}/allowances', [ApiPositionAllowanceController::class, 'listByPosition']);
+Router::post('/api/v1/positions/{id}/allowances', [ApiPositionAllowanceController::class, 'create']);
+Router::put('/api/v1/positions/{id}/allowances/{allowanceId}', [ApiPositionAllowanceController::class, 'update']);
+Router::delete('/api/v1/positions/{id}/allowances/{allowanceId}', [ApiPositionAllowanceController::class, 'delete']);
+
+// Vacancy recruitment (Phase 9 — หลักฐานอัตราว่างพร้อมบรรจุ)
+Router::get('/api/v1/vacancy-recruitment', [ApiVacancyRecruitmentController::class, 'list']);
+Router::post('/api/v1/vacancy-recruitment', [ApiVacancyRecruitmentController::class, 'create']);
+Router::put('/api/v1/vacancy-recruitment/{id}', [ApiVacancyRecruitmentController::class, 'update']);
+Router::delete('/api/v1/vacancy-recruitment/{id}', [ApiVacancyRecruitmentController::class, 'delete']);
+
+// Personnel budget policies (Phase 9 — เกณฑ์การคำนวณรายปีงบ)
+Router::get('/api/v1/personnel-budget-policies', [ApiPersonnelBudgetPolicyController::class, 'list']);
+Router::post('/api/v1/personnel-budget-policies', [ApiPersonnelBudgetPolicyController::class, 'create']);
+Router::put('/api/v1/personnel-budget-policies/{id}', [ApiPersonnelBudgetPolicyController::class, 'update']);
+
+// Personnel allowances (Phase 9 — การรับจริงรายคน)
+Router::get('/api/v1/personnel-allowances', [ApiPersonnelAllowanceController::class, 'list']);
+Router::post('/api/v1/personnel-allowances', [ApiPersonnelAllowanceController::class, 'create']);
+Router::put('/api/v1/personnel-allowances/{id}', [ApiPersonnelAllowanceController::class, 'update']);
+Router::delete('/api/v1/personnel-allowances/{id}', [ApiPersonnelAllowanceController::class, 'delete']);
+
+// Personnel assignments (Phase 9 — ไปช่วยราชการ)
+Router::get('/api/v1/personnel-assignments', [ApiPersonnelAssignmentController::class, 'list']);
+Router::post('/api/v1/personnel-assignments', [ApiPersonnelAssignmentController::class, 'create']);
+Router::put('/api/v1/personnel-assignments/{id}', [ApiPersonnelAssignmentController::class, 'update']);
+Router::delete('/api/v1/personnel-assignments/{id}', [ApiPersonnelAssignmentController::class, 'delete']);
 
 // Organization CRUD
 Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
