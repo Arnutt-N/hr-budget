@@ -16,6 +16,8 @@ use App\Api\Controllers\ThaIdController as ApiThaIdController;
 use App\Api\Controllers\BudgetRequestController as ApiBudgetRequestController;
 use App\Api\Controllers\FiscalYearController as ApiFiscalYearController;
 use App\Api\Controllers\PositionController as ApiPositionController;
+use App\Api\Controllers\AllowanceTypeController as ApiAllowanceTypeController;
+use App\Api\Controllers\SalaryScaleController as ApiSalaryScaleController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
@@ -74,6 +76,21 @@ Router::delete('/api/v1/positions/{id}', [ApiPositionController::class, 'delete'
 Router::get('/api/v1/positions/{id}/versions', [ApiPositionController::class, 'listVersions']);
 Router::post('/api/v1/positions/{id}/versions', [ApiPositionController::class, 'createVersion']);
 Router::put('/api/v1/positions/{id}/versions/{versionId}', [ApiPositionController::class, 'updateVersion']);
+
+// Allowance catalog + rates (Phase 9 — เงินเพิ่ม)
+Router::get('/api/v1/allowance-types', [ApiAllowanceTypeController::class, 'list']);
+Router::get('/api/v1/allowance-types/{id}', [ApiAllowanceTypeController::class, 'show']);
+Router::put('/api/v1/allowance-types/{id}', [ApiAllowanceTypeController::class, 'update']);
+Router::get('/api/v1/allowance-types/{id}/rates', [ApiAllowanceTypeController::class, 'listRates']);
+Router::post('/api/v1/allowance-types/{id}/rates', [ApiAllowanceTypeController::class, 'createRate']);
+Router::put('/api/v1/allowance-types/{id}/rates/{rateId}', [ApiAllowanceTypeController::class, 'updateRate']);
+Router::delete('/api/v1/allowance-types/{id}/rates/{rateId}', [ApiAllowanceTypeController::class, 'deleteRate']);
+
+// Salary scales (Phase 9 — อัตราเงินเดือนขั้นต่ำ/ขั้นสูง)
+Router::get('/api/v1/salary-scales', [ApiSalaryScaleController::class, 'list']);
+Router::post('/api/v1/salary-scales', [ApiSalaryScaleController::class, 'create']);
+Router::put('/api/v1/salary-scales/{id}', [ApiSalaryScaleController::class, 'update']);
+Router::delete('/api/v1/salary-scales/{id}', [ApiSalaryScaleController::class, 'delete']);
 
 // Organization CRUD
 Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
