@@ -16,6 +16,14 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Current Database: `hr_budget`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `hr_budget` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+USE `hr_budget`;
+
+--
 -- Table structure for table `activities`
 --
 
@@ -141,6 +149,94 @@ LOCK TABLES `activity_logs` WRITE;
 /*!40000 ALTER TABLE `activity_logs` DISABLE KEYS */;
 INSERT INTO `activity_logs` VALUES (1,2,'logout','User logged out','::1','2025-12-14 05:16:17'),(2,2,'logout','User logged out','::1','2025-12-14 05:17:28'),(3,2,'logout','User logged out','::1','2025-12-14 05:19:11'),(4,2,'logout','User logged out','::1','2025-12-14 05:25:53'),(5,2,'login','User logged in successfully','::1','2025-12-14 05:28:27'),(6,2,'logout','User logged out','::1','2025-12-14 05:29:10'),(7,2,'login','User logged in successfully','::1','2025-12-14 05:29:12'),(8,2,'logout','User logged out','::1','2025-12-14 07:02:05'),(9,2,'login','User logged in successfully','::1','2025-12-14 07:02:09'),(10,2,'logout','User logged out','::1','2025-12-14 07:21:31'),(11,2,'login','User logged in successfully','::1','2025-12-14 09:56:06'),(12,2,'logout','User logged out','::1','2025-12-14 10:38:32'),(13,2,'login','User logged in successfully','::1','2025-12-14 10:38:34'),(14,2,'logout','User logged out','::1','2025-12-14 11:31:19'),(15,2,'login','User logged in successfully','::1','2025-12-14 11:31:22'),(16,2,'login','User logged in successfully','::1','2025-12-14 13:32:28'),(17,2,'logout','User logged out','::1','2025-12-14 14:18:21'),(18,2,'login','User logged in successfully','::1','2025-12-14 14:18:23'),(19,2,'login','User logged in successfully','::1','2025-12-14 16:18:41'),(20,2,'logout','User logged out','::1','2025-12-14 17:28:55'),(21,2,'login','User logged in successfully','::1','2025-12-14 17:29:01'),(22,2,'login','User logged in successfully','::1','2025-12-14 19:33:14'),(23,2,'logout','User logged out','::1','2025-12-14 19:48:21'),(24,2,'login','User logged in successfully','::1','2025-12-14 19:48:23'),(25,2,'logout','User logged out','::1','2025-12-14 20:01:26'),(26,2,'login','User logged in successfully','::1','2025-12-14 20:01:28'),(27,2,'logout','User logged out','::1','2025-12-14 21:38:27'),(28,2,'login','User logged in successfully','::1','2025-12-14 21:38:29'),(29,2,'login','User logged in successfully','::1','2025-12-16 00:10:36'),(30,2,'logout','User logged out','::1','2025-12-16 00:11:39'),(31,2,'login','User logged in successfully','::1','2025-12-16 00:12:47'),(32,2,'login','User logged in successfully','::1','2025-12-17 13:15:58'),(33,2,'login','User logged in successfully','::1','2025-12-17 15:05:50'),(34,2,'login','User logged in successfully','::1','2025-12-17 15:06:05'),(35,2,'login','User logged in successfully','::1','2025-12-17 17:20:36'),(36,189,'login','User logged in via ThaID (Mock)','::1','2025-12-18 11:30:52'),(37,2,'login','User logged in successfully','::1','2025-12-18 11:53:05'),(38,2,'login','User logged in successfully','::1','2025-12-18 13:57:17'),(39,2,'login','User logged in successfully','::1','2025-12-18 14:15:07'),(40,2,'login','User logged in successfully','::1','2025-12-18 16:42:02'),(41,2,'login','User logged in successfully','::1','2025-12-18 17:01:58'),(42,2,'login','User logged in successfully','::1','2025-12-19 09:44:22'),(43,2,'login','User logged in successfully','::1','2025-12-19 11:28:41'),(44,2,'login','User logged in successfully','::1','2025-12-19 11:51:18'),(45,189,'login','User logged in via ThaID (Mock)','::1','2025-12-19 14:01:37'),(46,2,'login','User logged in successfully','::1','2025-12-19 14:03:04'),(47,2,'login','User logged in successfully','::1','2025-12-19 16:09:28'),(48,2,'login','User logged in successfully','::1','2025-12-19 16:09:54'),(49,2,'login','User logged in successfully','::1','2025-12-20 01:28:31'),(50,2,'login','User logged in successfully','::1','2025-12-20 03:51:02'),(51,2,'login','User logged in successfully','::1','2025-12-20 04:06:28'),(52,2,'logout','User logged out','::1','2025-12-20 04:13:59'),(53,2,'login','User logged in successfully','::1','2025-12-20 04:14:01'),(54,2,'logout','User logged out','::1','2025-12-20 04:14:07'),(55,2,'login','User logged in successfully','::1','2025-12-20 04:14:16'),(56,2,'login','User logged in successfully','::1','2025-12-20 06:11:46'),(57,2,'login','User logged in successfully','::1','2025-12-20 06:14:48'),(58,2,'login','User logged in successfully','::1','2025-12-20 08:37:27'),(59,2,'login','User logged in successfully','::1','2025-12-21 03:14:21'),(60,2,'login','User logged in successfully','::1','2025-12-21 03:22:31'),(61,2,'login','User logged in successfully','127.0.0.1','2025-12-21 06:57:17'),(62,189,'login','User logged in via ThaID (Mock)','::1','2025-12-22 00:44:10'),(63,189,'logout','User logged out','::1','2025-12-22 01:51:24'),(64,189,'login','User logged in via ThaID (Mock)','::1','2025-12-22 01:51:38'),(65,189,'logout','User logged out','::1','2025-12-22 01:52:12'),(66,2,'login','User logged in successfully','127.0.0.1','2025-12-23 15:49:24'),(67,2,'login','User logged in successfully','127.0.0.1','2025-12-24 11:54:33'),(68,2,'login','User logged in successfully','127.0.0.1','2025-12-25 14:10:22'),(69,2,'login','User logged in successfully','127.0.0.1','2025-12-25 14:50:03'),(70,2,'login','User logged in successfully','127.0.0.1','2025-12-27 05:48:58'),(71,2,'login','User logged in successfully','::1','2025-12-27 06:26:08'),(72,2,'login','User logged in successfully','::1','2025-12-27 08:27:31'),(73,2,'login','User logged in successfully','::1','2025-12-27 11:30:33'),(74,2,'login','User logged in successfully','::1','2025-12-28 05:31:37'),(75,2,'login','User logged in successfully','::1','2025-12-29 06:34:28'),(76,2,'login','User logged in successfully','::1','2025-12-29 08:51:26'),(77,2,'login','User logged in successfully','::1','2025-12-29 12:01:20'),(78,2,'login','User logged in successfully','::1','2025-12-29 12:34:54'),(79,2,'login','User logged in successfully','::1','2025-12-29 16:38:56'),(80,2,'login','User logged in successfully','::1','2025-12-29 18:05:40'),(81,2,'login','User logged in successfully','::1','2025-12-30 14:41:13'),(82,2,'login','User logged in successfully','::1','2025-12-31 07:39:03'),(83,2,'logout','User logged out','::1','2025-12-31 07:40:09'),(84,2,'login','User logged in successfully','::1','2025-12-31 07:40:38'),(85,2,'login','User logged in successfully','::1','2025-12-31 09:47:08'),(86,2,'login','User logged in successfully','::1','2025-12-31 10:53:26'),(87,2,'logout','User logged out','::1','2025-12-31 11:05:17'),(88,2,'login','User logged in successfully','::1','2025-12-31 11:18:02'),(89,2,'login','User logged in successfully','::1','2025-12-31 11:48:03'),(90,2,'login','User logged in successfully','::1','2025-12-31 14:27:28'),(91,2,'login','User logged in successfully','::1','2025-12-31 16:28:29'),(92,2,'login','User logged in successfully','::1','2026-01-01 06:29:10'),(93,2,'login','User logged in successfully','::1','2026-01-01 08:35:25'),(94,2,'login','User logged in successfully','::1','2026-01-01 09:58:12'),(95,2,'login','User logged in successfully','::1','2026-01-02 07:10:07'),(96,2,'login','User logged in successfully','::1','2026-01-02 07:10:20'),(97,2,'login','User logged in successfully','::1','2026-01-02 09:59:56'),(98,2,'login','User logged in successfully','::1','2026-01-02 13:42:48'),(99,189,'login','User logged in via ThaID (Mock)','127.0.0.1','2026-01-02 16:55:28'),(100,2,'login','User logged in successfully','::1','2026-01-02 17:10:15'),(101,2,'login','User logged in successfully','::1','2026-01-03 15:06:53'),(102,2,'logout','User logged out','::1','2026-01-03 15:17:20'),(103,2,'login','User logged in successfully','::1','2026-01-03 15:17:25'),(104,2,'login','User logged in successfully','::1','2026-01-03 17:22:01'),(105,2,'login','User logged in successfully','::1','2026-01-03 22:31:51'),(106,2,'login','User logged in successfully','::1','2026-01-04 10:54:51'),(107,2,'login','User logged in successfully','::1','2026-01-04 12:55:02'),(108,2,'login','User logged in successfully','::1','2026-01-04 15:30:55'),(109,2,'login','User logged in successfully','::1','2026-01-04 17:35:41'),(110,2,'login','User logged in successfully','::1','2026-01-04 18:19:38'),(111,2,'login','User logged in successfully','::1','2026-01-04 20:21:15'),(112,2,'login','User logged in successfully','::1','2026-01-05 14:06:31'),(113,2,'logout','User logged out','::1','2026-01-05 14:07:08'),(114,2,'login','User logged in successfully','::1','2026-01-05 14:07:30'),(115,2,'logout','User logged out','::1','2026-01-05 15:27:48'),(116,2,'login','User logged in successfully','::1','2026-01-05 15:27:53'),(117,2,'login','User logged in successfully','::1','2026-01-06 01:40:57'),(118,2,'login','User logged in successfully','::1','2026-01-06 11:44:31'),(119,2,'login','User logged in successfully','::1','2026-01-06 13:43:59'),(120,2,'login','User logged in successfully','::1','2026-01-06 15:57:20'),(121,2,'login','User logged in successfully','::1','2026-01-06 16:09:37'),(122,2,'login','User logged in successfully','::1','2026-01-06 18:25:45'),(123,2,'login','User logged in successfully','127.0.0.1','2026-01-07 11:52:49'),(124,2,'login','User logged in successfully','::1','2026-01-07 20:28:10'),(125,2,'login','User logged in successfully','::1','2026-01-07 22:34:54'),(126,2,'login','User logged in successfully','::1','2026-01-08 00:37:30'),(127,2,'login','User logged in successfully','::1','2026-01-08 10:44:51'),(128,2,'login','User logged in successfully','::1','2026-01-08 14:26:10'),(129,2,'login','User logged in successfully','::1','2026-01-09 12:13:18'),(130,2,'login','User logged in successfully','::1','2026-01-09 21:25:19'),(131,2,'login','User logged in successfully','::1','2026-01-10 03:17:17'),(132,2,'login','User logged in successfully','::1','2026-01-10 08:02:31'),(133,2,'login','User logged in successfully','::1','2026-01-10 09:22:26'),(134,2,'login','User logged in successfully','::1','2026-01-10 10:38:58'),(135,2,'login','User logged in successfully','::1','2026-01-10 11:48:34'),(136,2,'login','User logged in successfully','::1','2026-01-10 12:53:03'),(137,2,'login','User logged in successfully','::1','2026-01-10 14:59:15'),(138,2,'login','User logged in successfully','::1','2026-01-11 03:25:25'),(139,2,'login','User logged in successfully','::1','2026-01-11 04:11:14'),(140,2,'login','User logged in successfully','::1','2026-01-11 05:52:45'),(141,2,'login','User logged in successfully','::1','2026-01-11 12:26:34'),(142,2,'login','User logged in successfully','::1','2026-01-11 14:26:37'),(143,2,'login','User logged in successfully','::1','2026-01-11 14:56:48'),(144,2,'login','User logged in successfully','::1','2026-01-11 16:26:47'),(145,2,'login','User logged in successfully','::1','2026-01-12 10:39:14'),(146,2,'logout','User logged out','::1','2026-01-12 12:29:19'),(147,2,'login','User logged in successfully','::1','2026-01-12 12:29:24'),(148,2,'login','User logged in successfully','::1','2026-01-12 14:52:12'),(149,2,'login','User logged in successfully','::1','2026-01-12 16:58:55'),(150,2,'login','User logged in successfully','::1','2026-01-13 11:35:40'),(151,2,'logout','User logged out','::1','2026-01-13 12:50:05'),(152,2,'login','User logged in successfully','::1','2026-01-13 12:50:07'),(153,2,'logout','User logged out','::1','2026-01-13 13:56:10'),(154,2,'login','User logged in successfully','::1','2026-01-13 13:56:12'),(155,2,'login','User logged in successfully','::1','2026-01-13 17:23:39'),(156,2,'logout','User logged out','::1','2026-01-13 17:24:14'),(157,2,'login','User logged in successfully','::1','2026-01-13 17:24:45'),(158,2,'login','User logged in successfully','::1','2026-01-14 10:48:29'),(159,2,'logout','User logged out','::1','2026-01-14 11:16:23'),(160,2,'login','User logged in successfully','::1','2026-01-14 11:16:25'),(161,2,'login','User logged in successfully','::1','2026-01-15 13:20:35'),(162,2,'login','User logged in successfully','::1','2026-01-15 15:22:20'),(163,2,'login','User logged in successfully','::1','2026-01-15 17:34:24'),(164,2,'login','User logged in successfully','::1','2026-01-16 12:06:51'),(165,2,'login','User logged in successfully','::1','2026-01-16 14:24:46'),(166,2,'login','User logged in successfully','::1','2026-01-16 16:36:52'),(167,2,'login','User logged in successfully','::1','2026-01-17 02:12:06'),(168,2,'login','User logged in successfully','::1','2026-01-17 03:06:54'),(169,2,'login','User logged in successfully','::1','2026-01-17 03:12:10');
 /*!40000 ALTER TABLE `activity_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `allowance_rates`
+--
+
+DROP TABLE IF EXISTS `allowance_rates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `allowance_rates` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `allowance_type_id` int NOT NULL COMMENT 'FK: allowance_types.id',
+  `level_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ระดับตำแหน่ง — NULL = ทุกระดับ',
+  `line_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'สายงาน — NULL = ทุกสาย',
+  `amount` decimal(12,2) DEFAULT NULL COMMENT 'จำนวนเงิน (ความหมายตาม rate_kind ของ type)',
+  `percent` decimal(6,3) DEFAULT NULL COMMENT 'ถ้า type.basis=percent_of_salary เช่น 10.000 = 10%',
+  `derives_from_type_id` int DEFAULT NULL COMMENT 'FK: allowance_types.id — จำนวนเงิน = ของ type นั้นในตำแหน่งเดียวกัน',
+  `fallback_amount` decimal(12,2) DEFAULT NULL COMMENT 'ใช้เมื่อ derives_from ไม่มี/เป็น 0 — NULL = ไม่มีพื้น → 0',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มมีผลของอัตรา',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = มีผลถึงปัจจุบัน',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่ง/ประกาศที่กำหนดอัตรา',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  KEY `idx_allowance_rates_lookup` (`allowance_type_id`,`level_code`,`line_code`,`effective_from`),
+  KEY `idx_allowance_rates_derives_from` (`derives_from_type_id`),
+  KEY `idx_allowance_rates_deleted` (`deleted_at`),
+  CONSTRAINT `fk_allowance_rates_derives_from` FOREIGN KEY (`derives_from_type_id`) REFERENCES `allowance_types` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_allowance_rates_type` FOREIGN KEY (`allowance_type_id`) REFERENCES `allowance_types` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อัตราเงินเพิ่มรายระดับ/สายงาน+ช่วงเวลา — ไม่มีแถว = ไม่มีสิทธิ์';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `allowance_rates`
+--
+
+LOCK TABLES `allowance_rates` WRITE;
+/*!40000 ALTER TABLE `allowance_rates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `allowance_rates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `allowance_types`
+--
+
+DROP TABLE IF EXISTS `allowance_types`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `allowance_types` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'รหัส เช่น POSITION_ALLOWANCE, KHN, HOUSE_RENT',
+  `name_th` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ชื่อเต็มภาษาไทย',
+  `short_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ชื่อย่อ เช่น พ.ต.ก.',
+  `expense_item_id` int DEFAULT NULL COMMENT 'FK: expense_items.id — สะพานเข้าโครงงบเดิม',
+  `scope` enum('position','personal') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'position' COMMENT 'ข้อเท็จจริง: สิทธิ์ผูกกับตำแหน่ง หรือสถานการณ์ส่วนตัว',
+  `vacant_eligible` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'นโยบาย: อัตราว่างนับเงินเพิ่มนี้ไหม — คนละเรื่องกับ scope',
+  `report_scope` set('personnel','operating') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'personnel' COMMENT 'แกนบริหาร: รายงานรวมกับก้อนไหน — ห้ามใช้ลงเอกสารราชการ',
+  `basis` enum('flat','percent_of_salary','by_level','derived') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'flat' COMMENT 'รูปแบบการคำนวณ — derived = อ้างอิง type อื่น (ค.ต.น.)',
+  `rate_kind` enum('exact','ceiling') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'exact' COMMENT 'exact=จ่ายแน่นอน · ceiling=เพดานตรวจสอบ (ห้ามบวกเป็นงบ)',
+  `budget_basis` enum('establishment','actuals','manual') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'establishment' COMMENT 'ตั้งงบจากอัตรากำลัง · snapshot ผู้รับ · ผู้ใช้กรอกก้อน',
+  `legal_ref` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ระเบียบ/ประกาศที่ให้อำนาจ',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_allowance_types_code` (`code`),
+  KEY `idx_allowance_types_expense_item` (`expense_item_id`),
+  KEY `idx_allowance_types_scope` (`scope`),
+  KEY `idx_allowance_types_deleted` (`deleted_at`),
+  CONSTRAINT `fk_allowance_types_expense_item` FOREIGN KEY (`expense_item_id`) REFERENCES `expense_items` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='แคตตาล็อกเงินเพิ่ม — ทุกเกณฑ์เป็นข้อมูล แก้ด้วย UPDATE ไม่ใช่แก้โค้ด';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `allowance_types`
+--
+
+LOCK TABLES `allowance_types` WRITE;
+/*!40000 ALTER TABLE `allowance_types` DISABLE KEYS */;
+INSERT INTO `allowance_types` VALUES (1,'POSITION_ALLOWANCE','เงินประจำตำแหน่ง','เงินประจำตำแหน่ง',5,'position',1,'personnel','by_level','exact','establishment',NULL,1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(2,'KHN','ค่าตอบแทนนอกเหนือจากเงินเดือน','ค.ต.น.',12,'position',1,'personnel','derived','exact','establishment',NULL,1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(3,'PTK','เงิน พ.ต.ก. (นิติกร)','พ.ต.ก.',18,'position',0,'personnel','flat','exact','establishment','ต้องผ่านการประเมินรายบุคคล — อัตราว่างไม่นับ',1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(4,'PPD','เงิน พ.พ.ด. (พัสดุ)','พ.พ.ด.',19,'position',0,'personnel','flat','exact','establishment','ต้องได้รับแต่งตั้งเป็นเจ้าหน้าที่พัสดุรายบุคคล — อัตราว่างไม่นับ',1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(5,'PSR','เงิน พ.ส.ร. (การสู้รบ)','พ.ส.ร.',20,'personal',0,'personnel','flat','exact','manual','สิทธิ์ติดตัวบุคคล (ทหารผ่านศึก) — อนุมานจากอัตรากำลังไม่ได้',1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(6,'SPP','เงิน สปพ. (พื้นที่พิเศษ)','สปพ.',21,'position',1,'personnel','flat','exact','establishment','ตัดสินจากที่ตั้งหน่วยงาน — อัตราว่างในพื้นที่นั้นเข้าเกณฑ์',1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL),(7,'HOUSE_RENT','ค่าเช่าบ้าน','ค่าเช่าบ้าน',35,'personal',0,'personnel,operating','flat','ceiling','actuals','จ่ายตามจริงไม่เกินเพดานตามระดับ — ห้ามบวกเพดานเป็นงบ',1,NULL,'2026-08-15 09:14:18','2026-08-15 09:14:18',NULL,NULL);
+/*!40000 ALTER TABLE `allowance_types` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -389,6 +485,7 @@ CREATE TABLE `budget_line_items` (
   `expense_type_id` int DEFAULT NULL COMMENT 'FK: expense_types',
   `expense_group_id` int DEFAULT NULL COMMENT 'FK: expense_groups',
   `expense_item_id` int DEFAULT NULL COMMENT 'FK: expense_items (lowest level)',
+  `source` enum('manual','computed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'manual' COMMENT 'manual=พิมพ์มือ · computed=คำนวณจากอัตรากำลัง (positions)',
   `ministry_id` int DEFAULT NULL COMMENT 'กระทรวง: organizations.id',
   `department_id` int DEFAULT NULL COMMENT 'กรม: organizations.id',
   `division_id` int DEFAULT NULL COMMENT 'กอง: organizations.id',
@@ -441,7 +538,7 @@ CREATE TABLE `budget_line_items` (
 
 LOCK TABLES `budget_line_items` WRITE;
 /*!40000 ALTER TABLE `budget_line_items` DISABLE KEYS */;
-INSERT INTO `budget_line_items` VALUES (219,2569,1,15,21,31,1,1,2,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(220,2569,1,15,21,31,1,1,3,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(221,2569,1,15,21,31,1,1,6,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(222,2569,1,15,21,31,1,1,7,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(225,2569,1,15,21,31,1,1,13,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(226,2569,1,15,21,31,1,1,14,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(229,2569,1,15,21,31,1,1,16,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(230,2569,1,15,21,31,1,1,17,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(231,2569,1,15,21,31,1,1,18,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(232,2569,1,15,21,31,1,1,19,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(233,2569,1,15,21,31,1,1,20,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(234,2569,1,15,21,31,1,1,21,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(235,2569,1,15,21,31,1,1,23,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(236,2569,1,15,21,31,1,1,24,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(237,2569,1,15,21,31,1,1,26,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(238,2569,1,15,21,31,1,1,27,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(239,2569,1,15,21,31,1,1,28,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(240,2569,1,15,21,31,1,2,30,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(241,2569,1,15,21,31,1,2,31,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(242,2569,1,15,21,31,1,2,33,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(243,2569,1,15,21,31,2,3,35,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(244,2569,1,15,21,31,2,3,36,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(245,2569,1,15,21,31,2,3,37,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(246,2569,1,15,21,31,2,3,38,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(247,2569,1,15,21,31,2,3,40,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(248,2569,1,15,21,31,2,3,40,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(249,2569,2,16,22,32,2,3,41,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(250,2569,2,16,22,32,2,3,42,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(251,2569,2,16,22,32,2,3,43,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(252,2569,2,16,22,32,2,3,44,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(253,2569,2,16,22,32,2,3,45,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(254,2569,2,16,22,32,2,3,46,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(255,2569,2,16,22,32,2,3,47,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(256,2569,2,16,22,32,2,3,48,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(257,2569,2,16,22,32,2,3,49,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(258,2569,2,16,22,32,2,3,50,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(259,2569,2,16,22,32,2,3,51,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(260,2569,2,16,22,32,2,3,52,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(261,2569,2,16,22,32,2,3,53,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(262,2569,2,16,22,32,2,3,54,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(263,2569,2,16,22,32,2,3,55,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(264,2569,2,16,22,32,2,3,56,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(265,2569,2,16,22,32,2,3,57,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(266,2569,2,16,22,32,2,3,58,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(267,2569,2,16,22,32,2,3,59,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(268,2569,2,16,22,32,2,3,60,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(269,2569,2,16,22,32,2,3,61,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(270,2569,2,16,22,32,2,3,62,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(271,2569,2,16,22,32,2,3,63,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(272,2569,2,16,22,32,2,3,64,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(273,2569,2,16,22,32,2,3,64,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(274,2569,2,16,22,32,2,3,64,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(275,2569,2,16,22,32,2,3,65,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(276,2569,2,16,22,32,2,3,65,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(277,2569,2,16,22,32,2,3,65,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(278,2569,2,16,22,32,2,3,66,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(279,2569,2,16,22,32,2,3,66,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(280,2569,2,16,22,32,2,3,67,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(281,2569,2,16,22,32,2,3,67,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(282,2569,2,16,22,32,2,3,67,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(283,2569,2,16,22,32,2,3,68,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(284,2569,2,16,22,32,2,3,68,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(285,2569,2,16,22,32,2,3,68,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(286,2569,2,16,22,32,2,3,69,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(287,2569,2,16,22,32,2,3,69,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(288,2569,2,16,22,32,2,3,69,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(289,2569,2,16,22,32,2,3,70,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(290,2569,2,16,22,32,2,3,70,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(291,2569,2,16,22,32,2,3,70,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(292,2569,2,16,22,32,2,4,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(293,2569,2,16,22,32,2,4,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(294,2569,2,16,22,32,2,4,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(295,2569,2,16,22,32,3,5,72,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(296,2569,2,16,22,32,3,5,72,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(297,2569,2,16,22,32,3,5,72,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(298,2569,2,16,22,32,3,5,73,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(299,2569,2,16,22,32,3,5,73,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(300,2569,2,16,22,32,3,5,73,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(301,2569,2,16,22,32,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(302,2569,2,16,22,32,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(303,2569,2,16,22,32,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(304,2569,2,16,22,33,5,7,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(305,2569,2,16,22,33,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(306,2569,2,16,22,34,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(307,2569,2,16,22,35,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(308,2569,2,17,23,36,5,7,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(309,2569,2,17,23,36,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(310,2569,2,18,24,37,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(311,2569,2,18,24,38,2,3,34,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(312,2569,2,18,24,38,2,3,39,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(313,2569,2,18,24,38,2,3,70,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(314,2569,2,18,24,38,2,4,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(315,2569,2,18,24,38,3,5,74,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(316,2569,2,18,24,38,3,5,72,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(317,2569,2,18,24,38,3,5,75,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(318,2569,2,18,24,38,3,5,75,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(319,2569,2,18,24,38,5,7,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(320,2569,2,18,24,38,4,6,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(321,2569,2,18,25,39,4,8,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(322,2569,2,18,26,40,4,9,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(323,2569,2,18,26,41,4,10,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(324,2569,2,19,27,42,4,11,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(325,2569,3,20,28,43,4,12,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(326,2569,3,20,29,44,2,3,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(327,2569,3,21,30,45,4,13,NULL,1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(328,2569,NULL,15,21,31,2,3,77,NULL,NULL,3,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-04 14:12:10','2026-01-04 14:12:10',NULL,NULL,NULL),(329,2569,1,15,21,31,1,1,15,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL),(330,2569,1,15,21,31,1,1,9,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL),(331,2569,1,15,21,31,1,1,10,1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL);
+INSERT INTO `budget_line_items` VALUES (219,2569,1,15,21,31,1,1,2,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(220,2569,1,15,21,31,1,1,3,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(221,2569,1,15,21,31,1,1,6,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(222,2569,1,15,21,31,1,1,7,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(225,2569,1,15,21,31,1,1,13,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(226,2569,1,15,21,31,1,1,14,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL,NULL),(229,2569,1,15,21,31,1,1,16,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(230,2569,1,15,21,31,1,1,17,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(231,2569,1,15,21,31,1,1,18,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(232,2569,1,15,21,31,1,1,19,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(233,2569,1,15,21,31,1,1,20,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(234,2569,1,15,21,31,1,1,21,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(235,2569,1,15,21,31,1,1,23,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(236,2569,1,15,21,31,1,1,24,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(237,2569,1,15,21,31,1,1,26,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(238,2569,1,15,21,31,1,1,27,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(239,2569,1,15,21,31,1,1,28,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(240,2569,1,15,21,31,1,2,30,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(241,2569,1,15,21,31,1,2,31,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(242,2569,1,15,21,31,1,2,33,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(243,2569,1,15,21,31,2,3,35,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(244,2569,1,15,21,31,2,3,36,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(245,2569,1,15,21,31,2,3,37,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(246,2569,1,15,21,31,2,3,38,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(247,2569,1,15,21,31,2,3,40,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(248,2569,1,15,21,31,2,3,40,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL,NULL),(249,2569,2,16,22,32,2,3,41,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(250,2569,2,16,22,32,2,3,42,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(251,2569,2,16,22,32,2,3,43,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(252,2569,2,16,22,32,2,3,44,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(253,2569,2,16,22,32,2,3,45,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(254,2569,2,16,22,32,2,3,46,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(255,2569,2,16,22,32,2,3,47,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(256,2569,2,16,22,32,2,3,48,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(257,2569,2,16,22,32,2,3,49,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(258,2569,2,16,22,32,2,3,50,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(259,2569,2,16,22,32,2,3,51,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(260,2569,2,16,22,32,2,3,52,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(261,2569,2,16,22,32,2,3,53,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(262,2569,2,16,22,32,2,3,54,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(263,2569,2,16,22,32,2,3,55,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(264,2569,2,16,22,32,2,3,56,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(265,2569,2,16,22,32,2,3,57,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(266,2569,2,16,22,32,2,3,58,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(267,2569,2,16,22,32,2,3,59,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(268,2569,2,16,22,32,2,3,60,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(269,2569,2,16,22,32,2,3,61,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(270,2569,2,16,22,32,2,3,62,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(271,2569,2,16,22,32,2,3,63,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(272,2569,2,16,22,32,2,3,64,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(273,2569,2,16,22,32,2,3,64,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(274,2569,2,16,22,32,2,3,64,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(275,2569,2,16,22,32,2,3,65,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(276,2569,2,16,22,32,2,3,65,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(277,2569,2,16,22,32,2,3,65,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(278,2569,2,16,22,32,2,3,66,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(279,2569,2,16,22,32,2,3,66,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(280,2569,2,16,22,32,2,3,67,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(281,2569,2,16,22,32,2,3,67,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(282,2569,2,16,22,32,2,3,67,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(283,2569,2,16,22,32,2,3,68,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(284,2569,2,16,22,32,2,3,68,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(285,2569,2,16,22,32,2,3,68,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(286,2569,2,16,22,32,2,3,69,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(287,2569,2,16,22,32,2,3,69,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(288,2569,2,16,22,32,2,3,69,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(289,2569,2,16,22,32,2,3,70,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(290,2569,2,16,22,32,2,3,70,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(291,2569,2,16,22,32,2,3,70,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(292,2569,2,16,22,32,2,4,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(293,2569,2,16,22,32,2,4,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(294,2569,2,16,22,32,2,4,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(295,2569,2,16,22,32,3,5,72,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(296,2569,2,16,22,32,3,5,72,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(297,2569,2,16,22,32,3,5,72,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(298,2569,2,16,22,32,3,5,73,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(299,2569,2,16,22,32,3,5,73,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(300,2569,2,16,22,32,3,5,73,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(301,2569,2,16,22,32,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(302,2569,2,16,22,32,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(303,2569,2,16,22,32,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(304,2569,2,16,22,33,5,7,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(305,2569,2,16,22,33,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(306,2569,2,16,22,34,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(307,2569,2,16,22,35,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(308,2569,2,17,23,36,5,7,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(309,2569,2,17,23,36,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(310,2569,2,18,24,37,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(311,2569,2,18,24,38,2,3,34,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(312,2569,2,18,24,38,2,3,39,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(313,2569,2,18,24,38,2,3,70,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(314,2569,2,18,24,38,2,4,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(315,2569,2,18,24,38,3,5,74,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(316,2569,2,18,24,38,3,5,72,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(317,2569,2,18,24,38,3,5,75,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(318,2569,2,18,24,38,3,5,75,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(319,2569,2,18,24,38,5,7,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(320,2569,2,18,24,38,4,6,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(321,2569,2,18,25,39,4,8,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(322,2569,2,18,26,40,4,9,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(323,2569,2,18,26,41,4,10,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(324,2569,2,19,27,42,4,11,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(325,2569,3,20,28,43,4,12,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(326,2569,3,20,29,44,2,3,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(327,2569,3,21,30,45,4,13,NULL,'manual',1,2,NULL,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central','','active','2026-01-01 07:47:27','2026-01-03 21:55:48',NULL,NULL,NULL),(328,2569,NULL,15,21,31,2,3,77,'manual',NULL,NULL,3,NULL,NULL,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-04 14:12:10','2026-01-04 14:12:10',NULL,NULL,NULL),(329,2569,1,15,21,31,1,1,15,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL),(330,2569,1,15,21,31,1,1,9,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL),(331,2569,1,15,21,31,1,1,10,'manual',1,2,3,4,1,NULL,NULL,NULL,0.00,0.00,0.00,0.00,0.00,0.00,0.00,'central',NULL,'active','2026-01-05 15:52:29','2026-01-05 15:52:29',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `budget_line_items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -970,7 +1067,7 @@ CREATE TABLE `districts` (
   KEY `idx_districts_province` (`province_id`),
   KEY `idx_districts_deleted` (`deleted_at`),
   CONSTRAINT `fk_districts_province` FOREIGN KEY (`province_id`) REFERENCES `provinces` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1024 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อำเภอ/เขต';
+) ENGINE=InnoDB AUTO_INCREMENT=929 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อำเภอ/เขต';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1649,6 +1746,127 @@ INSERT INTO `permissions` VALUES (1,'budget.view','ดูข้อมูลง�
 UNLOCK TABLES;
 
 --
+-- Table structure for table `personnel_allowances`
+--
+
+DROP TABLE IF EXISTS `personnel_allowances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `personnel_allowances` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `person_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'รหัสบุคคลจากระบบ HR — VARCHAR อิสระ ไม่ FK (ไม่มีตารางบุคลากรในระบบนี้)',
+  `position_id` int NOT NULL COMMENT 'FK: positions.id — ตำแหน่งที่ผูกการรับนี้',
+  `allowance_type_id` int NOT NULL COMMENT 'FK: allowance_types.id',
+  `amount` decimal(12,2) NOT NULL COMMENT 'ยอดที่รับจริงรายเดือน',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มรับ',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = ยังรับอยู่',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่ง',
+  `doc_date` date DEFAULT NULL COMMENT 'วันที่คำสั่ง',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_personnel_allowances` (`person_id`,`allowance_type_id`,`effective_from`),
+  KEY `idx_personnel_allowances_position` (`position_id`,`allowance_type_id`),
+  KEY `idx_personnel_allowances_effective` (`effective_from`,`effective_to`),
+  KEY `idx_personnel_allowances_deleted` (`deleted_at`),
+  KEY `fk_personnel_allowances_type` (`allowance_type_id`),
+  CONSTRAINT `fk_personnel_allowances_position` FOREIGN KEY (`position_id`) REFERENCES `positions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_personnel_allowances_type` FOREIGN KEY (`allowance_type_id`) REFERENCES `allowance_types` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='การรับจริงเงินเพิ่มรายคน — ใช้ตอนเบิกจ่าย (สิทธิ์อยู่ที่ position_allowances)';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personnel_allowances`
+--
+
+LOCK TABLES `personnel_allowances` WRITE;
+/*!40000 ALTER TABLE `personnel_allowances` DISABLE KEYS */;
+/*!40000 ALTER TABLE `personnel_allowances` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel_assignments`
+--
+
+DROP TABLE IF EXISTS `personnel_assignments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `personnel_assignments` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `person_id` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'รหัสบุคคลจากระบบ HR — VARCHAR อิสระ ไม่ FK',
+  `position_id` int NOT NULL COMMENT 'FK: positions.id — เจ้าของตำแหน่ง (งบอยู่ต้นสังกัด)',
+  `serving_organization_id` int NOT NULL COMMENT 'FK: organizations.id — หน่วยที่ไปช่วย (รายงานอย่างเดียว ห้าม GROUP BY ยอดงบ)',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มไปช่วย',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = ยังไปช่วยอยู่',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่งช่วยราชการ',
+  `doc_date` date DEFAULT NULL COMMENT 'วันที่คำสั่ง',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_personnel_assignments` (`person_id`,`position_id`,`effective_from`),
+  KEY `idx_personnel_assignments_serving` (`serving_organization_id`,`effective_from`),
+  KEY `idx_personnel_assignments_position` (`position_id`),
+  KEY `idx_personnel_assignments_deleted` (`deleted_at`),
+  CONSTRAINT `fk_personnel_assignments_position` FOREIGN KEY (`position_id`) REFERENCES `positions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_personnel_assignments_serving_organization` FOREIGN KEY (`serving_organization_id`) REFERENCES `organizations` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ไปช่วยราชการ — งบอยู่ต้นสังกัด รายงานแยกผ่าน serving_organization_id';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personnel_assignments`
+--
+
+LOCK TABLES `personnel_assignments` WRITE;
+/*!40000 ALTER TABLE `personnel_assignments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `personnel_assignments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `personnel_budget_policy`
+--
+
+DROP TABLE IF EXISTS `personnel_budget_policy`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `personnel_budget_policy` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `fiscal_year_id` int NOT NULL COMMENT 'FK: fiscal_years.id — หนึ่งแถวต่อปีงบ',
+  `vacancy_rule` enum('transfer_request','eligibility_list','ready_to_fill') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เกณฑ์อัตราว่างที่นับในงบปีนี้ — ตรงกับ vacancy_recruitment.type · NULL=ยังไม่กำหนด',
+  `calc_mode` enum('snapshot','prorate') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'prorate' COMMENT 'prorate=หลัก (months_counted รายตำแหน่ง) · snapshot=บังคับ 12 เดือน',
+  `buffer_percent` decimal(5,2) DEFAULT NULL COMMENT 'ช่องปรับ % สำหรับก้อน actuals เช่น ค่าเช่าบ้าน',
+  `reference_date` date DEFAULT NULL COMMENT 'วันอ้างอิงสภาพอัตรา/ผู้รับ ณ วันตั้งงบ',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_personnel_budget_policy` (`fiscal_year_id`),
+  KEY `idx_personnel_budget_policy_deleted` (`deleted_at`),
+  CONSTRAINT `fk_personnel_budget_policy_fiscal_year` FOREIGN KEY (`fiscal_year_id`) REFERENCES `fiscal_years` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='นโยบายการคำนวณงบบุคลากรรายปีงบ — calc_mode/vacancy_rule/buffer ตั้งค่าได้';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personnel_budget_policy`
+--
+
+LOCK TABLES `personnel_budget_policy` WRITE;
+/*!40000 ALTER TABLE `personnel_budget_policy` DISABLE KEYS */;
+INSERT INTO `personnel_budget_policy` VALUES (1,4,NULL,'prorate',NULL,'2025-10-01',1,NULL,'2026-08-15 08:10:20','2026-08-15 08:10:20',NULL,NULL);
+/*!40000 ALTER TABLE `personnel_budget_policy` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `plans`
 --
 
@@ -1686,6 +1904,130 @@ LOCK TABLES `plans` WRITE;
 /*!40000 ALTER TABLE `plans` DISABLE KEYS */;
 INSERT INTO `plans` VALUES (15,1,'PL-e0bded','แผนงานบุคลากรภาครัฐ',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:26','2026-01-01 07:47:26',NULL,NULL),(16,2,'PL-c7fc87','แผนงานพื้นฐานด้านการปรับสมดุลและพัฒนาระบบการบริหารจัดการรัฐ',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL),(17,2,'PL-8297c2','แผนงานยุทธศาสตร์ป้องกันและแก้ไขปัญหาที่มีผลกระทบต่อความมั่นคง',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL),(18,2,'PL-65200c','แผนงานยุทธศาสตร์พัฒนากฎหมายและกระบวนการยุติธรรม',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL),(19,2,'PL-d5812d','แผนงานบูรณาการสร้างรายได้จากการท่องเที่ยว',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL),(20,3,'PL-2cdb9b','แผนงานบูรณารัฐบาลดิจิทัล',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL),(21,3,'PL-efdc14','แผนงานบูรณาการต่อต้านการทุจริตและประพฤติมิชอบ',NULL,NULL,2569,0,1,NULL,'2026-01-01 07:47:27','2026-01-01 07:47:27',NULL,NULL);
 /*!40000 ALTER TABLE `plans` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `position_allowances`
+--
+
+DROP TABLE IF EXISTS `position_allowances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `position_allowances` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `position_id` int NOT NULL COMMENT 'FK: positions.id',
+  `allowance_type_id` int NOT NULL COMMENT 'FK: allowance_types.id',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มมีสิทธิ์',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = มีสิทธิ์ถึงปัจจุบัน',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่งที่ให้สิทธิ์',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_position_allowances` (`position_id`,`allowance_type_id`,`effective_from`),
+  KEY `idx_position_allowances_type` (`allowance_type_id`),
+  KEY `idx_position_allowances_deleted` (`deleted_at`),
+  CONSTRAINT `fk_position_allowances_position` FOREIGN KEY (`position_id`) REFERENCES `positions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_position_allowances_type` FOREIGN KEY (`allowance_type_id`) REFERENCES `allowance_types` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='สิทธิ์เงินเพิ่มระดับตำแหน่ง — ใช้ตอนตั้งงบ (การรับจริงอยู่ที่ personnel_allowances)';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `position_allowances`
+--
+
+LOCK TABLES `position_allowances` WRITE;
+/*!40000 ALTER TABLE `position_allowances` DISABLE KEYS */;
+/*!40000 ALTER TABLE `position_allowances` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `position_versions`
+--
+
+DROP TABLE IF EXISTS `position_versions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `position_versions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `position_id` int NOT NULL COMMENT 'FK: positions.id',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มมีผลของเวอร์ชันนี้',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = มีผลถึงปัจจุบัน',
+  `pos_no` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่ตำแหน่ง — versioned แก้กับดักระบบเดิม',
+  `organization_id` int NOT NULL COMMENT 'FK: organizations.id — เจ้าของงบ (ต้นสังกัด) เสมอ',
+  `level_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'ระดับตำแหน่ง เช่น ชำนาญการพิเศษ',
+  `line_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'สายงาน',
+  `base_salary` decimal(12,2) NOT NULL DEFAULT '0.00' COMMENT 'เงินเดือนของเวอร์ชันนี้',
+  `salary_basis` enum('actual','estimated') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'estimated' COMMENT 'actual=เลื่อนเสร็จแล้ว · estimated=ประมาณการ — ความน่าเชื่อถือของ base_salary',
+  `salary_pre_raise` decimal(12,2) DEFAULT NULL COMMENT 'เงินเดือนก่อนเลื่อน — เก็บไว้เทียบตอนตัวเลขจริงมา',
+  `occupancy` enum('occupied','vacant_funded','vacant_unfunded') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'occupied' COMMENT 'มีคนครอง · ว่างมีเงิน · ว่างไม่มีเงิน',
+  `lifecycle` enum('active','abolished') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active' COMMENT 'สถานะอัตรา — แยกจาก occupancy อย่ายัดรวม (กับดัก pos_status ของระบบเดิม)',
+  `months_counted` tinyint NOT NULL DEFAULT '12' COMMENT '1..12 — prorate รายตำแหน่ง',
+  `approval_status` enum('approved','requested') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'approved' COMMENT 'คำขอที่ยังไม่อนุมัติไม่รวมยอดหลัก — query กรอง approved เป็น default',
+  `order_doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่งที่ทำให้เกิดเวอร์ชันนี้',
+  `order_doc_date` date DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_position_versions_pos_from` (`position_id`,`effective_from`),
+  KEY `idx_position_versions_org` (`organization_id`,`effective_from`),
+  KEY `idx_position_versions_level` (`level_code`),
+  KEY `idx_position_versions_occupancy` (`occupancy`),
+  KEY `idx_position_versions_deleted` (`deleted_at`),
+  CONSTRAINT `fk_position_versions_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_position_versions_position` FOREIGN KEY (`position_id`) REFERENCES `positions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `chk_position_versions_months` CHECK ((`months_counted` between 1 and 12))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='สภาพอัตรารายช่วงเวลา — แหล่งความจริง temporal (ตัวตนอยู่ที่ positions)';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `position_versions`
+--
+
+LOCK TABLES `position_versions` WRITE;
+/*!40000 ALTER TABLE `position_versions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `position_versions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `positions`
+--
+
+DROP TABLE IF EXISTS `positions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `positions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pay_no` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'เลขถือจ่าย — รหัสอ้างอิงอัตราที่ไม่เปลี่ยน',
+  `employee_category` enum('civil_servant','government_employee','permanent_employee') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ข้าราชการ · พนักงานราชการ · ลูกจ้างประจำ (3 ค่า ห้ามเพิ่ม)',
+  `created_doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่งที่ตั้งอัตรา',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_positions_pay_no` (`pay_no`),
+  KEY `idx_positions_category` (`employee_category`),
+  KEY `idx_positions_deleted` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อัตรากำลัง — ตัวตนของอัตราที่ไม่เปลี่ยน (ทุกอย่างที่เปลี่ยนอยู่ใน position_versions)';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `positions`
+--
+
+LOCK TABLES `positions` WRITE;
+/*!40000 ALTER TABLE `positions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `positions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1886,6 +2228,156 @@ LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
 INSERT INTO `roles` VALUES (1,'super_admin','ผู้ดูแลระบบสูงสุด','Super Administrator',NULL,1,1,1,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(2,'org_admin','ผู้ดูแลหน่วยงาน','Organization Admin',NULL,0,1,2,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(3,'planner','เจ้าหน้าที่แผน/จัดทำคำขอ','Planner',NULL,0,1,3,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(4,'budget_editor','เจ้าหน้าที่งบประมาณ','Budget Editor',NULL,0,1,4,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(5,'finance_officer','เจ้าหน้าที่การเงิน/เบิกจ่าย','Finance Officer',NULL,0,1,5,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(6,'approver_division','ผู้อนุมัติระดับกอง','Division Approver',NULL,0,1,6,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(7,'approver_department','ผู้อนุมัติระดับกรม','Department Approver',NULL,0,1,7,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(8,'approver_ministry','ผู้อนุมัติระดับกระทรวง','Ministry Approver',NULL,0,1,8,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(9,'auditor','ผู้ตรวจสอบ','Auditor',NULL,0,1,9,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(10,'executive','ผู้บริหาร (ดูภาพรวม)','Executive',NULL,0,1,10,'2026-06-17 15:04:18','2026-06-17 15:04:18'),(11,'viewer','ผู้ดูข้อมูลทั่วไป','Viewer',NULL,0,1,11,'2026-06-17 15:04:18','2026-06-17 15:04:18');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salary_increment_policy`
+--
+
+DROP TABLE IF EXISTS `salary_increment_policy`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary_increment_policy` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `fiscal_year_id` int NOT NULL COMMENT 'FK: fiscal_years.id — ปีงบที่ policy มีผล',
+  `employee_category` enum('civil_servant','government_employee','permanent_employee') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `max_percent` decimal(5,2) NOT NULL COMMENT 'อัตราประมาณการเลื่อน % — ใช้เต็มทุกคน',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_salary_increment_policy` (`fiscal_year_id`,`employee_category`),
+  KEY `idx_salary_increment_policy_deleted` (`deleted_at`),
+  CONSTRAINT `fk_salary_increment_policy_fiscal_year` FOREIGN KEY (`fiscal_year_id`) REFERENCES `fiscal_years` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อัตราประมาณการเลื่อนเงินเดือนรายปีงบ×ประเภท — ห้ามฝังโค้ด';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `salary_increment_policy`
+--
+
+LOCK TABLES `salary_increment_policy` WRITE;
+/*!40000 ALTER TABLE `salary_increment_policy` DISABLE KEYS */;
+INSERT INTO `salary_increment_policy` VALUES (1,4,'civil_servant',3.00,1,NULL,'2026-08-15 08:10:11','2026-08-15 08:10:11',NULL,NULL),(2,4,'permanent_employee',3.00,1,NULL,'2026-08-15 08:10:11','2026-08-15 08:10:11',NULL,NULL),(3,4,'government_employee',4.00,1,NULL,'2026-08-15 08:10:11','2026-08-15 08:10:11',NULL,NULL);
+/*!40000 ALTER TABLE `salary_increment_policy` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salary_raise_progress`
+--
+
+DROP TABLE IF EXISTS `salary_raise_progress`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary_raise_progress` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `round_id` int NOT NULL COMMENT 'FK: salary_raise_rounds.id — ผูกกับรอบ ไม่ใช่ปีงบ',
+  `organization_id` int NOT NULL COMMENT 'FK: organizations.id',
+  `status` enum('completed','pending') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT 'เสร็จ=ใช้เงินเดือนจริง (actual) · รอ=ประมาณการ (estimated)',
+  `completed_at` timestamp NULL DEFAULT NULL COMMENT 'เวลาที่เลื่อนเสร็จ',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่หนังสือ/คำสั่งยืนยันการเลื่อน',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_salary_raise_progress` (`round_id`,`organization_id`),
+  KEY `idx_salary_raise_progress_status` (`status`),
+  KEY `idx_salary_raise_progress_deleted` (`deleted_at`),
+  KEY `fk_salary_raise_progress_organization` (`organization_id`),
+  CONSTRAINT `fk_salary_raise_progress_organization` FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_salary_raise_progress_round` FOREIGN KEY (`round_id`) REFERENCES `salary_raise_rounds` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='สถานะการเลื่อนเงินเดือนรายหน่วย×รอบ — ตัวตัดสิน actual/estimated (ห้ามอนุมานจาก region)';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `salary_raise_progress`
+--
+
+LOCK TABLES `salary_raise_progress` WRITE;
+/*!40000 ALTER TABLE `salary_raise_progress` DISABLE KEYS */;
+/*!40000 ALTER TABLE `salary_raise_progress` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salary_raise_rounds`
+--
+
+DROP TABLE IF EXISTS `salary_raise_rounds`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary_raise_rounds` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `round_month` enum('apr','oct') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'เม.ย. · ต.ค.',
+  `round_year_be` smallint NOT NULL COMMENT 'ปี พ.ศ. ของรอบ',
+  `effective_date` date NOT NULL COMMENT 'วันที่รอบนี้มีผล เช่น 2568-10-01',
+  `fiscal_year_id` int NOT NULL COMMENT 'FK: fiscal_years.id — ปีงบที่รอบกระทบ',
+  `include_in_budget` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'สวิตช์เดียว: รอบนี้นับในงบปีนี้ไหม',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_salary_raise_rounds` (`round_month`,`round_year_be`),
+  KEY `idx_salary_raise_rounds_fiscal` (`fiscal_year_id`,`include_in_budget`),
+  KEY `idx_salary_raise_rounds_deleted` (`deleted_at`),
+  CONSTRAINT `fk_salary_raise_rounds_fiscal_year` FOREIGN KEY (`fiscal_year_id`) REFERENCES `fiscal_years` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='รอบเลื่อนเงินเดือน — แถวสร้างล่วงหน้า เปิดทีละรอบด้วย include_in_budget';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `salary_raise_rounds`
+--
+
+LOCK TABLES `salary_raise_rounds` WRITE;
+/*!40000 ALTER TABLE `salary_raise_rounds` DISABLE KEYS */;
+INSERT INTO `salary_raise_rounds` VALUES (1,'apr',2568,'2025-04-01',3,0,1,NULL,'2026-08-15 08:10:13','2026-08-15 08:10:13',NULL,NULL),(2,'oct',2568,'2025-10-01',4,1,1,NULL,'2026-08-15 08:10:13','2026-08-15 08:10:13',NULL,NULL),(3,'apr',2569,'2026-04-01',4,0,1,NULL,'2026-08-15 08:10:13','2026-08-15 08:10:13',NULL,NULL),(4,'oct',2569,'2026-10-01',5,0,1,NULL,'2026-08-15 08:10:13','2026-08-15 08:10:13',NULL,NULL);
+/*!40000 ALTER TABLE `salary_raise_rounds` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `salary_scales`
+--
+
+DROP TABLE IF EXISTS `salary_scales`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `salary_scales` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `employee_category` enum('civil_servant','government_employee','permanent_employee') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ข้าราชการ · พนักงานราชการ · ลูกจ้างประจำ',
+  `level_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ระดับตำแหน่ง',
+  `effective_from` date NOT NULL COMMENT 'วันเริ่มใช้อัตราศาลนี้',
+  `effective_to` date DEFAULT NULL COMMENT 'NULL = ใช้ถึงปัจจุบัน',
+  `min_amount` decimal(12,2) NOT NULL COMMENT 'อัตราเงินเดือนขั้นต่ำ',
+  `max_amount` decimal(12,2) NOT NULL COMMENT 'อัตราเงินเดือนขั้นสูง — เพดานตอนประมาณการเลื่อน',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่คำสั่ง/ประกาศกำหนดอัตรา',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_salary_scales` (`employee_category`,`level_code`,`effective_from`),
+  KEY `idx_salary_scales_deleted` (`deleted_at`),
+  CONSTRAINT `chk_salary_scales_range` CHECK ((`max_amount` >= `min_amount`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='อัตราเงินเดือนขั้นต่ำ/ขั้นสูงรายระดับ — max_amount เป็นเพดานประมาณการเลื่อน';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `salary_scales`
+--
+
+LOCK TABLES `salary_scales` WRITE;
+/*!40000 ALTER TABLE `salary_scales` DISABLE KEYS */;
+/*!40000 ALTER TABLE `salary_scales` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -2094,8 +2586,52 @@ SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = @saved_cs_client;
 
 --
+-- Table structure for table `vacancy_recruitment`
+--
+
+DROP TABLE IF EXISTS `vacancy_recruitment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vacancy_recruitment` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `position_id` int NOT NULL COMMENT 'FK: positions.id',
+  `fiscal_year_id` int NOT NULL COMMENT 'FK: fiscal_years.id — หลักฐานผูกกับปีงบ',
+  `type` enum('transfer_request','eligibility_list','ready_to_fill') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'หนังสือขอรับโอน · ประกาศขึ้นบัญชี · อัตราพร้อมบรรจุ',
+  `doc_no` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'เลขที่หนังสือ/ประกาศ',
+  `doc_date` date DEFAULT NULL COMMENT 'วันที่หนังสือ/ประกาศ',
+  `is_active` tinyint(1) DEFAULT '1',
+  `deleted_at` timestamp NULL DEFAULT NULL COMMENT 'Soft delete',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int DEFAULT NULL COMMENT 'ผู้สร้าง',
+  `updated_by` int DEFAULT NULL COMMENT 'ผู้แก้ไขล่าสุด',
+  PRIMARY KEY (`id`),
+  KEY `idx_vacancy_recruitment_lookup` (`position_id`,`fiscal_year_id`,`type`),
+  KEY `idx_vacancy_recruitment_fiscal` (`fiscal_year_id`),
+  KEY `idx_vacancy_recruitment_deleted` (`deleted_at`),
+  CONSTRAINT `fk_vacancy_recruitment_fiscal_year` FOREIGN KEY (`fiscal_year_id`) REFERENCES `fiscal_years` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_vacancy_recruitment_position` FOREIGN KEY (`position_id`) REFERENCES `positions` (`id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='หลักฐานการสรรหาของอัตราว่างรายปีงบ — เกณฑ์อัตราพร้อมบรรจุเป็นข้อมูล ไม่ฝังโค้ด';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `vacancy_recruitment`
+--
+
+LOCK TABLES `vacancy_recruitment` WRITE;
+/*!40000 ALTER TABLE `vacancy_recruitment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `vacancy_recruitment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping routines for database 'hr_budget'
 --
+
+--
+-- Current Database: `hr_budget`
+--
+
+USE `hr_budget`;
 
 --
 -- Final view structure for view `v_kpi_dashboard`
@@ -2142,4 +2678,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-09 20:15:36
+-- Dump completed

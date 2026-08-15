@@ -136,6 +136,8 @@ secrets/
 
 
 project-log-md/
+# Local-only agent skill-collection notes (not part of the repo surface)
+.claude/skill-collections-*.md
 # Local-only analysis scratchpad (untracked from the repo 2026-08-15;
 # history purged via filter-repo — never commit files here)
 research/
