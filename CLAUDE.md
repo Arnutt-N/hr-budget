@@ -18,7 +18,7 @@ file beyond this pointer, they are stale — trust `AGENTS.md`.
 | Architecture | Request lifecycle, routing, data layer, views, auth, domain modules, REST API layering, fiscal-year conventions |
 | Verification & CI | GitHub Actions is **disabled** — local `composer verify` / `npm run verify` / pre-push hook is the real gate |
 | Test environment | `hr_budget_test` isolation guard, `phpunit.xml` env bridging, output-buffer caveat |
-| Project layout conventions | `research/`, `PRPs/`, `project-log-md/`, `docs/agents/`, `archives/` |
+| Project layout conventions | `PRPs/`, `project-log-md/`, `docs/agents/`, `archives/`; `research/` is local-only (git-ignored) |
 | Conventions | PR title format, Thai/English language rule, retirement-via-git-tags |
 | Migration gotchas | No framework, number collisions, rollback pairs |
 | Key gotchas | Tracked `public/app/` build artifact, `Router::notFound()` catch-all |

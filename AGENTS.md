@@ -276,7 +276,9 @@ push moment; the scripts cover ad-hoc runs.
 
 Defined in `.agents/workflows/folder-structure.md`:
 
-- `research/` — analysis documents written before planning
+- `research/` — local-only analysis scratchpad (**git-ignored** since 2026-08-15; not part of
+  the repo — pre-planning analysis lives on the primary machine only, tracked deliverables go
+  to `PRPs/` or `docs/`)
 - `PRPs/` — implementation plans (Pre-work Request Proposals) created before coding
 - `project-log-md/` — session logs, task checklists, walkthroughs (git-ignored)
 - `python/` — one-off analysis / migration scripts written in Python (separate venv)

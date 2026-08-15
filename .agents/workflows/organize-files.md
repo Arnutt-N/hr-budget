@@ -29,7 +29,7 @@ Workflow นี้ใช้สำหรับจัดระเบียบไ�
 
 | ประเภทไฟล์ | โฟลเดอร์ปลายทาง | ตัวอย่าง |
 |------------|-----------------|----------|
-| เอกสารวิจัย, Analysis, Schema Doc | `research/` | `schema_analysis.md`, `requirements.md` |
+| เอกสารวิจัย, Analysis, Schema Doc | `research/` (local-only, git-ignored) | `schema_analysis.md`, `requirements.md` |
 | แผนงาน, Proposal, Implementation Plan | `PRPs/` | `phase_*.md`, `status_*.md` |
 | ตัวอย่าง code, Reference, UI Mockup | `examples/` | `wireframe_*.html`, `sample_*.php` |
 | Logs, Task lists, Walkthroughs | `project-log-md/` | `2026-01-*_session_*.md`, `backup-log.md` |
