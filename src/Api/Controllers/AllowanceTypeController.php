@@ -8,6 +8,7 @@ use App\Api\Middleware\AuthMiddleware;
 use App\Api\Middleware\CorsMiddleware;
 use App\Api\Responses\ApiResponse;
 use App\Dtos\CreateAllowanceRateDto;
+use App\Dtos\CreateAllowanceTypeDto;
 use App\Dtos\UpdateAllowanceRateDto;
 use App\Dtos\UpdateAllowanceTypeDto;
 use App\Services\AllowanceRateService;
@@ -74,6 +75,50 @@ final class AllowanceTypeController
             ApiResponse::ok($this->service->findById((int) $id));
         } catch (\Throwable $e) {
             error_log("[AllowanceTypeController::update] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
+        }
+    }
+
+    public function create(): void
+    {
+        CorsMiddleware::apply();
+        $user = AuthMiddleware::require();
+
+        try {
+            $dto = CreateAllowanceTypeDto::fromRequest();
+            $errors = $dto->validate();
+            if (!empty($errors)) {
+                ApiResponse::validationFailed($errors);
+                return;
+            }
+
+            $id = $this->service->create($user['role'] ?? 'viewer', $dto);
+            if ($id === null) {
+                ApiResponse::error('ไม่สามารถสร้างชนิดเงินเพิ่มได้ (รหัสซ้ำ)', 422);
+                return;
+            }
+
+            ApiResponse::created($this->service->findById($id));
+        } catch (\Throwable $e) {
+            error_log("[AllowanceTypeController::create] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
+        }
+    }
+
+    public function delete(string $id): void
+    {
+        CorsMiddleware::apply();
+        $user = AuthMiddleware::require();
+
+        try {
+            $ok = $this->service->delete($user['role'] ?? 'viewer', (int) $id);
+            if (!$ok) {
+                ApiResponse::error('ไม่สามารถลบชนิดเงินเพิ่มได้', 422);
+                return;
+            }
+            ApiResponse::noContent();
+        } catch (\Throwable $e) {
+            error_log("[AllowanceTypeController::delete] {$e->getMessage()}");
             ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
         }
     }
