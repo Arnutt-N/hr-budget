@@ -19,6 +19,7 @@ use App\Api\Controllers\PositionController as ApiPositionController;
 use App\Api\Controllers\AllowanceTypeController as ApiAllowanceTypeController;
 use App\Api\Controllers\SalaryScaleController as ApiSalaryScaleController;
 use App\Api\Controllers\SalaryRaiseController as ApiSalaryRaiseController;
+use App\Api\Controllers\PersonnelBudgetController as ApiPersonnelBudgetController;
 use App\Api\Controllers\OrganizationController as ApiOrganizationController;
 use App\Api\Controllers\BudgetCategoryController as ApiBudgetCategoryController;
 use App\Api\Controllers\UserController as ApiUserController;
@@ -100,6 +101,9 @@ Router::post('/api/v1/salary-raise-rounds/{id}/include-in-budget', [ApiSalaryRai
 Router::get('/api/v1/salary-raise-rounds/{id}/progress', [ApiSalaryRaiseController::class, 'listProgress']);
 Router::put('/api/v1/salary-raise-rounds/{id}/progress', [ApiSalaryRaiseController::class, 'markProgress']);
 Router::post('/api/v1/salary-raise-rounds/{id}/progress/seed-all', [ApiSalaryRaiseController::class, 'seedProgress']);
+
+// Personnel budget computation (Phase 9 — อัตรากำลัง *ผลิต* ยอดลง budget_line_items)
+Router::post('/api/v1/personnel-budget/compute', [ApiPersonnelBudgetController::class, 'compute']);
 
 // Organization CRUD
 Router::get('/api/v1/organizations', [ApiOrganizationController::class, 'list']);
