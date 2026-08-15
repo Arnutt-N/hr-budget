@@ -96,7 +96,7 @@ function getOrInsert($pdo, &$cache, $table, $criteria, $data) {
 }
 
 // Open CSV
-$csvFile = __DIR__ . '/research/budget_structure_2569.csv';
+$csvFile = __DIR__ . '/../database/budget_structure_2569.csv';
 if (!file_exists($csvFile)) die("CSV not found at $csvFile");
 
 $handle = fopen($csvFile, 'r');

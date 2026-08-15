@@ -16,7 +16,7 @@ try {
     echo "Connected to database.\n";
     
     // Read CSV
-    $csvFile = __DIR__ . '/../research/budget_structure_reference.csv';
+    $csvFile = __DIR__ . '/../database/budget_structure_reference.csv';
     if (!file_exists($csvFile)) {
         die("CSV file not found: $csvFile\n");
     }

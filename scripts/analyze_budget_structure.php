@@ -10,7 +10,7 @@
  * 5. Generate summary statistics
  */
 
-$csvFile = __DIR__ . '/../research/budget_structure_reference.csv';
+$csvFile = __DIR__ . '/../database/budget_structure_reference.csv';
 
 if (!file_exists($csvFile)) {
     die("Error: CSV file not found at $csvFile\n");

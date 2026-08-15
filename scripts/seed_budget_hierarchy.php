@@ -1,7 +1,7 @@
 <?php
 /**
  * Seeder script to populate `budget_category_items` with hierarchical data
- * from `research/budget_structure_reference.csv`.
+ * from `database/budget_structure_reference.csv`.
  *
  * The CSV has columns: รายการ 0, รายการ 1, รายการ 2, รายการ 3, รายการ 4, รายการ 5
  * plus other metadata columns. We will walk through each row and insert
@@ -26,7 +26,7 @@ try {
     exit(1);
 }
 
-$csvPath = __DIR__ . '/../research/budget_structure_reference.csv';
+$csvPath = __DIR__ . '/../database/budget_structure_reference.csv';
 if (!file_exists($csvPath)) {
     echo "CSV file not found at $csvPath\n";
     exit(1);

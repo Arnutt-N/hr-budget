@@ -6,7 +6,7 @@
 > **Status Report:** [status_expense_hierarchy_2025-12-29.md](file:///c:/laragon/www/hr_budget/PRPs/status_expense_hierarchy_2025-12-29.md)
 
 ## สรุป (Summary)
-ปรับโครงสร้างฐานข้อมูลให้รองรับโครงสร้างรายการค่าใช้จ่าย 6 ระดับ (รายการ 0 ถึง รายการ 5) ตามข้อมูลอ้างอิงในไฟล์ `research/budget_structure_reference.csv`
+ปรับโครงสร้างฐานข้อมูลให้รองรับโครงสร้างรายการค่าใช้จ่าย 6 ระดับ (รายการ 0 ถึง รายการ 5) ตามข้อมูลอ้างอิงในไฟล์ `database/budget_structure_reference.csv`
 
 ## เป้าหมาย (Goal)
 ระบบปัจจุบันใช้โครงสร้างแบบ Flat สำหรับ `budget_category_items` แต่ต้องการรองรับ Hierarchy 6 ระดับ:
@@ -62,7 +62,7 @@ ALTER TABLE budget_category_items
 ### 2. Data Seeder
 
 #### [NEW] [`scripts/seed_budget_hierarchy.php`](file:///c:/laragon/www/hr_budget/scripts/seed_budget_hierarchy.php)
-- อ่านข้อมูลจาก [`research/budget_structure_reference.csv`](file:///c:/laragon/www/hr_budget/research/budget_structure_reference.csv)
+- อ่านข้อมูลจาก [`database/budget_structure_reference.csv`](file:///c:/laragon/www/hr_budget/database/budget_structure_reference.csv)
 - สร้าง Items ตาม Hierarchy:
   - Level 0: `parent_id = NULL`
   - Level 1-5: `parent_id` ชี้ไปยัง parent ของระดับก่อนหน้า
@@ -116,7 +116,7 @@ mysql -u root hr_budget -e "SELECT id, name, parent_id, level FROM budget_catego
 ---
 
 ## Dependencies
-- ไฟล์ข้อมูลอ้างอิง: [budget_structure_reference.csv](file:///c:/laragon/www/hr_budget/research/budget_structure_reference.csv)
+- ไฟล์ข้อมูลอ้างอิง: [budget_structure_reference.csv](file:///c:/laragon/www/hr_budget/database/budget_structure_reference.csv)
 - ตาราง: `budget_category_items`, `budget_categories`
 
 ## ความเสี่ยง (Risks)

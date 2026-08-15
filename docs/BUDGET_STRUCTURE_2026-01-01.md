@@ -271,7 +271,7 @@ return [
 ### Previous Data Import
 From `HANDOFF_SUMMARY.md`:
 - **Last Import:** 2026-01-01 14:01:11 (UTC+7)
-- **Source:** `research/budget_structure_2569.csv`
+- **Source:** `database/budget_structure_2569.csv` (เดิมอยู่ `research/`)
 - **Issues Fixed:** 
   - Double-encoded CSV
   - Organization linkage (Session 6 → Org ID 111)
