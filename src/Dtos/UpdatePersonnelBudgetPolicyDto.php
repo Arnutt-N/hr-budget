@@ -43,13 +43,27 @@ final class UpdatePersonnelBudgetPolicyDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields($raw, ['vacancy_rule', 'buffer_percent', 'reference_date']);
+
+        return (new self(
             vacancyRule: array_key_exists('vacancy_rule', $raw) ? self::nullableString($raw['vacancy_rule']) : null,
             calcMode: array_key_exists('calc_mode', $raw) ? (string) $raw['calc_mode'] : null,
             bufferPercent: array_key_exists('buffer_percent', $raw)
                 ? ($raw['buffer_percent'] === null ? null : (float) $raw['buffer_percent'])
                 : null,
             referenceDate: array_key_exists('reference_date', $raw) ? self::nullableString($raw['reference_date']) : null,
-        );
+        ))->withCleared($cleared);
+    }
+
+    /** แปลงเป็นชุดคอลัมน์ที่ repository อัปเดตได้ (null = ไม่แตะ · ผ่าน withCleared = ล้าง) */
+    public function toUpdateData(): array
+    {
+        $map = [
+            'vacancy_rule' => $this->vacancyRule,
+            'calc_mode' => $this->calcMode,
+            'buffer_percent' => $this->bufferPercent,
+            'reference_date' => $this->referenceDate,
+        ];
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

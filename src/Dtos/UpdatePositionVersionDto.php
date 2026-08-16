@@ -70,7 +70,12 @@ final class UpdatePositionVersionDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields(
+            $raw,
+            ['pos_no', 'level_code', 'line_code', 'salary_pre_raise', 'effective_to', 'order_doc_no', 'order_doc_date'],
+        );
+
+        return (new self(
             organizationId: array_key_exists('organization_id', $raw) ? (int) $raw['organization_id'] : null,
             posNo: array_key_exists('pos_no', $raw) ? self::nullableString($raw['pos_no']) : null,
             levelCode: array_key_exists('level_code', $raw) ? self::nullableString($raw['level_code']) : null,
@@ -85,10 +90,10 @@ final class UpdatePositionVersionDto
             monthsCounted: array_key_exists('months_counted', $raw) ? (int) $raw['months_counted'] : null,
             approvalStatus: array_key_exists('approval_status', $raw) ? (string) $raw['approval_status'] : null,
             effectiveFrom: array_key_exists('effective_from', $raw) ? (string) $raw['effective_from'] : null,
-            effectiveTo: array_key_exists('effective_to', $raw) ? (string) $raw['effective_to'] : null,
+            effectiveTo: array_key_exists('effective_to', $raw) ? self::nullableString($raw['effective_to']) : null,
             orderDocNo: array_key_exists('order_doc_no', $raw) ? self::nullableString($raw['order_doc_no']) : null,
             orderDocDate: array_key_exists('order_doc_date', $raw) ? self::nullableString($raw['order_doc_date']) : null,
-        );
+        ))->withCleared($cleared);
     }
 
     /** แปลงเป็นชุดคอลัมน์ที่ repository อัปเดตได้ (null = ไม่แตะ) */
@@ -112,9 +117,9 @@ final class UpdatePositionVersionDto
             'order_doc_date' => $this->orderDocDate,
         ];
 
-        return array_filter(
+        return $this->applyCleared(array_filter(
             $map,
             fn ($value) => $value !== null,
-        );
+        ));
     }
 }

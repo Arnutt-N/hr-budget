@@ -46,12 +46,27 @@ final class UpdateSalaryScaleDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields($raw, ['effective_to', 'doc_no']);
+
+        return (new self(
             minAmount: array_key_exists('min_amount', $raw) ? (float) $raw['min_amount'] : null,
             maxAmount: array_key_exists('max_amount', $raw) ? (float) $raw['max_amount'] : null,
             effectiveFrom: array_key_exists('effective_from', $raw) ? (string) $raw['effective_from'] : null,
-            effectiveTo: array_key_exists('effective_to', $raw) ? (string) $raw['effective_to'] : null,
+            effectiveTo: array_key_exists('effective_to', $raw) ? self::nullableString($raw['effective_to']) : null,
             docNo: array_key_exists('doc_no', $raw) ? self::nullableString($raw['doc_no']) : null,
-        );
+        ))->withCleared($cleared);
+    }
+
+    /** แปลงเป็นชุดคอลัมน์ที่ repository อัปเดตได้ (null = ไม่แตะ · ผ่าน withCleared = ล้าง) */
+    public function toUpdateData(): array
+    {
+        $map = [
+            'min_amount' => $this->minAmount,
+            'max_amount' => $this->maxAmount,
+            'effective_from' => $this->effectiveFrom,
+            'effective_to' => $this->effectiveTo,
+            'doc_no' => $this->docNo,
+        ];
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

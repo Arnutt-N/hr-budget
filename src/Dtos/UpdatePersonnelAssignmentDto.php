@@ -40,7 +40,9 @@ final class UpdatePersonnelAssignmentDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields($raw, ['effective_to', 'doc_no', 'doc_date']);
+
+        return (new self(
             servingOrganizationId: array_key_exists('serving_organization_id', $raw)
                 ? (int) $raw['serving_organization_id']
                 : null,
@@ -48,7 +50,7 @@ final class UpdatePersonnelAssignmentDto
             effectiveTo: array_key_exists('effective_to', $raw) ? self::nullableString($raw['effective_to']) : null,
             docNo: array_key_exists('doc_no', $raw) ? self::nullableString($raw['doc_no']) : null,
             docDate: array_key_exists('doc_date', $raw) ? self::nullableString($raw['doc_date']) : null,
-        );
+        ))->withCleared($cleared);
     }
 
     public function toUpdateData(): array
@@ -60,6 +62,6 @@ final class UpdatePersonnelAssignmentDto
             'doc_no' => $this->docNo,
             'doc_date' => $this->docDate,
         ];
-        return array_filter($map, fn ($value) => $value !== null);
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

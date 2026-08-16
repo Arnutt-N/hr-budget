@@ -59,6 +59,54 @@ class AllowanceRateRepository
         return (int) ($result[0]['total'] ?? 0) > 0;
     }
 
+    /**
+     * จำนวนลูกที่ resolve อัตราแม่ "ชุด (level, line) นี้" — ลูก level/line NULL (generic)
+     * ใช้ได้กับทุกชุดของแม่ ตาม matchRate() ใน PersonnelBudgetService
+     */
+    public function countDependentsFor(
+        int $allowanceTypeId,
+        ?string $levelCode,
+        ?string $lineCode,
+        int $excludeRateId
+    ): int {
+        $result = Database::query(
+            "SELECT COUNT(*) AS total FROM allowance_rates
+             WHERE derives_from_type_id = ? AND deleted_at IS NULL AND id <> ?
+               AND (level_code IS NULL OR level_code = ?)
+               AND (line_code IS NULL OR line_code = ?)",
+            [$allowanceTypeId, $excludeRateId, $levelCode, $lineCode]
+        );
+        return (int) ($result[0]['total'] ?? 0);
+    }
+
+    /** ลูกทั้งหมดที่อ้าง type นี้ (ใช้เมื่อแม่ที่ถูกลบเป็น generic เต็มตัว — ครอบทุกชุด) */
+    public function countAllDependents(int $allowanceTypeId, int $excludeRateId): int
+    {
+        $result = Database::query(
+            "SELECT COUNT(*) AS total FROM allowance_rates
+             WHERE derives_from_type_id = ? AND deleted_at IS NULL AND id <> ?",
+            [$allowanceTypeId, $excludeRateId]
+        );
+        return (int) ($result[0]['total'] ?? 0);
+    }
+
+    /** อัตราที่เหลือของ type นี้ที่ครอบชุด (level, line) นี้ (level/line NULL = ครอบทุกค่า) */
+    public function countActiveCovering(
+        int $allowanceTypeId,
+        ?string $levelCode,
+        ?string $lineCode,
+        int $excludeRateId
+    ): int {
+        $result = Database::query(
+            "SELECT COUNT(*) AS total FROM allowance_rates
+             WHERE allowance_type_id = ? AND deleted_at IS NULL AND id <> ?
+               AND (level_code IS NULL OR level_code = ?)
+               AND (line_code IS NULL OR line_code = ?)",
+            [$allowanceTypeId, $excludeRateId, $levelCode, $lineCode]
+        );
+        return (int) ($result[0]['total'] ?? 0);
+    }
+
     public function insert(array $data): int
     {
         return Database::insert('allowance_rates', $data);

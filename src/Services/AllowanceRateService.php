@@ -94,9 +94,14 @@ final class AllowanceRateService
     }
 
     /**
-     * ลบอัตรา — บล็อกถ้าเป็น "อัตราสุดท้ายของ type ที่มีลูกอ้างอิง derived"
-     * (ลบแม่แบบเงียบๆ จะทำให้ลูกคำนวณกลายเป็น 0/fallback ทันทีโดยไม่มีใครรู้ —
-     * ถ้ายังมีอัตราอื่นของ type เดียวกันอยู่ ให้ลบได้เพราะลูกยังมีที่อ้างอิง)
+     * ลบอัตรา — บล็อกถ้าการลบทำให้ลูก derived resolve ไม่ได้
+     * แก้ debt (level+line-aware): เดิมตรวจแค่ระดับ type/level แต่ลูก resolve แม่
+     * ด้วยชุด (level, line) ตาม matchRate() — ลบแม่ที่ line ต่างจากลูกได้ ⇒ ลูก resolve ไม่ได้เงียบๆ
+     *
+     * ตรรกะ:
+     * - ลบ generic เต็มตัว (level+line NULL ครอบทุกชุด): บล็อกถ้ามีลูกที่อ้าง type นี้เลย
+     * - ลบแบบเฉพาะ (level/line อย่างน้อยหนึ่งค่า): บล็อกถ้ามีลูกที่ต้องการชุดนี้
+     *   และไม่มีอัตราเหลือของ type ที่ครอบชุดนี้
      */
     public function delete(string $role, int $id): bool
     {
@@ -110,8 +115,20 @@ final class AllowanceRateService
         }
 
         $typeId = (int) $rate['allowance_type_id'];
-        if ($this->repo->hasDerivedDependents($typeId) && $this->repo->countActiveByType($typeId) <= 1) {
-            return false; // เป็นแม่แบบเพียงตัวเดียวของ type ที่มีลูก — ห้ามลบ
+        $level = $rate['level_code'] !== null ? (string) $rate['level_code'] : null;
+        $line = $rate['line_code'] !== null ? (string) $rate['line_code'] : null;
+
+        if ($level === null && $line === null) {
+            // generic เต็มตัว — ครอบทุกชุด ถ้าเดลลูกที่อ้าง type นั้นจะ resolve ไม่ได้เลย
+            if ($this->repo->countAllDependents($typeId, $id) > 0) {
+                return false;
+            }
+        } else {
+            if ($this->repo->countDependentsFor($typeId, $level, $line, $id) > 0) {
+                if ($this->repo->countActiveCovering($typeId, $level, $line, $id) === 0) {
+                    return false; // ชุดนี้ไม่มีอัตราแม่เหลือแล้ว — ลูกจะ resolve ไม่ได้
+                }
+            }
         }
 
         return $this->repo->softDelete($id);

@@ -176,39 +176,146 @@ class AllowanceRateServiceTest extends TestCase
     }
 
     /** @test */
-    public function deleting_last_rate_of_derived_parent_type_is_blocked(): void
+    public function deleting_rate_that_dependents_need_at_their_level_is_blocked(): void
     {
         $service = new AllowanceRateService();
 
-        // type 1 (เงินประจำตำแหน่ง) มีอัตราปกติ 1 แถว
-        $plain = new CreateAllowanceRateDto(
+        // แม่: type 1 อัตราระดับ 'ชำนาญการพิเศษ' (ระดับเดียวกับลูก)
+        $parentId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการพิเศษ', lineCode: null,
+            amount: 5600.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        // ลูก: type 2 derived → type 1 ระดับเดียวกับแม่
+        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0)); // level 'ชำนาญการพิเศษ'
+        $this->assertNotNull($parentId);
+        $this->assertNotNull($derivedId);
+
+        // ลบแม่ ⇒ ลูกระดับ 'ชำนาญการพิเศษ' ไม่มีอัตราแม่ครอบ ⇒ บล็อก
+        $this->assertFalse($service->delete('admin', $parentId));
+    }
+
+    /** @test */
+    public function deleting_rate_whose_level_no_dependent_needs_is_allowed(): void
+    {
+        $service = new AllowanceRateService();
+
+        // แม่ type 1 มี 2 ระดับ: 'ชำนาญการ' + 'ชำนาญการพิเศษ'
+        $juniorId = $service->create('admin', new CreateAllowanceRateDto(
             allowanceTypeId: 1, levelCode: 'ชำนาญการ', lineCode: null,
             amount: 3500.0, percent: null, derivesFromTypeId: null,
             fallbackAmount: null, effectiveFrom: '2025-10-01',
             effectiveTo: null, docNo: null,
-        );
-        $plainId = $service->create('admin', $plain);
-
-        // type 2 (ค.ต.น.) อ้างอิง type 1
-        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0));
-        $this->assertNotNull($plainId);
-        $this->assertNotNull($derivedId);
-
-        // ลบอัตราเดียวของ type 1 ที่มีลูกอ้างอิง ⇒ ต้องถูกบล็อก
-        $this->assertFalse($service->delete('admin', $plainId));
-
-        // เพิ่มอัตราอีกแถวให้ type 1 ⇒ ตอนนี้ลบแถวแรกได้ (ลูกยังมีที่อ้าง)
-        $another = new CreateAllowanceRateDto(
-            allowanceTypeId: 1, levelCode: 'เชี่ยวชาญ', lineCode: null,
+        ));
+        $seniorId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการพิเศษ', lineCode: null,
             amount: 5600.0, percent: null, derivesFromTypeId: null,
             fallbackAmount: null, effectiveFrom: '2025-10-01',
             effectiveTo: null, docNo: null,
-        );
-        $this->assertNotNull($service->create('admin', $another));
-        $this->assertTrue($service->delete('admin', $plainId));
+        ));
+        // ลูก level 'ชำนาญการพิเศษ' → แม่
+        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0));
+        $this->assertNotNull($juniorId);
+        $this->assertNotNull($seniorId);
+        $this->assertNotNull($derivedId);
 
-        // ลบแถวลูก (type 2) ได้ตามปกติ — ไม่มีใครอ้างอิงมัน
+        // ลบแม่ระดับ 'ชำนาญการ' — ไม่มีลูกต้องการระดับนี้ ⇒ ปล่อย
+        $this->assertTrue($service->delete('admin', $juniorId));
+        // ลบแม่ระดับ 'ชำนาญการพิเศษ' — ลูกต้องการ ⇒ บล็อก
+        $this->assertFalse($service->delete('admin', $seniorId));
+    }
+
+    /** @test */
+    public function deleting_generic_parent_with_dependents_is_blocked(): void
+    {
+        $service = new AllowanceRateService();
+
+        // แม่ generic (level NULL) ครอบทุกระดับ
+        $genericId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: null, lineCode: null,
+            amount: 5000.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        // ลูก level 'ชำนาญการพิเศษ' → แม่
+        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0));
+        $this->assertNotNull($genericId);
+        $this->assertNotNull($derivedId);
+
+        // ลบ generic ที่มีลูก ⇒ บล็อกเสมอ (ลูก resolve แม่ที่ระดับตัวเอง = ทุกระดับ)
+        $this->assertFalse($service->delete('admin', $genericId));
+    }
+
+    /** @test */
+    public function deleting_derived_child_is_always_allowed(): void
+    {
+        $service = new AllowanceRateService();
+        $derivedId = $service->create('admin', $this->rateDto(2, 1, 3500.0));
+        $this->assertNotNull($derivedId);
+
         $this->assertTrue($service->delete('admin', $derivedId));
+    }
+
+    /** @test */
+    public function deleting_parent_with_different_line_that_dependent_needs_is_blocked(): void
+    {
+        $service = new AllowanceRateService();
+
+        // แม่: type 1 ระดับ 'ชำนาญการพิเศษ' สาย 'นิติกร' (line เฉพาะ)
+        $parentId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการพิเศษ', lineCode: 'นิติกร',
+            amount: 5600.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        // ลูก: type 2 derived → type 1 ระดับ+สายเดียวกับแม่
+        $derivedId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 2, levelCode: 'ชำนาญการพิเศษ', lineCode: 'นิติกร',
+            amount: null, percent: null, derivesFromTypeId: 1,
+            fallbackAmount: 3500.0, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        $this->assertNotNull($parentId);
+        $this->assertNotNull($derivedId);
+
+        // ลบแม่ ⇒ ลูกที่ต้องการ (level, line) นี้ไม่มีอัตราแม่ครอบ ⇒ บล็อก
+        $this->assertFalse($service->delete('admin', $parentId));
+    }
+
+    /** @test */
+    public function deleting_parent_whose_line_no_dependent_needs_is_allowed(): void
+    {
+        $service = new AllowanceRateService();
+
+        // แม่ type 1 มี 2 สาย: 'นิติกร' + 'พัสดุ'
+        $legalId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการพิเศษ', lineCode: 'นิติกร',
+            amount: 5600.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        $supplyId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 1, levelCode: 'ชำนาญการพิเศษ', lineCode: 'พัสดุ',
+            amount: 5600.0, percent: null, derivesFromTypeId: null,
+            fallbackAmount: null, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        // ลูก สาย 'นิติกร' → แม่
+        $derivedId = $service->create('admin', new CreateAllowanceRateDto(
+            allowanceTypeId: 2, levelCode: 'ชำนาญการพิเศษ', lineCode: 'นิติกร',
+            amount: null, percent: null, derivesFromTypeId: 1,
+            fallbackAmount: 3500.0, effectiveFrom: '2025-10-01',
+            effectiveTo: null, docNo: null,
+        ));
+        $this->assertNotNull($legalId);
+        $this->assertNotNull($supplyId);
+        $this->assertNotNull($derivedId);
+
+        // ลบแม่สาย 'พัสดุ' — ไม่มีลูกต้องการ ⇒ ปล่อย
+        $this->assertTrue($service->delete('admin', $supplyId));
+        // ลบแม่สาย 'นิติกร' — ลูกต้องการ ⇒ บล็อก
+        $this->assertFalse($service->delete('admin', $legalId));
     }
 
     /** @test */

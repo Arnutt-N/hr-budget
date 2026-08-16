@@ -31,21 +31,11 @@ import {
   useDeletePositionAllowance,
 } from '@/queries/usePersonnel'
 import { useAllowanceTypeList } from '@/queries/useAllowances'
+import { CATEGORY_OPTIONS, OCCUPANCY_OPTIONS, categoryLabel, occupancyTag } from '@/lib/personnel'
 import type { PositionFilters } from '@/api/positions'
 
 const confirm = useConfirm()
 const toast = useToast()
-
-const CATEGORY_OPTIONS = [
-  { value: 'civil_servant', label: 'ข้าราชการ' },
-  { value: 'government_employee', label: 'พนักงานราชการ' },
-  { value: 'permanent_employee', label: 'ลูกจ้างประจำ' },
-]
-const OCCUPANCY_OPTIONS = [
-  { value: 'occupied', label: 'มีคนครอง' },
-  { value: 'vacant_funded', label: 'ว่างมีเงิน' },
-  { value: 'vacant_unfunded', label: 'ว่างไม่มีเงิน' },
-]
 
 const filters = ref<PositionFilters>({})
 const { data: positions, isLoading, isError, error } = usePositionList(filters)
@@ -53,16 +43,6 @@ const { data: organizations } = useOrganizationList()
 const createMutation = useCreatePosition()
 const updateMutation = useUpdatePosition()
 const deleteMutation = useDeletePosition()
-
-function categoryLabel(v: string | null): string {
-  return CATEGORY_OPTIONS.find((o) => o.value === v)?.label ?? v ?? '—'
-}
-function occupancyTag(v: string | null): { label: string; severity: string } {
-  if (v === 'occupied') return { label: 'มีคนครอง', severity: 'success' }
-  if (v === 'vacant_funded') return { label: 'ว่างมีเงิน', severity: 'warn' }
-  if (v === 'vacant_unfunded') return { label: 'ว่างไม่มีเงิน', severity: 'secondary' }
-  return { label: '—', severity: 'secondary' }
-}
 
 // ---------- create/edit dialog ----------
 const showDialog = ref(false)

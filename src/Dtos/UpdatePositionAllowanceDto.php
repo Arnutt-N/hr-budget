@@ -35,11 +35,13 @@ final class UpdatePositionAllowanceDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields($raw, ['effective_to', 'doc_no']);
+
+        return (new self(
             effectiveFrom: array_key_exists('effective_from', $raw) ? (string) $raw['effective_from'] : null,
             effectiveTo: array_key_exists('effective_to', $raw) ? self::nullableString($raw['effective_to']) : null,
             docNo: array_key_exists('doc_no', $raw) ? self::nullableString($raw['doc_no']) : null,
-        );
+        ))->withCleared($cleared);
     }
 
     public function toUpdateData(): array
@@ -49,6 +51,6 @@ final class UpdatePositionAllowanceDto
             'effective_to' => $this->effectiveTo,
             'doc_no' => $this->docNo,
         ];
-        return array_filter($map, fn ($value) => $value !== null);
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

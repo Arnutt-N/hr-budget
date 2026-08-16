@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use PHPUnit\Framework\TestCase;
 use App\Core\Database;
 use App\Dtos\CreatePersonnelAllowanceDto;
+use App\Dtos\UpdatePersonnelAllowanceDto;
 use App\Services\PersonnelAllowanceService;
 
 class PersonnelAllowanceServiceTest extends TestCase
@@ -128,5 +129,41 @@ class PersonnelAllowanceServiceTest extends TestCase
 
         $this->assertTrue($service->delete('admin', $id));
         $this->assertSame(0, $service->list(1, 50, [])['meta']['total']);
+    }
+
+    /** @test */
+    public function update_can_clear_nullable_fields_back_to_null(): void
+    {
+        $service = new PersonnelAllowanceService();
+        $dto = new CreatePersonnelAllowanceDto(
+            personId: 'P-1001',
+            positionId: 1,
+            allowanceTypeId: 1,
+            amount: 5000.0,
+            effectiveFrom: '2025-10-01',
+            effectiveTo: '2026-03-31',
+            docNo: 'กค 001/2569',
+            docDate: '2025-09-01',
+        );
+        $id = $service->create('admin', $dto);
+        $this->assertNotNull($id);
+
+        // ล้าง effective_to + doc_no + doc_date กลับเป็น NULL
+        $update = (new UpdatePersonnelAllowanceDto(
+            amount: null,
+            effectiveFrom: null,
+            effectiveTo: null, // ไม่ได้ล้าง (null = ไม่แตะ)
+            docNo: null,
+            docDate: null,
+        ))->withCleared(['effective_to', 'doc_no', 'doc_date']);
+
+        $this->assertTrue($service->update('admin', $id, $update));
+
+        $rows = $service->list(1, 50, []);
+        $row = $rows['data'][0];
+        $this->assertNull($row['effective_to']);
+        $this->assertNull($row['doc_no']);
+        $this->assertNull($row['doc_date']);
+        $this->assertSame(5000.0, (float) $row['amount']); // ค่าอื่นไม่ถูกแตะ
     }
 }
