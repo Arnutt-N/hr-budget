@@ -43,6 +43,8 @@ build/
 *.min.css
 .cache/
 *.cache
+__pycache__/
+*.pyc
 /bootstrap/cache/*
 /public/hot
 /public/storage
