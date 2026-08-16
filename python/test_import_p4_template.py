@@ -16,7 +16,9 @@ from import_p4_template import (  # noqa: E402
     SHEET_ALLOWANCE,
     SHEET_POLICY,
     SHEET_SALARY,
+    AllowanceRow,
     SalaryRow,
+    _insert_allowance_rows,
     _insert_salary_rows,
     parse_workbook,
 )
@@ -193,6 +195,32 @@ class ParseAllowanceSheetTest(unittest.TestCase):
         self.assertEqual(res.errors, [])
         self.assertEqual(res.allowance_rows[0].effective_from, "2025-10-01")
 
+    def test_impossible_date_rejected(self):
+        """regex ผ่านแต่ calendar ไม่มี (2025-13-45) — ต้องจับได้ กัน DB error = rollback ทั้งไฟล์"""
+        res = parse(build_workbook(allowance_rows=[
+            ["POSITION_ALLOWANCE | เงินประจำตำแหน่ง", "(ทุกระดับ)", "", 4200, "", "-", "", "2025-13-45", "", "คำสั่ง 21/2569", ""],
+        ]))
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("วันที่ไม่ถูกต้อง", res.errors[0])
+        self.assertEqual(res.allowance_rows, [])
+
+    def test_line_code_kept_verbatim(self):
+        """สายงานเป็น free-text — 'งานวิเคราะห์ | (เดิม)' (≤20 ตัวอักษร) ต้องไม่ถูกตัดทิ้ง"""
+        res = parse(build_workbook(allowance_rows=[
+            ["POSITION_ALLOWANCE | เงินประจำตำแหน่ง", "(ทุกระดับ)", "งานวิเคราะห์ | เดิม", 4200, "", "-", "", "2025-10-01", "", "คำสั่ง 22/2569", ""],
+        ]))
+        self.assertEqual(res.errors, [])
+        self.assertEqual(res.allowance_rows[0].line_code, "งานวิเคราะห์ | เดิม")
+
+    def test_amount_over_decimal_limit_rejected(self):
+        """เกิน DECIMAL(12,2) (9,999,999,999.99) = DB error = rollback ทั้งไฟล์"""
+        res = parse(build_workbook(allowance_rows=[
+            ["POSITION_ALLOWANCE | เงินประจำตำแหน่ง", "(ทุกระดับ)", "", 100000000000000.0, "", "-", "", "2025-10-01", "", "คำสั่ง 23/2569", ""],
+        ]))
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("เกินขอบเขต", res.errors[0])
+        self.assertEqual(res.allowance_rows, [])
+
     def test_duplicate_row_blank_lines_skipped(self):
         res = parse(build_workbook(allowance_rows=[
             ["POSITION_ALLOWANCE | เงินประจำตำแหน่ง", "(ทุกระดับ)", "", 4200, "", "-", "", "2025-10-01", "", "คำสั่ง 7/2569", ""],
@@ -259,6 +287,15 @@ class ParseSalarySheetTest(unittest.TestCase):
         self.assertIn("ซ้ำกับแถว 3", res.errors[0])
         self.assertEqual(len(res.salary_rows), 1)
 
+    def test_doc_no_too_long_rejected(self):
+        """เกิน VARCHAR(100) ใน schema = DB error = rollback ทั้งไฟล์"""
+        res = parse(build_workbook(salary_rows=[
+            ["ข้าราชการ", "ประเภททั่วไป", "ปฏิบัติงาน", 15000, 25000, "2025-10-01", "ก" * 101, ""],
+        ]))
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("ยาวเกิน 100", res.errors[0])
+        self.assertEqual(res.salary_rows, [])
+
 
 class ParsePolicySheetTest(unittest.TestCase):
     def test_valid_vacancy(self):
@@ -284,6 +321,30 @@ class ParsePolicySheetTest(unittest.TestCase):
         res = parse(build_workbook(buffer_pct="abc"))
         self.assertEqual(len(res.errors), 1)
         self.assertIn("buffer", res.errors[0])
+
+    def test_buffer_infinity_rejected(self):
+        """'inf'/'nan' ผ่าน float() แต่ DECIMAL(5,2) reject = rollback ทั้งไฟล์"""
+        res = parse(build_workbook(buffer_pct="inf"))
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("buffer", res.errors[0])
+        self.assertIsNone(res.policy.buffer_percent)
+
+    def test_buffer_over_decimal_limit_rejected(self):
+        """เกิน DECIMAL(5,2) (999.99) = DB error = rollback ทั้งไฟล์"""
+        res = parse(build_workbook(buffer_pct="1000"))
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("0–999.99", res.errors[0])
+        self.assertIsNone(res.policy.buffer_percent)
+
+    def test_missing_policy_label_rejected(self):
+        """HR ลบแถว 'เกณฑ์อัตราว่าง' ทิ้ง → error ชัดเจน กันตั้งนโยบายผิดปีเงียบๆ"""
+        wb = build_workbook(vacancy="eligibility_list | ประกาศขึ้นบัญชี")
+        ws3 = wb[SHEET_POLICY]
+        ws3.cell(row=3, column=1, value="เปลี่ยนชื่อรายการผิด" )  # แก้ label ไม่ให้ตรง
+        res = parse(wb)
+        self.assertEqual(len(res.errors), 1)
+        self.assertIn("ไม่พบรายการ", res.errors[0])
+        self.assertIsNone(res.policy.vacancy_rule)
 
     def test_policy_parsed_by_label_not_fixed_row(self):
         """หาค่าจากชื่อรายการ (คอลัมน์ A) — ถ้า HR แทรกแถวกลาง แถวเลื่อนก็ยังอ่านถูก"""
