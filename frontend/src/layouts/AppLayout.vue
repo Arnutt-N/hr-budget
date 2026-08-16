@@ -19,6 +19,11 @@ import {
   Coins,
   Ruler,
   ArrowUpCircle,
+  ScrollText,
+  ClipboardList,
+  HeartHandshake,
+  Calculator,
+  Plane,
   Bell,
   FolderArchive,
   BarChart3,
@@ -167,6 +172,31 @@ async function onLogout(): Promise<void> {
           <RouterLink to="/salary-raise-rounds" class="nav-link" @click="sidebarOpen = false">
             <ArrowUpCircle class="h-5 w-5" />
             <span class="ml-3">รอบเลื่อนเงินเดือน</span>
+          </RouterLink>
+
+          <RouterLink to="/personnel-budget-policies" class="nav-link" @click="sidebarOpen = false">
+            <ScrollText class="h-5 w-5" />
+            <span class="ml-3">นโยบายงบบุคลากร</span>
+          </RouterLink>
+
+          <RouterLink to="/vacancy-recruitment" class="nav-link" @click="sidebarOpen = false">
+            <ClipboardList class="h-5 w-5" />
+            <span class="ml-3">อัตราว่างพร้อมบรรจุ</span>
+          </RouterLink>
+
+          <RouterLink to="/personnel-allowances" class="nav-link" @click="sidebarOpen = false">
+            <HeartHandshake class="h-5 w-5" />
+            <span class="ml-3">การรับจริงเงินเพิ่ม</span>
+          </RouterLink>
+
+          <RouterLink to="/personnel-assignments" class="nav-link" @click="sidebarOpen = false">
+            <Plane class="h-5 w-5" />
+            <span class="ml-3">ไปช่วยราชการ</span>
+          </RouterLink>
+
+          <RouterLink to="/compute-budget" class="nav-link" @click="sidebarOpen = false">
+            <Calculator class="h-5 w-5" />
+            <span class="ml-3">คำนวณงบบุคลากร</span>
           </RouterLink>
 
           <RouterLink to="/target-types" class="nav-link" @click="sidebarOpen = false">
