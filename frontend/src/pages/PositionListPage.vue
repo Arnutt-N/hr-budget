@@ -25,6 +25,12 @@ import {
   useCreatePositionVersion,
 } from '@/queries/usePositions'
 import { useOrganizationList } from '@/queries/useOrganizations'
+import {
+  usePositionAllowances,
+  useCreatePositionAllowance,
+  useDeletePositionAllowance,
+} from '@/queries/usePersonnel'
+import { useAllowanceTypeList } from '@/queries/useAllowances'
 import type { PositionFilters } from '@/api/positions'
 
 const confirm = useConfirm()
@@ -243,6 +249,66 @@ async function onAddVersion(): Promise<void> {
     toast.add({ severity: 'error', summary: 'เพิ่มเวอร์ชันไม่สำเร็จ', detail: message, life: 5000 })
   }
 }
+
+// ---------- allowances dialog ----------
+const showAllowances = ref(false)
+const allowancePositionId = ref<number | null>(null)
+const { data: allowances, isLoading: allowancesLoading } = usePositionAllowances(allowancePositionId)
+const createAllowanceMutation = useCreatePositionAllowance()
+const deleteAllowanceMutation = useDeletePositionAllowance()
+const { data: allowanceTypes } = useAllowanceTypeList()
+
+const allowanceForm = ref({
+  allowance_type_id: 0,
+  effective_from: '',
+  doc_no: '',
+})
+
+function openAllowances(p: Position): void {
+  allowancePositionId.value = p.id
+  allowanceForm.value = { allowance_type_id: 0, effective_from: '', doc_no: '' }
+  showAllowances.value = true
+}
+
+async function onAddAllowance(): Promise<void> {
+  if (!allowancePositionId.value || !allowanceForm.value.allowance_type_id || !allowanceForm.value.effective_from) return
+  try {
+    await createAllowanceMutation.mutateAsync({
+      positionId: allowancePositionId.value,
+      data: {
+        allowance_type_id: allowanceForm.value.allowance_type_id,
+        effective_from: allowanceForm.value.effective_from,
+        doc_no: allowanceForm.value.doc_no || null,
+      },
+    })
+    toast.add({ severity: 'success', summary: 'เพิ่มสิทธิ์สำเร็จ', life: 3000 })
+    allowanceForm.value = { allowance_type_id: 0, effective_from: '', doc_no: '' }
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+    toast.add({ severity: 'error', summary: 'เพิ่มสิทธิ์ไม่สำเร็จ', detail: message, life: 5000 })
+  }
+}
+
+function confirmDeleteAllowance(allowanceId: number): void {
+  confirm.require({
+    message: 'ลบสิทธิ์เงินเพิ่มนี้?',
+    header: 'ยืนยันการลบ',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ลบ',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      if (!allowancePositionId.value) return
+      try {
+        await deleteAllowanceMutation.mutateAsync({ positionId: allowancePositionId.value, allowanceId })
+        toast.add({ severity: 'success', summary: 'ลบสิทธิ์สำเร็จ', life: 3000 })
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
+        toast.add({ severity: 'error', summary: 'ลบไม่สำเร็จ', detail: message, life: 5000 })
+      }
+    },
+  })
+}
 </script>
 
 <template>
@@ -330,6 +396,7 @@ async function onAddVersion(): Promise<void> {
       <Column header="จัดการ" class="text-right">
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
+            <Button label="สิทธิ์" size="small" text severity="warn" @click="openAllowances(data)" />
             <Button label="เวอร์ชัน" size="small" text severity="info" @click="openVersions(data)" />
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
             <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
@@ -499,6 +566,57 @@ async function onAddVersion(): Promise<void> {
             :loading="createVersionMutation.isPending.value"
             :disabled="!versionForm.effective_from"
             @click="onAddVersion"
+          />
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- Allowances dialog -->
+    <Dialog v-model:visible="showAllowances" header="สิทธิ์เงินเพิ่มของอัตรา" modal class="w-full max-w-2xl">
+      <DataTable :value="allowances ?? []" :loading="allowancesLoading" data-key="id">
+        <template #empty>
+          <p class="py-3 text-center text-dark-muted">ยังไม่มีสิทธิ์ (ไม่มีแถว = ไม่มีสิทธิ์)</p>
+        </template>
+        <Column header="เงินเพิ่ม">
+          <template #body="{ data }">{{ data.short_name ?? data.allowance_name ?? '—' }}</template>
+        </Column>
+        <Column header="ช่วงมีสิทธิ์">
+          <template #body="{ data }">
+            {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+          </template>
+        </Column>
+        <Column field="doc_no" header="เอกสาร">
+          <template #body="{ data }">{{ data.doc_no ?? '—' }}</template>
+        </Column>
+        <Column header="" class="text-right">
+          <template #body="{ data }">
+            <Button label="ลบ" size="small" text severity="danger" @click="confirmDeleteAllowance(data.id)" />
+          </template>
+        </Column>
+      </DataTable>
+
+      <div class="mt-4 rounded-lg border border-dark-border p-4">
+        <h3 class="mb-3 font-semibold text-white">เพิ่มสิทธิ์</h3>
+        <div class="grid grid-cols-3 gap-3">
+          <Select
+            v-model="allowanceForm.allowance_type_id"
+            :options="allowanceTypes ?? []"
+            option-label="name_th"
+            option-value="id"
+            placeholder="ชนิดเงินเพิ่ม"
+            filter
+            fluid
+          />
+          <InputText v-model="allowanceForm.effective_from" type="date" placeholder="วันเริ่มมีสิทธิ์" />
+          <InputText v-model="allowanceForm.doc_no" placeholder="เลขที่คำสั่ง" />
+        </div>
+        <div class="mt-3 flex justify-end">
+          <Button
+            label="เพิ่มสิทธิ์"
+            icon="pi pi-plus"
+            :loading="createAllowanceMutation.isPending.value"
+            :disabled="!allowanceForm.allowance_type_id || !allowanceForm.effective_from"
+            @click="onAddAllowance"
           />
         </div>
       </div>

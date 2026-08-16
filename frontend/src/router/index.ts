@@ -171,6 +171,36 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/SalaryRaisePage.vue'),
         meta: { requiresAdmin: true, title: 'รอบเลื่อนเงินเดือน' },
       },
+      {
+        path: 'personnel-budget-policies',
+        name: 'personnel-budget-policies',
+        component: () => import('@/pages/PersonnelBudgetPolicyPage.vue'),
+        meta: { requiresAdmin: true, title: 'นโยบายงบบุคลากร' },
+      },
+      {
+        path: 'vacancy-recruitment',
+        name: 'vacancy-recruitment',
+        component: () => import('@/pages/VacancyRecruitmentPage.vue'),
+        meta: { requiresAdmin: true, title: 'อัตราว่างพร้อมบรรจุ' },
+      },
+      {
+        path: 'personnel-allowances',
+        name: 'personnel-allowances',
+        component: () => import('@/pages/PersonnelAllowancePage.vue'),
+        meta: { requiresAdmin: true, title: 'การรับจริงเงินเพิ่ม' },
+      },
+      {
+        path: 'personnel-assignments',
+        name: 'personnel-assignments',
+        component: () => import('@/pages/PersonnelAssignmentPage.vue'),
+        meta: { requiresAdmin: true, title: 'ไปช่วยราชการ' },
+      },
+      {
+        path: 'compute-budget',
+        name: 'compute-budget',
+        component: () => import('@/pages/ComputeBudgetPage.vue'),
+        meta: { requiresAdmin: true, title: 'คำนวณงบบุคลากร' },
+      },
     ],
   },
   {
