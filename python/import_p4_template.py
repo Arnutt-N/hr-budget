@@ -121,6 +121,9 @@ def _num(v, sheet_row, col, errors, sheet=SHEET_ALLOWANCE, decimals=2):
     if f != f or f in (float("inf"), float("-inf")):
         errors.append(f"{sheet} แถว {sheet_row}: คอลัมน์ {col} ค่าตัวเลขไม่ถูกต้อง ('{v}')")
         return None
+    if abs(f) > 9999999999.99:  # DECIMAL(12,2) ใน DB — เกิน = DB error = rollback ทั้งไฟล์
+        errors.append(f"{sheet} แถว {sheet_row}: คอลัมน์ {col} ค่าเกินขอบเขตสูงสุด 9,999,999,999.99 ('{v}')")
+        return None
     return round(f, decimals)
 
 
@@ -131,11 +134,16 @@ def _date(v, sheet_row, col, errors, required=True, sheet=SHEET_ALLOWANCE):
             errors.append(f"{sheet} แถว {sheet_row}: คอลัมน์ {col} ต้องกรอกวันที่ (ตัวอย่าง: 2025-10-01)")
         return None
     if isinstance(v, str) and DATE_RE.match(v):
+        try:
+            datetime.strptime(v, "%Y-%m-%d")  # กันวันที่ปลอม เช่น 2025-13-45 (regex ผ่าน แต่ calendar ไม่มี)
+        except ValueError:
+            errors.append(f"{sheet} แถว {sheet_row}: คอลัมน์ {col} วันที่ไม่ถูกต้อง ('{v}') — ใช้รูปแบบ YYYY-MM-DD เช่น 2025-10-01")
+            return None
         return v
     if isinstance(v, datetime):
         return v.strftime("%Y-%m-%d")
     if isinstance(v, (int, float)):
-        # Excel date serial — ตัวอย่าง: 45935 = 2025-10-01
+        # Excel date serial — ตัวอย่าง: 45931 = 2025-10-01
         try:
             return (SERIAL_EPOCH + timedelta(days=float(v))).strftime("%Y-%m-%d")
         except (OverflowError, ValueError):
@@ -187,7 +195,10 @@ def _parse_allowance_sheet(ws, result: ImportResult, allowance_codes: set[str]):
         if line_raw is not None and not isinstance(line_raw, str):
             result.errors.append(f"{SHEET_ALLOWANCE} แถว {r}: สายงาน (คอลัมน์ C) ต้องเป็นข้อความ")
             continue
-        line = _split_code_label(line_raw)
+        # สายงานเป็น free-text (ไม่มี dropdown) — เก็บข้อความเต็ม ไม่ผ่าน _split_code_label
+        # (ไม่งั้น 'งานวิเคราะห์ | (เดิม)' จะถูกตัดทิ้งเงียบๆ)
+        line = line_raw or None
+        n0 = len(result.errors)
         amount = _num(vals[3], r, "D (จำนวนเงิน)", result.errors, sheet=SHEET_ALLOWANCE)
         percent = _num(vals[4], r, "E (ร้อยละ)", result.errors, sheet=SHEET_ALLOWANCE, decimals=3)
         derives_raw = vals[5]
@@ -196,6 +207,8 @@ def _parse_allowance_sheet(ws, result: ImportResult, allowance_codes: set[str]):
             continue
         derives = _split_code_label(derives_raw)
         fallback = _num(vals[6], r, "G (พื้นสำรอง)", result.errors, sheet=SHEET_ALLOWANCE)
+        if len(result.errors) > n0:
+            continue  # ตัวเลขผิด — error ถูกเพิ่มแล้ว ไม่ประมวลผลต่อ (กัน error ซ้ำซ้อน)
         eff_from = _date(vals[7], r, "H (วันเริ่มมีผล)", result.errors)
         eff_to = _date(vals[8], r, "I (วันสิ้นสุด)", result.errors, required=False)
         doc_no = vals[9]
@@ -315,6 +328,10 @@ def _parse_salary_sheet(ws, result: ImportResult):
             else:
                 result.errors.append(f"{SHEET_SALARY} แถว {r}: เลขที่คำสั่ง/ประกาศ (คอลัมน์ G) ต้องเป็นข้อความ")
             continue
+        # ความยาวตรงกับ schema (VARCHAR) — เกิน = DB error = rollback ทั้งไฟล์
+        if len(doc_no) > 100:
+            result.errors.append(f"{SHEET_SALARY} แถว {r}: เลขที่คำสั่ง/ประกาศ (G) ยาวเกิน 100 ตัวอักษร")
+            continue
 
         # UK (employee_category, level_code, effective_from) — ซ้ำในไฟล์ = UPSERT ทับกันเงียบๆ
         key = (category_code, level, eff_from)
@@ -340,7 +357,10 @@ def _parse_salary_sheet(ws, result: ImportResult):
 
 
 def _parse_policy_sheet(ws, result: ImportResult):
-    """หาค่าตามชื่อรายการในคอลัมน์ A — ไม่ผูกแถวตายตัว (HR อาจแทรก/ลบแถว)"""
+    """หาค่าตามชื่อรายการในคอลัมน์ A — ไม่ผูกแถวตายตัว (HR อาจแทรก/ลบแถว)
+
+    ถ้าหาชื่อรายการไม่เจอ (HR ลบแถวทิ้ง) → error ชัดเจน ไม่อ่านเงียบๆ (กันตั้งนโยบายผิดปี)
+    """
     values = {}
     for r, row in enumerate(ws.iter_rows(min_row=2, max_col=2), start=2):
         label = _cell(row[0].value)
@@ -349,7 +369,9 @@ def _parse_policy_sheet(ws, result: ImportResult):
 
     vacancy = None
     v = values.get("เกณฑ์อัตราว่างปี 2569 (vacancy_rule)")
-    if v not in (None, "", "-"):
+    if v is None and "เกณฑ์อัตราว่างปี 2569 (vacancy_rule)" not in values:
+        result.errors.append(f"{SHEET_POLICY}: ไม่พบรายการ 'เกณฑ์อัตราว่างปี 2569 (vacancy_rule)' — ใช้ไฟล์ต้นฉบับ")
+    elif v not in (None, "", "-"):
         code = _split_code_label(v)
         if code not in [r.split(" | ", 1)[0] for r in VACANCY_RULES]:
             result.errors.append(f"{SHEET_POLICY}: เกณฑ์อัตราว่าง '{v}' ไม่ตรงกับรายการใน dropdown")
@@ -358,11 +380,18 @@ def _parse_policy_sheet(ws, result: ImportResult):
 
     buffer_pct = None
     b = values.get("ช่องปรับ buffer (%)")
-    if b not in (None, "", "-"):
+    if b is None and "ช่องปรับ buffer (%)" not in values:
+        result.errors.append(f"{SHEET_POLICY}: ไม่พบรายการ 'ช่องปรับ buffer (%)' — ใช้ไฟล์ต้นฉบับ")
+    elif b not in (None, "", "-"):
         try:
             buffer_pct = float(str(b).replace("%", "").replace(",", ""))
         except ValueError:
             result.errors.append(f"{SHEET_POLICY}: ช่องปรับ buffer (%) ต้องเป็นตัวเลข ('{b}')")
+        else:
+            # NaN/inf และเกิน DECIMAL(5,2) ใน DB (สูงสุด 999.99) = DB error = rollback ทั้งไฟล์
+            if buffer_pct != buffer_pct or buffer_pct in (float("inf"), float("-inf")) or not (0 <= buffer_pct <= 999.99):
+                result.errors.append(f"{SHEET_POLICY}: ช่องปรับ buffer (%) ต้องอยู่ระหว่าง 0–999.99 ('{b}')")
+                buffer_pct = None
 
     result.policy = PolicyRow(vacancy_rule=vacancy, buffer_percent=buffer_pct)
 
@@ -421,7 +450,11 @@ def resolve_type_ids(conn, codes: set[str]) -> dict[str, int]:
 
 
 def _insert_allowance_rows(conn, rows: list[AllowanceRow], type_ids: dict[str, int]):
-    """INSERT ใหม่ทั้งหมด — แถวซ้ำ (ทุกคอลัมน์เหมือนเดิม) ข้ามเงียบๆ"""
+    """INSERT ใหม่ทั้งหมด — แถวซ้ำ (ทุกคอลัมน์เหมือนเดิม) ข้ามเงียบๆ
+
+    ⚠ allowance_rates ไม่มี UNIQUE key (ต่างจาก salary_scales) — SELECT หาแถวซ้ำ
+    ต้องรวม soft-deleted ด้วย ไม่งั้นแถวที่ถูกลบไปแล้วจะถูก INSERT ใหม่ = แถวคู่ซ่อน
+    """
     cur = conn.cursor()
     inserted = skipped = 0
     for r in rows:
@@ -432,7 +465,7 @@ def _insert_allowance_rows(conn, rows: list[AllowanceRow], type_ids: dict[str, i
             "WHERE allowance_type_id = %s AND level_code <=> %s AND line_code <=> %s "
             "AND amount <=> %s AND percent <=> %s AND derives_from_type_id <=> %s "
             "AND fallback_amount <=> %s AND effective_from = %s AND effective_to <=> %s "
-            "AND doc_no <=> %s AND deleted_at IS NULL",
+            "AND doc_no <=> %s",
             (type_id, r.level_code, r.line_code, r.amount, r.percent, derives_id,
              r.fallback_amount, r.effective_from, r.effective_to, r.doc_no),
         )
@@ -547,7 +580,8 @@ def main(argv=None):
     result = parse_workbook(args.path)
 
     print("=" * 60)
-    print("ผลตรวจเทมเพลต P4 — {}".format("DRY RUN (ยังไม่เขียน DB)" if not args.apply else "นำเข้าจริง"))
+    print("ผลตรวจเทมเพลต P4 (ปีงบ " + str(args.fiscal_year) + ") — {}".format(
+        "DRY RUN (ยังไม่เขียน DB)" if not args.apply else "นำเข้าจริง"))
     print("=" * 60)
     print(f"อัตราเงินเพิ่ม : {len(result.allowance_rows)} แถว")
     print(f"อัตราเงินเดือน : {len(result.salary_rows)} แถว")
