@@ -36,11 +36,13 @@ final class UpdateVacancyRecruitmentDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields($raw, ['doc_no', 'doc_date']);
+
+        return (new self(
             type: array_key_exists('type', $raw) ? (string) $raw['type'] : null,
             docNo: array_key_exists('doc_no', $raw) ? self::nullableString($raw['doc_no']) : null,
             docDate: array_key_exists('doc_date', $raw) ? self::nullableString($raw['doc_date']) : null,
-        );
+        ))->withCleared($cleared);
     }
 
     public function toUpdateData(): array
@@ -50,6 +52,6 @@ final class UpdateVacancyRecruitmentDto
             'doc_no' => $this->docNo,
             'doc_date' => $this->docDate,
         ];
-        return array_filter($map, fn ($value) => $value !== null);
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

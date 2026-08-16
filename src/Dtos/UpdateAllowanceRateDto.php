@@ -56,7 +56,12 @@ final class UpdateAllowanceRateDto
     {
         $raw = self::jsonBody();
 
-        return new self(
+        $cleared = self::parseClearedFields(
+            $raw,
+            ['level_code', 'line_code', 'amount', 'percent', 'derives_from_type_id', 'fallback_amount', 'effective_to', 'doc_no'],
+        );
+
+        return (new self(
             levelCode: array_key_exists('level_code', $raw) ? self::nullableString($raw['level_code']) : null,
             lineCode: array_key_exists('line_code', $raw) ? self::nullableString($raw['line_code']) : null,
             amount: array_key_exists('amount', $raw)
@@ -72,12 +77,12 @@ final class UpdateAllowanceRateDto
                 ? ($raw['fallback_amount'] === null ? null : (float) $raw['fallback_amount'])
                 : null,
             effectiveFrom: array_key_exists('effective_from', $raw) ? (string) $raw['effective_from'] : null,
-            effectiveTo: array_key_exists('effective_to', $raw) ? (string) $raw['effective_to'] : null,
+            effectiveTo: array_key_exists('effective_to', $raw) ? self::nullableString($raw['effective_to']) : null,
             docNo: array_key_exists('doc_no', $raw) ? self::nullableString($raw['doc_no']) : null,
-        );
+        ))->withCleared($cleared);
     }
 
-    /** แปลงเป็นชุดคอลัมน์ที่ repository อัปเดตได้ (null = ไม่แตะ) */
+    /** แปลงเป็นชุดคอลัมน์ที่ repository อัปเดตได้ (null = ไม่แตะ · ผ่าน withCleared = ล้าง) */
     public function toUpdateData(): array
     {
         $map = [
@@ -92,6 +97,6 @@ final class UpdateAllowanceRateDto
             'doc_no' => $this->docNo,
         ];
 
-        return array_filter($map, fn ($value) => $value !== null);
+        return $this->applyCleared(array_filter($map, fn ($value) => $value !== null));
     }
 }

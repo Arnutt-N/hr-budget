@@ -16,6 +16,7 @@ import Message from 'primevue/message'
 import { formatThaiDate } from '@/lib/date'
 import type { SalaryScale } from '@/types/salary'
 import type { EmployeeCategory } from '@/types/position'
+import { CATEGORY_OPTIONS, categoryLabel } from '@/lib/personnel'
 import { useSalaryScaleList, useCreateSalaryScale, useDeleteSalaryScale } from '@/queries/useSalary'
 
 const confirm = useConfirm()
@@ -24,15 +25,6 @@ const toast = useToast()
 const { data: scales, isLoading, isError, error } = useSalaryScaleList()
 const createMutation = useCreateSalaryScale()
 const deleteMutation = useDeleteSalaryScale()
-
-const CATEGORY_OPTIONS = [
-  { value: 'civil_servant', label: 'ข้าราชการ' },
-  { value: 'government_employee', label: 'พนักงานราชการ' },
-  { value: 'permanent_employee', label: 'ลูกจ้างประจำ' },
-]
-function categoryLabel(v: string): string {
-  return CATEGORY_OPTIONS.find((o) => o.value === v)?.label ?? v
-}
 
 const showDialog = ref(false)
 const saving = computed(() => createMutation.isPending.value)

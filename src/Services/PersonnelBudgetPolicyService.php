@@ -57,24 +57,14 @@ final class PersonnelBudgetPolicyService
         if ($role !== 'admin') {
             return false;
         }
+        if (!empty($dto->validate())) {
+            return false; // defense-in-depth
+        }
         if ($this->repo->findById($id) === null) {
             return false;
         }
 
-        $updateData = [];
-        if ($dto->vacancyRule !== null) {
-            $updateData['vacancy_rule'] = $dto->vacancyRule;
-        }
-        if ($dto->calcMode !== null) {
-            $updateData['calc_mode'] = $dto->calcMode;
-        }
-        if ($dto->bufferPercent !== null) {
-            $updateData['buffer_percent'] = $dto->bufferPercent;
-        }
-        if ($dto->referenceDate !== null) {
-            $updateData['reference_date'] = $dto->referenceDate;
-        }
-
+        $updateData = $dto->toUpdateData();
         if (empty($updateData)) {
             return true;
         }

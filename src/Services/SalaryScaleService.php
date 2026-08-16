@@ -75,23 +75,7 @@ final class SalaryScaleService
             return false;
         }
 
-        $updateData = [];
-        if ($dto->minAmount !== null) {
-            $updateData['min_amount'] = $dto->minAmount;
-        }
-        if ($dto->maxAmount !== null) {
-            $updateData['max_amount'] = $dto->maxAmount;
-        }
-        if ($dto->effectiveFrom !== null) {
-            $updateData['effective_from'] = $dto->effectiveFrom;
-        }
-        if ($dto->effectiveTo !== null) {
-            $updateData['effective_to'] = $dto->effectiveTo;
-        }
-        if ($dto->docNo !== null) {
-            $updateData['doc_no'] = $dto->docNo;
-        }
-
+        $updateData = $dto->toUpdateData();
         if (empty($updateData)) {
             return true;
         }
