@@ -352,5 +352,5 @@ exist on GitHub — no setup needed. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
-Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. Neither exists yet — they are
-created lazily by `/domain-modeling`. See `docs/agents/domain.md`.
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. `CONTEXT.md` exists (the
+domain glossary); `docs/adr/` does not exist yet. See `docs/agents/domain.md`.

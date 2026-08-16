@@ -7,7 +7,7 @@ codebase.
 
 ```
 /
-├── CONTEXT.md          ← does not exist yet
+├── CONTEXT.md          ← exists (the domain glossary)
 ├── docs/adr/           ← does not exist yet
 └── src/
 ```
