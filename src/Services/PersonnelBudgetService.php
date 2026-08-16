@@ -189,16 +189,18 @@ final class PersonnelBudgetService
     /** @return array[] เวอร์ชันที่มีผล ณ referenceDate ของอัตราที่ยัง active+approved */
     private function fetchEffectiveVersions(string $referenceDate): array
     {
+        // ใช้ ? แทน named param — MySQL native prepares (EMULATE_PREPARES=false)
+        // ห้ามใช้ named param ซ้ำใน query เดียวกัน (HY093)
         return Database::query(
             "SELECT pv.*, p.employee_category
              FROM position_versions pv
              JOIN positions p ON p.id = pv.position_id AND p.deleted_at IS NULL
              WHERE pv.deleted_at IS NULL
-               AND pv.effective_from <= :ref
-               AND (pv.effective_to IS NULL OR pv.effective_to >= :ref)
+               AND pv.effective_from <= ?
+               AND (pv.effective_to IS NULL OR pv.effective_to >= ?)
                AND pv.lifecycle = 'active'
                AND pv.approval_status = 'approved'",
-            ['ref' => $referenceDate]
+            [$referenceDate, $referenceDate]
         );
     }
 
@@ -243,9 +245,9 @@ final class PersonnelBudgetService
             Database::query(
                 "SELECT position_id, allowance_type_id FROM position_allowances
                  WHERE deleted_at IS NULL
-                   AND effective_from <= :ref
-                   AND (effective_to IS NULL OR effective_to >= :ref)",
-                ['ref' => $referenceDate]
+                   AND effective_from <= ?
+                   AND (effective_to IS NULL OR effective_to >= ?)",
+                [$referenceDate, $referenceDate]
             ) as $row
         ) {
             $byPosition[(int) $row['position_id']][] = (int) $row['allowance_type_id'];
