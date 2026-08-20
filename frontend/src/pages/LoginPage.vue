@@ -104,7 +104,7 @@ const onSubmit = handleSubmit(async (values) => {
             name="email"
             autocomplete="email"
             :invalid="!!errors.email"
-            class="pl-10"
+            class="!pl-10"
             fluid
           />
         </div>
@@ -125,7 +125,7 @@ const onSubmit = handleSubmit(async (values) => {
             name="password"
             autocomplete="current-password"
             :invalid="!!errors.password"
-            class="pl-10 pr-10"
+            class="!pl-10 !pr-10"
             fluid
           />
           <button
