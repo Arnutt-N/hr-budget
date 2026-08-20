@@ -6,11 +6,10 @@ import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
 import InputText from 'primevue/inputtext'
-import InputGroup from 'primevue/inputgroup'
-import InputGroupAddon from 'primevue/inputgroupaddon'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import Dialog from 'primevue/dialog'
 import { useAuthStore } from '@/stores/auth'
 import { fetchThaidStatus, thaidLoginUrl } from '@/api/auth'
 
@@ -27,6 +26,7 @@ const auth = useAuthStore()
 const thaidEnabled = ref(false)
 const remember = ref(false)
 const showPassword = ref(false)
+const showForgotDialog = ref(false)
 const errorMsg = ref('')
 const loading = ref(false)
 
@@ -92,10 +92,11 @@ const onSubmit = handleSubmit(async (values) => {
 
       <div class="flex flex-col gap-1">
         <label for="email" class="text-sm font-medium text-dark-muted">อีเมล</label>
-        <InputGroup>
-          <InputGroupAddon>
-            <Mail class="h-4 w-4" aria-hidden="true" />
-          </InputGroupAddon>
+        <div class="relative">
+          <Mail
+            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-muted"
+            aria-hidden="true"
+          />
           <InputText
             id="email"
             v-model.trim="email"
@@ -103,18 +104,20 @@ const onSubmit = handleSubmit(async (values) => {
             name="email"
             autocomplete="email"
             :invalid="!!errors.email"
+            class="pl-10"
             fluid
           />
-        </InputGroup>
+        </div>
         <small v-if="errors.email" class="text-red-600" role="alert">{{ errors.email }}</small>
       </div>
 
       <div class="flex flex-col gap-1">
         <label for="password" class="text-sm font-medium text-dark-muted">รหัสผ่าน</label>
-        <InputGroup>
-          <InputGroupAddon>
-            <Lock class="h-4 w-4" aria-hidden="true" />
-          </InputGroupAddon>
+        <div class="relative">
+          <Lock
+            class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-muted"
+            aria-hidden="true"
+          />
           <InputText
             id="password"
             v-model="password"
@@ -122,27 +125,35 @@ const onSubmit = handleSubmit(async (values) => {
             name="password"
             autocomplete="current-password"
             :invalid="!!errors.password"
+            class="pl-10 pr-10"
             fluid
           />
-          <InputGroupAddon>
-            <button
-              type="button"
-              class="flex items-center text-dark-muted hover:text-white"
-              :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
-              :aria-pressed="showPassword"
-              @click="showPassword = !showPassword"
-            >
-              <EyeOff v-if="showPassword" class="h-4 w-4" aria-hidden="true" />
-              <Eye v-else class="h-4 w-4" aria-hidden="true" />
-            </button>
-          </InputGroupAddon>
-        </InputGroup>
+          <button
+            type="button"
+            class="absolute right-2 top-1/2 flex -translate-y-1/2 items-center rounded-md p-1 text-dark-muted hover:text-white focus:outline-none focus-visible:text-white focus-visible:ring-1 focus-visible:ring-primary-500"
+            :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
+            :aria-pressed="showPassword"
+            @click="showPassword = !showPassword"
+          >
+            <EyeOff v-if="showPassword" class="h-4 w-4" aria-hidden="true" />
+            <Eye v-else class="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
         <small v-if="errors.password" class="text-red-600" role="alert">{{ errors.password }}</small>
       </div>
 
-      <div class="flex items-center gap-2">
-        <Checkbox v-model="remember" input-id="remember" binary />
-        <label for="remember" class="text-sm text-dark-muted select-none">จดจำฉัน</label>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <Checkbox v-model="remember" input-id="remember" binary />
+          <label for="remember" class="text-sm text-dark-muted select-none">จดจำฉัน</label>
+        </div>
+        <button
+          type="button"
+          class="rounded text-sm text-primary-400 hover:text-primary-300 focus:outline-none focus-visible:text-primary-300 focus-visible:ring-1 focus-visible:ring-primary-500"
+          @click="showForgotDialog = true"
+        >
+          ลืมรหัสผ่าน?
+        </button>
       </div>
 
       <Message v-if="errorMsg" severity="error" :closable="false">{{ errorMsg }}</Message>
@@ -174,5 +185,22 @@ const onSubmit = handleSubmit(async (values) => {
         </Button>
       </template>
     </form>
+
+    <Dialog
+      v-model:visible="showForgotDialog"
+      modal
+      header="ลืมรหัสผ่าน"
+      class="w-full max-w-sm"
+      :draggable="false"
+    >
+      <p class="text-sm text-dark-muted">
+        ระบบยังไม่รองรับการตั้งรหัสผ่านใหม่ด้วยตนเอง
+        กรุณาติดต่อผู้ดูแลระบบเพื่อขอตั้งรหัสผ่านใหม่
+        พร้อมแจ้งอีเมลที่ใช้เข้าสู่ระบบของท่าน
+      </p>
+      <p v-if="email" class="mt-3 rounded-md bg-dark-bg border border-dark-border p-3 text-sm text-white">
+        อีเมลของท่าน: <span class="font-medium">{{ email }}</span>
+      </p>
+    </Dialog>
   </div>
 </template>
