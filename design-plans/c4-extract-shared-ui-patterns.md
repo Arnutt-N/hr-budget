@@ -14,7 +14,7 @@ Written against: f6badd4
      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}</Message>` — **19 files**
      (e.g. `FiscalYearListPage.vue:155-157`, `RoleListPage.vue:184-186`).
   3. DataTable empty slot — `<template #empty><p class="py-4 text-center text-dark-muted">…`
-     — **21 files** (e.g. `PlanListPage.vue:157-159`).
+     — **20 files** (e.g. `PlanListPage.vue:157-159`).
   4. Delete confirm — the ~15-line `confirm.require` block with identical Thai labels
      (`header: 'ยืนยันการลบ'`, `icon: 'pi pi-exclamation-triangle'`, `acceptLabel: 'ลบ'`,
      `rejectLabel: 'ยกเลิก'`, `acceptClass: 'p-button-danger'`) — **19 files, 23 calls**
@@ -118,7 +118,7 @@ which `ListEmptyState` covers.
 
 ## Scope
 
-- Inherit: all 23 header pages, 19 error-banner files, 21 empty-slot files, 19 delete-confirm
+- Inherit: all 23 header pages, 19 error-banner files, 20 empty-slot files, 19 delete-confirm
   files (heavy overlap — most admin pages get all four).
 - Verify: pages with **richer** empty states keep them — `RequestListPage.vue:148-156` (CTA
   link) and `DashboardPage.vue:78-84` (icon + message) are exclusions, not defects.

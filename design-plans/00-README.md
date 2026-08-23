@@ -7,6 +7,13 @@ Tailwind 3 SPA), run per `.claude/skill-collections-20260815.md` routing (ui-ski
 Written against: `f6badd4` (clean tree). Standards invoked: project `accessibility_guidelines`
 skill (WCAG 2.1 AA minimum), Vercel web-interface-guidelines, internal consistency contracts.
 
+> **Rebaseline note (2026-08-20):** commits #66/#67 (login form icons, remember-me, password
+> visibility toggle) changed `LoginPage.vue` **after** the `f6badd4` baseline, so LoginPage line
+> citations have drifted: `a1`'s error lines are now `LoginPage.vue:111,142` (still
+> `text-red-600`; repo-wide count unchanged at 35 occurrences / 13 files) and its labels are now
+> wired `for`/`id` (`:94,115,148`) — `a2` only needs to add `aria-describedby` there. Other
+> plans' citations are unaffected (re-verified 2026-08-20).
+
 Each plan is self-contained — an executor needs no context from the audit conversation.
 
 ## Plans
