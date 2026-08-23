@@ -16,6 +16,7 @@ import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { Role, Permission } from '@/types/rbac'
 import {
   useRoleList,
@@ -27,6 +28,7 @@ import { usePermissionCatalogue } from '@/queries/usePermissions'
 import { activeSeverity } from '@/lib/rbac'
 
 const confirm = useConfirm()
+const confirmDelete = useDeleteConfirm()
 const toast = useToast()
 
 const { data: roles, isLoading, isError, error } = useRoleList()
@@ -161,15 +163,10 @@ function confirmToggle(role: Role): void {
 }
 
 function onDelete(role: Role): void {
-  // This page's delete-confirm copy differs from the shared default
-  // ('ยืนยันลบบทบาท' + custom message), so c4's stop-condition keeps it inline.
-  confirm.require({
-    message: `ลบบทบาท "${role.name_th}" อย่างถาวร? ผู้ใช้ที่ถูกมอบบทบาทนี้จะถูกถอนสิทธิ์`,
+  // Custom header/copy overrides the shared delete-confirm defaults via spread
+  confirmDelete({
     header: 'ยืนยันลบบทบาท',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
+    message: `ลบบทบาท "${role.name_th}" อย่างถาวร? ผู้ใช้ที่ถูกมอบบทบาทนี้จะถูกถอนสิทธิ์`,
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(role.id)

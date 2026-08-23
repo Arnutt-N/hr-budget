@@ -10,7 +10,8 @@ import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDisbursementSessions, useDeleteSession } from '@/queries/useDisbursements'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { useFiscalYearOptions } from '@/queries/useFiscalYears'
+import { formatThaiDate } from '@/lib/date'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { MONTH_LABELS, type SessionFilters } from '@/types/disbursement'
@@ -19,8 +20,6 @@ const router = useRouter()
 const confirmDelete = useDeleteConfirm()
 const toast = useToast()
 const wizard = useDisbursementWizard()
-
-const { data: fiscalYears } = useFiscalYearList()
 
 const PER_PAGE = 20
 const filters = ref<SessionFilters>({ page: 1, per_page: PER_PAGE })
@@ -40,12 +39,7 @@ const monthOptions = computed(() =>
   Object.entries(MONTH_LABELS).map(([value, label]) => ({ value: Number(value), label })),
 )
 
-const fiscalYearOptions = computed(() =>
-  (fiscalYears.value ?? []).map((fy) => ({
-    label: `${fy.year}${fy.is_current ? ' (ปีปัจจุบัน)' : ''}`,
-    value: fy.year,
-  })),
-)
+const fiscalYearOptions = useFiscalYearOptions()
 
 function applyFilters(): void {
   filters.value = {
@@ -64,15 +58,6 @@ function onPage(event: { page: number }): void {
 function startWizard(): void {
   wizard.reset()
   router.push('/disbursements/wizard')
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 function confirmDeleteSession(id: number, orgName: string): void {
@@ -181,7 +166,7 @@ function confirmDeleteSession(id: number, orgName: string): void {
       </Column>
       <Column header="วันที่บันทึก">
         <template #body="{ data }">
-          <span class="text-sm text-dark-muted">{{ formatDate(data.record_date) }}</span>
+          <span class="text-sm text-dark-muted">{{ formatThaiDate(data.record_date) }}</span>
         </template>
       </Column>
       <Column header="จัดการ" class="text-center">

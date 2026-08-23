@@ -10,27 +10,20 @@ import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import { useBudgetRequestList } from '@/queries/useBudgetRequests'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { useFiscalYearOptions } from '@/queries/useFiscalYears'
+import { formatThaiDate } from '@/lib/date'
+import { formatAmount } from '@/lib/format'
+import { STATUS_LABELS } from '@/types/budget-request'
 import type { ListFilters, RequestStatus } from '@/types/budget-request'
-
-const { data: fiscalYears } = useFiscalYearList()
 
 const PER_PAGE = 20
 
-const STATUS_OPTIONS: { label: string; value: RequestStatus }[] = [
-  { label: 'ร่าง', value: 'draft' },
-  { label: 'บันทึกแล้ว', value: 'saved' },
-  { label: 'รออนุมัติ', value: 'pending' },
-  { label: 'อนุมัติแล้ว', value: 'approved' },
-  { label: 'ปฏิเสธ', value: 'rejected' },
-]
+// 'confirmed' is not offered as a list filter (transient state before approval)
+const STATUS_OPTIONS: { label: string; value: RequestStatus }[] = (
+  ['draft', 'saved', 'pending', 'approved', 'rejected'] as const
+).map((value) => ({ label: STATUS_LABELS[value], value }))
 
-const fiscalYearOptions = computed(() =>
-  (fiscalYears.value ?? []).map((fy) => ({
-    label: `${fy.year}${fy.is_current ? ' (ปีปัจจุบัน)' : ''}`,
-    value: fy.year,
-  })),
-)
+const fiscalYearOptions = useFiscalYearOptions()
 
 // `filters` is the applied query input; editing the inputs is staged until "ค้นหา".
 const filters = ref<ListFilters>({ page: 1, per_page: PER_PAGE })
@@ -59,16 +52,6 @@ function applyFilters() {
 function onPage(event: { page: number }) {
   // PrimeVue pages are 0-based; the API contract is 1-based.
   filters.value = { ...filters.value, page: event.page + 1 }
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-function formatAmount(amount: string | null): string {
-  if (!amount) return '-'
-  return parseFloat(amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })
 }
 </script>
 
@@ -177,7 +160,7 @@ function formatAmount(amount: string | null): string {
       </Column>
       <Column header="วันที่">
         <template #body="{ data }">
-          <span class="text-sm text-dark-muted">{{ formatDate(data.created_at) }}</span>
+          <span class="text-sm text-dark-muted">{{ formatThaiDate(data.created_at) }}</span>
         </template>
       </Column>
       <Column header="จัดการ" class="text-center">

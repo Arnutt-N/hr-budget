@@ -5,6 +5,7 @@ export function useDeleteConfirm() {
   return function confirmDelete(options: {
     message: string
     accept: () => void | Promise<void>
+    header?: string
   }): void {
     confirm.require({
       header: 'ยืนยันการลบ',

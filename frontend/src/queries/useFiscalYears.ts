@@ -1,3 +1,4 @@
+import { computed } from 'vue'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import type { CreateFiscalYear, UpdateFiscalYear } from '@/types/fiscal-year'
 import {
@@ -19,6 +20,17 @@ export function useFiscalYearList() {
       return res.data
     },
   })
+}
+
+/** Select options over the fiscal-year list, marking the current year. */
+export function useFiscalYearOptions() {
+  const { data } = useFiscalYearList()
+  return computed(() =>
+    (data.value ?? []).map((fy) => ({
+      label: `${fy.year}${fy.is_current ? ' (ปีปัจจุบัน)' : ''}`,
+      value: fy.year,
+    })),
+  )
 }
 
 export function useCreateFiscalYear() {
