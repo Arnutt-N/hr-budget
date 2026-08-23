@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -14,13 +13,16 @@ import Textarea from 'primevue/textarea'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { Plan } from '@/types/plan'
 import { usePlanList, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/queries/usePlans'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: plans, isLoading, isError, error } = usePlanList()
 const { data: fiscalYears } = useFiscalYearList()
@@ -113,14 +115,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(plan: Plan): void {
-  confirm.require({
+function onDelete(plan: Plan): void {
+  confirmDelete({
     message: `ยืนยันลบแผนงาน "${plan.name_th}"?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(plan.id)
@@ -136,14 +133,11 @@ function confirmDelete(plan: Plan): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">แผนงาน/ผลผลิต</h1>
+    <PageHeader title="แผนงาน/ผลผลิต">
       <Button label="เพิ่มแผนงาน" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -155,7 +149,7 @@ function confirmDelete(plan: Plan): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลแผนงาน</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลแผนงาน" />
       </template>
 
       <Column field="code" header="รหัส" sortable>
@@ -182,7 +176,7 @@ function confirmDelete(plan: Plan): void {
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -192,14 +186,27 @@ function confirmDelete(plan: Plan): void {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label for="plan-code" class="text-sm font-medium text-dark-muted">รหัส</label>
-          <InputText id="plan-code" v-model.trim="code" maxlength="50" :invalid="!!errors.code" fluid />
-          <small v-if="errors.code" class="text-red-600" role="alert">{{ errors.code }}</small>
+          <InputText
+            id="plan-code"
+            v-model.trim="code"
+            maxlength="50"
+            :invalid="!!errors.code"
+            :aria-describedby="errors.code ? 'plan-code-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.code" id="plan-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="plan-name" class="text-sm font-medium text-dark-muted">ชื่อแผนงาน/ผลผลิต</label>
-          <InputText id="plan-name" v-model.trim="nameTh" :invalid="!!errors.name_th" fluid />
-          <small v-if="errors.name_th" class="text-red-600" role="alert">{{ errors.name_th }}</small>
+          <InputText
+            id="plan-name"
+            v-model.trim="nameTh"
+            :invalid="!!errors.name_th"
+            :aria-describedby="errors.name_th ? 'plan-name-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.name_th" id="plan-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
@@ -222,9 +229,10 @@ function confirmDelete(plan: Plan): void {
             option-value="value"
             placeholder="-- เลือก --"
             :invalid="!!errors.fiscal_year"
+            :aria-describedby="errors.fiscal_year ? 'plan-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.fiscal_year" class="text-red-600" role="alert">{{ errors.fiscal_year }}</small>
+          <small v-if="errors.fiscal_year" id="plan-year-error" class="text-red-400" role="alert">{{ errors.fiscal_year }}</small>
         </div>
 
         <label v-if="editingId" class="flex items-center gap-2 text-sm">

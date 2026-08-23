@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -11,7 +10,10 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import CategoryItemsPanel from '@/components/CategoryItemsPanel.vue'
 import type { BudgetCategory } from '@/types/budget-category'
 import {
@@ -21,8 +23,8 @@ import {
   useDeleteCategory,
 } from '@/queries/useCategories'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: categories, isLoading, isError, error } = useCategoryList()
 const createMutation = useCreateCategory()
@@ -87,14 +89,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(cat: BudgetCategory): void {
-  confirm.require({
+function onDelete(cat: BudgetCategory): void {
+  confirmDelete({
     message: `ยืนยันลบหมวด "${cat.name_th}"? รายการทั้งหมดในหมวดจะถูกลบด้วย`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(cat.id)
@@ -110,14 +107,11 @@ function confirmDelete(cat: BudgetCategory): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">ประเภทรายจ่าย</h1>
+    <PageHeader title="ประเภทรายจ่าย">
       <Button label="เพิ่มหมวด" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -130,7 +124,7 @@ function confirmDelete(cat: BudgetCategory): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลหมวดงบประมาณ</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลหมวดงบประมาณ" />
       </template>
 
       <Column expander style="width: 3rem" />
@@ -149,7 +143,7 @@ function confirmDelete(cat: BudgetCategory): void {
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -163,14 +157,27 @@ function confirmDelete(cat: BudgetCategory): void {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label for="cat-code" class="text-sm font-medium text-dark-muted">รหัส</label>
-          <InputText id="cat-code" v-model.trim="code" maxlength="20" :invalid="!!errors.code" fluid />
-          <small v-if="errors.code" class="text-red-600" role="alert">{{ errors.code }}</small>
+          <InputText
+            id="cat-code"
+            v-model.trim="code"
+            maxlength="20"
+            :invalid="!!errors.code"
+            :aria-describedby="errors.code ? 'cat-code-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.code" id="cat-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="cat-name-th" class="text-sm font-medium text-dark-muted">ชื่อหมวด (ไทย)</label>
-          <InputText id="cat-name-th" v-model.trim="nameTh" :invalid="!!errors.name_th" fluid />
-          <small v-if="errors.name_th" class="text-red-600" role="alert">{{ errors.name_th }}</small>
+          <InputText
+            id="cat-name-th"
+            v-model.trim="nameTh"
+            :invalid="!!errors.name_th"
+            :aria-describedby="errors.name_th ? 'cat-name-th-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.name_th" id="cat-name-th-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
         </div>
 
         <div class="flex flex-col gap-1">

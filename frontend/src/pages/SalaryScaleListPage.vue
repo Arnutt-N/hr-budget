@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -13,14 +12,18 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import type { SalaryScale } from '@/types/salary'
 import type { EmployeeCategory } from '@/types/position'
 import { CATEGORY_OPTIONS, categoryLabel } from '@/lib/personnel'
 import { useSalaryScaleList, useCreateSalaryScale, useDeleteSalaryScale } from '@/queries/useSalary'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: scales, isLoading, isError, error } = useSalaryScaleList()
 const createMutation = useCreateSalaryScale()
@@ -83,14 +86,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(s: SalaryScale): void {
-  confirm.require({
+function onDelete(s: SalaryScale): void {
+  confirmDelete({
     message: `ยืนยันลบอัตรา ${categoryLabel(s.employee_category)} ระดับ ${s.level_code}?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(s.id)
@@ -106,14 +104,11 @@ function confirmDelete(s: SalaryScale): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">อัตราเงินเดือนขั้นต่ำ–ขั้นสูง</h1>
+    <PageHeader title="อัตราเงินเดือนขั้นต่ำ–ขั้นสูง">
       <Button label="เพิ่มอัตรา" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <Message severity="info" :closable="false" class="mb-4">
       อัตราขั้นสูงคือเพดานตอนประมาณการเลื่อนเงินเดือน — ขาดข้อมูลตรงนี้ งบประมาณการจะสูงเกินจริงในกลุ่มอาวุโส
@@ -126,7 +121,7 @@ function confirmDelete(s: SalaryScale): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลอัตราเงินเดือน</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลอัตราเงินเดือน" />
       </template>
 
       <Column header="ประเภทบุคลากร">
@@ -149,7 +144,7 @@ function confirmDelete(s: SalaryScale): void {
       </Column>
       <Column header="จัดการ" class="text-right">
         <template #body="{ data }">
-          <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+          <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
         </template>
       </Column>
     </DataTable>
@@ -157,46 +152,75 @@ function confirmDelete(s: SalaryScale): void {
     <Dialog v-model:visible="showDialog" header="เพิ่มอัตราเงินเดือน" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</span>
+          <label id="ss-category" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
           <Select
             v-model="employeeCategory"
+            label-id="ss-category"
             :options="CATEGORY_OPTIONS"
             option-label="label"
             option-value="value"
             :invalid="!!errors.employee_category"
+            :aria-describedby="errors.employee_category ? 'ss-category-error' : undefined"
             fluid
           />
-          <small v-if="errors.employee_category" class="text-red-600" role="alert">{{ errors.employee_category }}</small>
+          <small v-if="errors.employee_category" id="ss-category-error" class="text-red-400" role="alert">{{ errors.employee_category }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ระดับ</span>
-          <InputText v-model="levelCode" :invalid="!!errors.level_code" fluid />
-          <small v-if="errors.level_code" class="text-red-600" role="alert">{{ errors.level_code }}</small>
+          <label for="ss-level" class="text-sm font-medium text-dark-muted">ระดับ</label>
+          <InputText
+            id="ss-level"
+            v-model="levelCode"
+            :invalid="!!errors.level_code"
+            :aria-describedby="errors.level_code ? 'ss-level-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.level_code" id="ss-level-error" class="text-red-400" role="alert">{{ errors.level_code }}</small>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ขั้นต่ำ</span>
-            <InputNumber v-model="minAmount" :min="0" :invalid="!!errors.min_amount" fluid />
-            <small v-if="errors.min_amount" class="text-red-600" role="alert">{{ errors.min_amount }}</small>
+            <label for="ss-min" class="text-sm font-medium text-dark-muted">ขั้นต่ำ</label>
+            <InputNumber
+              v-model="minAmount"
+              input-id="ss-min"
+              :min="0"
+              :invalid="!!errors.min_amount"
+              :aria-describedby="errors.min_amount ? 'ss-min-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.min_amount" id="ss-min-error" class="text-red-400" role="alert">{{ errors.min_amount }}</small>
           </div>
           <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ขั้นสูง (เพดาน)</span>
-            <InputNumber v-model="maxAmount" :min="0" :invalid="!!errors.max_amount" fluid />
-            <small v-if="errors.max_amount" class="text-red-600" role="alert">{{ errors.max_amount }}</small>
+            <label for="ss-max" class="text-sm font-medium text-dark-muted">ขั้นสูง (เพดาน)</label>
+            <InputNumber
+              v-model="maxAmount"
+              input-id="ss-max"
+              :min="0"
+              :invalid="!!errors.max_amount"
+              :aria-describedby="errors.max_amount ? 'ss-max-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.max_amount" id="ss-max-error" class="text-red-400" role="alert">{{ errors.max_amount }}</small>
           </div>
         </div>
 
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</span>
-          <InputText v-model="effectiveFrom" type="date" :invalid="!!errors.effective_from" fluid />
-          <small v-if="errors.effective_from" class="text-red-600" role="alert">{{ errors.effective_from }}</small>
+          <label for="ss-effective" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+          <InputText
+            id="ss-effective"
+            v-model="effectiveFrom"
+            type="date"
+            :invalid="!!errors.effective_from"
+            :aria-describedby="errors.effective_from ? 'ss-effective-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.effective_from" id="ss-effective-error" class="text-red-400" role="alert">{{ errors.effective_from }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">เลขที่เอกสาร</span>
-          <InputText v-model="docNo" fluid />
+          <label for="ss-doc" class="text-sm font-medium text-dark-muted">เลขที่เอกสาร</label>
+          <InputText id="ss-doc" v-model="docNo" fluid />
         </div>
 
         <div class="flex justify-end gap-2 pt-2">

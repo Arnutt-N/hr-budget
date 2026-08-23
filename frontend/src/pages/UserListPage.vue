@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -15,12 +14,15 @@ import Password from 'primevue/password'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { User, UpdateUser } from '@/types/user'
 import { useUserList, useCreateUser, useUpdateUser, useDeleteUser } from '@/queries/useUsers'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 const router = useRouter()
 
 const { data: users, isLoading, isError, error } = useUserList()
@@ -104,14 +106,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(user: User): void {
-  confirm.require({
+function onDelete(user: User): void {
+  confirmDelete({
     message: `ยืนยันลบผู้ใช้ "${user.name}"?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(user.id)
@@ -133,14 +130,11 @@ function roleSeverity(r: string): string {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">จัดการผู้ใช้</h1>
+    <PageHeader title="จัดการผู้ใช้">
       <Button label="เพิ่มผู้ใช้" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -152,7 +146,7 @@ function roleSeverity(r: string): string {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลผู้ใช้</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลผู้ใช้" />
       </template>
 
       <Column field="email" header="อีเมล" sortable>
@@ -186,7 +180,7 @@ function roleSeverity(r: string): string {
               @click="router.push(`/users/${data.id}/access-grants`)"
             />
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -196,8 +190,15 @@ function roleSeverity(r: string): string {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label for="user-email" class="text-sm font-medium text-dark-muted">อีเมล</label>
-          <InputText id="user-email" v-model.trim="email" type="email" :invalid="!!errors.email" fluid />
-          <small v-if="errors.email" class="text-red-600" role="alert">{{ errors.email }}</small>
+          <InputText
+            id="user-email"
+            v-model.trim="email"
+            type="email"
+            :invalid="!!errors.email"
+            :aria-describedby="errors.email ? 'user-email-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.email" id="user-email-error" class="text-red-400" role="alert">{{ errors.email }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
@@ -209,22 +210,36 @@ function roleSeverity(r: string): string {
             input-id="user-password"
             :feedback="false"
             :invalid="!!errors.password"
+            :aria-describedby="errors.password ? 'user-password-error' : undefined"
             toggle-mask
             fluid
           />
-          <small v-if="errors.password" class="text-red-600" role="alert">{{ errors.password }}</small>
+          <small v-if="errors.password" id="user-password-error" class="text-red-400" role="alert">{{ errors.password }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="user-name" class="text-sm font-medium text-dark-muted">ชื่อ</label>
-          <InputText id="user-name" v-model.trim="name" :invalid="!!errors.name" fluid />
-          <small v-if="errors.name" class="text-red-600" role="alert">{{ errors.name }}</small>
+          <InputText
+            id="user-name"
+            v-model.trim="name"
+            :invalid="!!errors.name"
+            :aria-describedby="errors.name ? 'user-name-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.name" id="user-name-error" class="text-red-400" role="alert">{{ errors.name }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="user-role" class="text-sm font-medium text-dark-muted">บทบาท</label>
-          <Select v-model="role" label-id="user-role" :options="roleOptions" :invalid="!!errors.role" fluid />
-          <small v-if="errors.role" class="text-red-600" role="alert">{{ errors.role }}</small>
+          <Select
+            v-model="role"
+            label-id="user-role"
+            :options="roleOptions"
+            :invalid="!!errors.role"
+            :aria-describedby="errors.role ? 'user-role-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.role" id="user-role-error" class="text-red-400" role="alert">{{ errors.role }}</small>
         </div>
 
         <div class="flex flex-col gap-1">

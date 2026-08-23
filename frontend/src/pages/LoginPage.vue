@@ -104,11 +104,12 @@ const onSubmit = handleSubmit(async (values) => {
             name="email"
             autocomplete="email"
             :invalid="!!errors.email"
+            :aria-describedby="errors.email ? 'login-email-error' : undefined"
             class="!pl-10"
             fluid
           />
         </div>
-        <small v-if="errors.email" class="text-red-600" role="alert">{{ errors.email }}</small>
+        <small v-if="errors.email" id="login-email-error" class="text-red-400" role="alert">{{ errors.email }}</small>
       </div>
 
       <div class="flex flex-col gap-1">
@@ -125,6 +126,7 @@ const onSubmit = handleSubmit(async (values) => {
             name="password"
             autocomplete="current-password"
             :invalid="!!errors.password"
+            :aria-describedby="errors.password ? 'login-password-error' : undefined"
             class="!pl-10 !pr-10"
             fluid
           />
@@ -139,7 +141,7 @@ const onSubmit = handleSubmit(async (values) => {
             <Eye v-else class="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <small v-if="errors.password" class="text-red-600" role="alert">{{ errors.password }}</small>
+        <small v-if="errors.password" id="login-password-error" class="text-red-400" role="alert">{{ errors.password }}</small>
       </div>
 
       <div class="flex items-center justify-between">

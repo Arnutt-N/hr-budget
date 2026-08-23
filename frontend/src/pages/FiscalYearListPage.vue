@@ -13,7 +13,10 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import type { FiscalYear } from '@/types/fiscal-year'
 import {
@@ -26,6 +29,7 @@ import {
 
 const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: fiscalYears, isLoading, isError, error } = useFiscalYearList()
 const createMutation = useCreateFiscalYear()
@@ -99,14 +103,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(fy: FiscalYear): void {
-  confirm.require({
+function onDelete(fy: FiscalYear): void {
+  confirmDelete({
     message: `ยืนยันลบปีงบประมาณ ${fy.year}?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(fy.id)
@@ -147,14 +146,11 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">ปีงบประมาณ</h1>
+    <PageHeader title="ปีงบประมาณ">
       <Button label="เพิ่มปีงบประมาณ" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -168,7 +164,7 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลปีงบประมาณ</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลปีงบประมาณ" />
       </template>
 
       <Column field="year" header="ปีงบประมาณ" sortable>
@@ -199,7 +195,7 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
               @click="confirmSetCurrent(data)"
             />
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -214,21 +210,36 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
             input-id="fy-year"
             :use-grouping="false"
             :invalid="!!errors.year"
+            :aria-describedby="errors.year ? 'fy-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.year" class="text-red-600" role="alert">{{ errors.year }}</small>
+          <small v-if="errors.year" id="fy-year-error" class="text-red-400" role="alert">{{ errors.year }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="fy-start" class="text-sm font-medium text-dark-muted">วันเริ่มต้น</label>
-          <InputText id="fy-start" v-model="startDate" type="date" :invalid="!!errors.start_date" fluid />
-          <small v-if="errors.start_date" class="text-red-600" role="alert">{{ errors.start_date }}</small>
+          <InputText
+            id="fy-start"
+            v-model="startDate"
+            type="date"
+            :invalid="!!errors.start_date"
+            :aria-describedby="errors.start_date ? 'fy-start-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.start_date" id="fy-start-error" class="text-red-400" role="alert">{{ errors.start_date }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="fy-end" class="text-sm font-medium text-dark-muted">วันสิ้นสุด</label>
-          <InputText id="fy-end" v-model="endDate" type="date" :invalid="!!errors.end_date" fluid />
-          <small v-if="errors.end_date" class="text-red-600" role="alert">{{ errors.end_date }}</small>
+          <InputText
+            id="fy-end"
+            v-model="endDate"
+            type="date"
+            :invalid="!!errors.end_date"
+            :aria-describedby="errors.end_date ? 'fy-end-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.end_date" id="fy-end-error" class="text-red-400" role="alert">{{ errors.end_date }}</small>
         </div>
 
         <label class="flex items-center gap-2 text-sm">

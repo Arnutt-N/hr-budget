@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -11,7 +10,9 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
-import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import Tag from 'primevue/tag'
 import { useAuthStore } from '@/stores/auth'
 import { vaultFileDownloadUrl } from '@/api/vault'
@@ -28,7 +29,7 @@ import {
 import type { VaultFolder, VaultFile, Breadcrumb } from '@/types/vault'
 
 const auth = useAuthStore()
-const confirm = useConfirm()
+const confirmDeletePrompt = useDeleteConfirm()
 const toast = useToast()
 
 const canMutate = computed(() => ['admin', 'editor'].includes(auth.user?.role ?? ''))
@@ -138,13 +139,8 @@ const onSave = handleSubmit(async (values) => {
 })
 
 function confirmDeleteFolder(folder: VaultFolder): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: `ยืนยันลบโฟลเดอร์ "${folder.name}" และไฟล์ทั้งหมดภายใน?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteFolderMutation.mutateAsync(folder.id)
@@ -182,13 +178,8 @@ async function onFileSelected(event: Event): Promise<void> {
 }
 
 function confirmDeleteFile(file: VaultFile): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: `ยืนยันลบไฟล์ "${file.original_name}"?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteFileMutation.mutateAsync(file.id)
@@ -264,9 +255,7 @@ function formatSize(bytes: number): string {
       </template>
     </nav>
 
-    <Message v-if="foldersError" severity="error" :closable="false">
-      {{ foldersErr?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="foldersError" :error="foldersErr" />
 
     <template v-else>
       <!-- Folders grid -->
@@ -332,7 +321,7 @@ function formatSize(bytes: number): string {
           class="overflow-hidden rounded-lg border border-dark-border shadow"
         >
           <template #empty>
-            <p class="py-4 text-center text-dark-muted">ยังไม่มีไฟล์ในโฟลเดอร์นี้</p>
+            <ListEmptyState message="ยังไม่มีไฟล์ในโฟลเดอร์นี้" />
           </template>
 
           <Column field="original_name" header="ชื่อไฟล์" sortable>
@@ -357,6 +346,8 @@ function formatSize(bytes: number): string {
                 <a
                   :href="vaultFileDownloadUrl(data.id)"
                   class="p-button p-button-text p-button-sm p-button-secondary"
+                  aria-label="ดาวน์โหลดไฟล์"
+                  title="ดาวน์โหลด"
                 >
                   <i class="pi pi-download"></i>
                 </a>
@@ -381,8 +372,8 @@ function formatSize(bytes: number): string {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label for="folder-name" class="text-sm font-medium text-dark-muted">ชื่อโฟลเดอร์</label>
-          <InputText id="folder-name" v-model.trim="name" maxlength="255" :invalid="!!errors.name" fluid />
-          <small v-if="errors.name" class="text-red-600" role="alert">{{ errors.name }}</small>
+          <InputText id="folder-name" v-model.trim="name" maxlength="255" :invalid="!!errors.name" :aria-describedby="errors.name ? 'folder-name-error' : undefined" fluid />
+          <small v-if="errors.name" id="folder-name-error" class="text-red-400" role="alert">{{ errors.name }}</small>
         </div>
         <div class="flex flex-col gap-1">
           <label for="folder-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย (ไม่บังคับ)</label>

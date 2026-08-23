@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell } from '@lucide/vue'
 import {
@@ -11,6 +11,19 @@ import {
 
 const router = useRouter()
 const open = ref(false)
+const triggerEl = ref<HTMLButtonElement | null>(null)
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') close()
+}
+watch(open, (isOpen) => {
+  if (isOpen) window.addEventListener('keydown', onKeydown)
+  else {
+    window.removeEventListener('keydown', onKeydown)
+    triggerEl.value?.focus() // return focus to trigger on close
+  }
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 const unreadQuery = useUnreadCount()
 const listQuery = useNotificationList(open) // lazy: fetches only while the dropdown is open
@@ -61,10 +74,14 @@ function typeIcon(type: string): string {
 <template>
   <div class="relative">
     <button
+      ref="triggerEl"
       @click="toggleDropdown"
       class="relative rounded-full p-2 text-dark-muted hover:bg-slate-800 hover:text-white"
       title="การแจ้งเตือน"
       aria-label="การแจ้งเตือน"
+      :aria-expanded="open"
+      aria-haspopup="true"
+      aria-controls="notification-panel"
     >
       <Bell class="h-5 w-5" />
       <span
@@ -81,6 +98,7 @@ function typeIcon(type: string): string {
     <!-- Dropdown -->
     <div
       v-if="open"
+      id="notification-panel"
       class="absolute right-0 z-40 mt-2 w-80 rounded-lg border border-dark-border bg-dark-card shadow-lg"
     >
       <div class="flex items-center justify-between border-b border-dark-border px-4 py-3">

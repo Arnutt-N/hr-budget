@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
@@ -10,7 +9,9 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import {
   usePersonnelAllowanceList,
@@ -21,7 +22,7 @@ import { usePositionList } from '@/queries/usePositions'
 import { useAllowanceTypeList } from '@/queries/useAllowances'
 
 const toast = useToast()
-const confirm = useConfirm()
+const confirmDeletePrompt = useDeleteConfirm()
 
 const { data: items, isLoading, isError, error } = usePersonnelAllowanceList()
 const createMutation = useCreatePersonnelAllowance()
@@ -65,13 +66,8 @@ async function onSave(): Promise<void> {
 }
 
 function confirmDelete(id: number): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: 'ลบรายการรับจริงนี้?',
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(id)
@@ -95,9 +91,7 @@ function confirmDelete(id: number): void {
       <Button label="เพิ่มการรับจริง" icon="pi pi-plus" @click="openCreate" />
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -107,7 +101,7 @@ function confirmDelete(id: number): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลการรับจริง</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลการรับจริง" />
       </template>
       <Column field="person_id" header="รหัสบุคคล" />
       <Column field="pay_no" header="เลขถือจ่าย" />

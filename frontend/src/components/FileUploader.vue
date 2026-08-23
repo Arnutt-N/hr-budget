@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, toRef } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { fileDownloadUrl } from '@/api/files'
 import {
   useRequestFiles,
   useUploadRequestFile,
   useDeleteRequestFile,
 } from '@/queries/useRequestFiles'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 
 const props = defineProps<{
   requestId: number
@@ -20,6 +22,10 @@ const emit = defineEmits<{
 const filesQuery = useRequestFiles(toRef(props, 'requestId'))
 const uploadMut = useUploadRequestFile()
 const deleteMut = useDeleteRequestFile()
+const confirmDelete = useDeleteConfirm()
+const toast = useToast()
+
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const dragOver = ref(false)
 const uploadError = ref<string | null>(null)
@@ -65,13 +71,20 @@ function onFileInput(e: Event) {
   input.value = ''
 }
 
-async function handleDelete(fileId: number) {
-  try {
-    await deleteMut.mutateAsync({ requestId: props.requestId, fileId })
-    emit('removed')
-  } catch (e) {
-    uploadError.value = e instanceof Error ? e.message : 'ลบไฟล์ไม่สำเร็จ'
-  }
+function handleDelete(fileId: number, fileName: string): void {
+  confirmDelete({
+    message: `ยืนยันลบไฟล์ "${fileName}"?`,
+    accept: async () => {
+      try {
+        await deleteMut.mutateAsync({ requestId: props.requestId, fileId })
+        toast.add({ severity: 'success', summary: 'ลบไฟล์สำเร็จ', life: 3000 })
+        emit('removed')
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'ลบไฟล์ไม่สำเร็จ'
+        toast.add({ severity: 'error', summary: 'ลบไฟล์ไม่สำเร็จ', detail: message, life: 5000 })
+      }
+    },
+  })
 }
 
 function formatSize(bytes: number): string {
@@ -100,10 +113,21 @@ const files = computed(() => filesQuery.data.value ?? [])
       </template>
       <template v-else>
         <p class="text-sm text-dark-muted">คลิกหรือลากไฟล์มาวาง</p>
-        <label class="mt-2 inline-block cursor-pointer rounded bg-primary-600 px-3 py-1.5 text-xs text-white hover:bg-primary-500">
+        <input
+          ref="fileInput"
+          type="file"
+          class="hidden"
+          multiple
+          :accept="ALLOWED_EXTENSIONS.map(e => '.' + e).join(',')"
+          @change="onFileInput"
+        />
+        <button
+          type="button"
+          class="mt-2 inline-block rounded bg-primary-600 px-3 py-1.5 text-xs text-white hover:bg-primary-500"
+          @click="fileInput?.click()"
+        >
           เลือกไฟล์
-          <input type="file" class="hidden" multiple :accept="ALLOWED_EXTENSIONS.map(e => '.' + e).join(',')" @change="onFileInput" />
-        </label>
+        </button>
       </template>
     </div>
 
@@ -123,8 +147,9 @@ const files = computed(() => filesQuery.data.value ?? [])
         </div>
         <button
           v-if="!disabled"
-          @click="handleDelete(f.id)"
+          @click="handleDelete(f.id, f.original_name)"
           class="ml-2 shrink-0 text-xs text-red-400 hover:text-red-300"
+          aria-label="ลบไฟล์"
           title="ลบไฟล์"
         >
           &#10005;

@@ -95,16 +95,18 @@ async function handleSave() {
       <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">ชื่อคำขอ *</label>
+            <label for="req-title" class="mb-1 block text-sm font-medium text-dark-muted">ชื่อคำขอ *</label>
             <input
+              id="req-title"
               v-model="requestTitle"
               type="text"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             />
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+            <label for="req-fiscal-year" class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
             <select
+              id="req-fiscal-year"
               v-model.number="fiscalYear"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
@@ -114,8 +116,9 @@ async function handleSave() {
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
+            <label for="req-org" class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
             <select
+              id="req-org"
               v-model="orgId"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >

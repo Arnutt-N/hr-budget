@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -13,6 +12,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { BudgetCategoryItem } from '@/types/budget-category'
 import {
   useCategoryItems,
@@ -24,7 +24,7 @@ import {
 
 const props = defineProps<{ categoryId: number }>()
 
-const confirm = useConfirm()
+const confirmDeletePrompt = useDeleteConfirm()
 const toast = useToast()
 
 const { data: items, isLoading, isError, error } = useCategoryItems(() => props.categoryId)
@@ -93,13 +93,8 @@ const onSave = handleSubmit(async (values) => {
 })
 
 function confirmDelete(item: BudgetCategoryItem): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: `ยืนยันลบรายการ "${item.name}"?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync({ categoryId: props.categoryId, itemId: item.id })
@@ -184,8 +179,8 @@ async function restore(item: BudgetCategoryItem): Promise<void> {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label :for="`item-name-${categoryId}`" class="text-sm font-medium text-dark-muted">ชื่อรายการ</label>
-          <InputText :id="`item-name-${categoryId}`" v-model.trim="name" :invalid="!!errors.name" fluid />
-          <small v-if="errors.name" class="text-red-600" role="alert">{{ errors.name }}</small>
+          <InputText :id="`item-name-${categoryId}`" v-model.trim="name" :invalid="!!errors.name" :aria-describedby="errors.name ? `item-name-${categoryId}-error` : undefined" fluid />
+          <small v-if="errors.name" :id="`item-name-${categoryId}-error`" class="text-red-400" role="alert">{{ errors.name }}</small>
         </div>
 
         <div class="flex flex-col gap-1">

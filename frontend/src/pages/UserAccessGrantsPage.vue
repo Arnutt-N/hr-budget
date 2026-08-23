@@ -10,6 +10,8 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
 import type { AccessGrant, ScopeType, AssignGrantPayload } from '@/types/rbac'
 import { useUserGrants, useCreateGrant, useDeleteGrant } from '@/queries/useAccessGrants'
 import { useRoleList } from '@/queries/useRoles'
@@ -134,9 +136,7 @@ function confirmRevoke(g: AccessGrant): void {
       </div>
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -146,7 +146,7 @@ function confirmRevoke(g: AccessGrant): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ผู้ใช้นี้ยังไม่มีบทบาท/สิทธิ์ที่มอบไว้</p>
+        <ListEmptyState message="ผู้ใช้นี้ยังไม่มีบทบาท/สิทธิ์ที่มอบไว้" />
       </template>
 
       <Column header="บทบาท">

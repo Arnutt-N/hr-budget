@@ -176,8 +176,9 @@ async function handleReject() {
 
         <!-- Reject form -->
         <div v-if="rejectMode" class="mt-4 rounded border border-red-500/30 bg-red-500/10 p-4">
-          <label class="mb-1 block text-sm font-medium text-red-400">เหตุผลการปฏิเสธ *</label>
+          <label for="rej-reason" class="mb-1 block text-sm font-medium text-red-400">เหตุผลการปฏิเสธ *</label>
           <textarea
+            id="rej-reason"
             v-model="rejectNote"
             class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
             rows="3"
