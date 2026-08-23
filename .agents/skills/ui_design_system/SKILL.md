@@ -39,7 +39,7 @@ Thai-first: "ระบบจัดการงบประมาณทรัพ�
 | `PageHeader` | header div `mb-6 flex items-center justify-between` + h1 + CTA | title prop + action slot. Pages with subtitles / multi-control headers stay **inline** (stop-condition) |
 | `QueryErrorState` | `<Message severity="error">` load-error banner | `error?: unknown`; Thai fallback "ไม่สามารถโหลดข้อมูลได้" — single owner of that string |
 | `ListEmptyState` | DataTable `#empty` `<p class="py-4 text-center text-dark-muted">` | message prop + CTA slot. Richer empty states (icon, multi-line) stay inline |
-| `useDeleteConfirm` | the ~15-line delete `confirm.require` block | single owner of header "ยืนยันการลบ" + danger styling. Pages with **distinct** confirm copy (e.g. RoleListPage "ยืนยันลบบทบาท") keep an inline `confirm.require` |
+| `useDeleteConfirm` | the ~15-line delete `confirm.require` block | single owner of header "ยืนยันการลบ" + danger styling. Pages with **distinct** confirm copy (e.g. RoleListPage "ยืนยันลบบทบาท") pass overrides (`header`, custom message) through its options; inline `confirm.require` is reserved for non-delete confirmations (toggles, revokes) |
 
 Never reintroduce a copy of these patterns in a page — import the primitive.
 
@@ -75,8 +75,10 @@ Escape, and return focus to the trigger — see `NotificationBell.vue`.
 
 ### Destructive actions
 
-Always confirm before delete — `useDeleteConfirm` (or inline `confirm.require` when
-copy differs). Never delete immediately. Success/error toasts follow the repo Thai
+Always confirm before delete — `useDeleteConfirm`; pass overrides (`header`,
+custom message) through its options when copy differs, and reserve inline
+`confirm.require` for non-delete confirmations (toggles, revokes). Never delete
+immediately. Success/error toasts follow the repo Thai
 pattern (`…สำเร็จ` life 3000 / `…ไม่สำเร็จ` life 5000).
 
 ### Charts
