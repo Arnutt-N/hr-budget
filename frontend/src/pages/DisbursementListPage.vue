@@ -24,8 +24,9 @@ const { data: fiscalYears } = useFiscalYearList()
 
 const PER_PAGE = 20
 const filters = ref<SessionFilters>({ page: 1, per_page: PER_PAGE })
-const filterFiscalYear = ref<number | ''>('')
-const filterMonth = ref<number | ''>('')
+// PrimeVue Select emits null on clear (not ''), so the empty state is `| null`.
+const filterFiscalYear = ref<number | null>(null)
+const filterMonth = ref<number | null>(null)
 
 const query = useDisbursementSessions(filters)
 const sessions = computed(() => query.data.value?.data ?? [])
@@ -48,8 +49,8 @@ const fiscalYearOptions = computed(() =>
 
 function applyFilters(): void {
   filters.value = {
-    fiscal_year: filterFiscalYear.value === '' ? undefined : Number(filterFiscalYear.value),
-    record_month: filterMonth.value === '' ? undefined : Number(filterMonth.value),
+    fiscal_year: filterFiscalYear.value === null ? undefined : Number(filterFiscalYear.value),
+    record_month: filterMonth.value === null ? undefined : Number(filterMonth.value),
     page: 1,
     per_page: PER_PAGE,
   }

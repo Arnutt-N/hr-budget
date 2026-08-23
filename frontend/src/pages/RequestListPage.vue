@@ -35,7 +35,8 @@ const fiscalYearOptions = computed(() =>
 // `filters` is the applied query input; editing the inputs is staged until "ค้นหา".
 const filters = ref<ListFilters>({ page: 1, per_page: PER_PAGE })
 const filterStatus = ref<RequestStatus | ''>('')
-const filterFiscalYear = ref<number | ''>('')
+// PrimeVue Select emits null on clear (not ''), so the empty state is `| null`.
+const filterFiscalYear = ref<number | null>(null)
 const filterSearch = ref('')
 
 const query = useBudgetRequestList(filters)
@@ -47,7 +48,7 @@ const totalRecords = computed(() => meta.value?.total ?? 0)
 function applyFilters() {
   filters.value = {
     status: filterStatus.value || undefined,
-    fiscal_year: filterFiscalYear.value === '' ? undefined : Number(filterFiscalYear.value),
+    fiscal_year: filterFiscalYear.value === null ? undefined : Number(filterFiscalYear.value),
     search: filterSearch.value || undefined,
     page: 1,
     per_page: PER_PAGE,

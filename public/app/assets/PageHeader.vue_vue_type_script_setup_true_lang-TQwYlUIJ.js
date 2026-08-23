@@ -1,1 +1,0 @@
-import{d as s,c as a,a as o,t as n,E as l,l as r}from"./index-CqScWOFR.js";const c={class:"mb-6 flex items-center justify-between"},i={class:"text-2xl font-bold text-white"},m=s({__name:"PageHeader",props:{title:{}},setup(e){return(t,d)=>(r(),a("div",c,[o("h1",i,n(e.title),1),l(t.$slots,"default")]))}});export{m as _};

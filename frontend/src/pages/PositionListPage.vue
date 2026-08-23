@@ -430,10 +430,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
-            <label id="pos-category" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
+            <label id="pos-category-label" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
             <Select
               v-model="employeeCategory"
-              label-id="pos-category"
+              aria-labelledby="pos-category-label"
               :options="CATEGORY_OPTIONS"
               option-label="label"
               option-value="value"
@@ -444,10 +444,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
             <small v-if="errors.employee_category" id="pos-category-error" class="text-red-400" role="alert">{{ errors.employee_category }}</small>
           </div>
           <div class="flex flex-col gap-1">
-            <label id="pos-org" class="text-sm font-medium text-dark-muted">หน่วยงานเจ้าของงบ</label>
+            <label id="pos-org-label" class="text-sm font-medium text-dark-muted">หน่วยงานเจ้าของงบ</label>
             <Select
               v-model="organizationId"
-              label-id="pos-org"
+              aria-labelledby="pos-org-label"
               :options="organizations ?? []"
               option-label="name_th"
               option-value="id"
@@ -483,10 +483,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
         <div v-if="!editingId" class="grid grid-cols-3 gap-3">
           <div class="flex flex-col gap-1">
-            <label id="pos-occupancy" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
+            <label id="pos-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
             <Select
               v-model="occupancy"
-              label-id="pos-occupancy"
+              aria-labelledby="pos-occupancy-label"
               :options="OCCUPANCY_OPTIONS"
               option-label="label"
               option-value="value"
@@ -606,10 +606,11 @@ function confirmDeleteAllowance(allowanceId: number): void {
               option-value="id"
               aria-labelledby="version-organization-label"
               :invalid="!!versionErrors.organization_id"
+              :aria-describedby="versionErrors.organization_id ? 'version-org-error' : undefined"
               filter
               fluid
             />
-            <small v-if="versionErrors.organization_id" class="text-red-400" role="alert">{{ versionErrors.organization_id }}</small>
+            <small v-if="versionErrors.organization_id" id="version-org-error" class="text-red-400" role="alert">{{ versionErrors.organization_id }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label id="version-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
@@ -630,9 +631,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
               :min="1"
               :max="12"
               :invalid="!!versionErrors.months_counted"
+              :aria-describedby="versionErrors.months_counted ? 'version-months-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.months_counted" class="text-red-400" role="alert">{{ versionErrors.months_counted }}</small>
+            <small v-if="versionErrors.months_counted" id="version-months-error" class="text-red-400" role="alert">{{ versionErrors.months_counted }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label id="version-salary-basis-label" class="text-sm font-medium text-dark-muted">สถานะเงินเดือน</label>
@@ -708,10 +710,11 @@ function confirmDeleteAllowance(allowanceId: number): void {
               option-value="id"
               aria-labelledby="allowance-type-label"
               :invalid="!!allowanceErrors.allowance_type_id"
+              :aria-describedby="allowanceErrors.allowance_type_id ? 'allowance-type-error' : undefined"
               filter
               fluid
             />
-            <small v-if="allowanceErrors.allowance_type_id" class="text-red-400" role="alert">{{ allowanceErrors.allowance_type_id }}</small>
+            <small v-if="allowanceErrors.allowance_type_id" id="allowance-type-error" class="text-red-400" role="alert">{{ allowanceErrors.allowance_type_id }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="allowance-effective-from" class="text-sm font-medium text-dark-muted">วันเริ่มมีสิทธิ์</label>
@@ -720,9 +723,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
               v-model="aEffectiveFrom"
               type="date"
               :invalid="!!allowanceErrors.effective_from"
+              :aria-describedby="allowanceErrors.effective_from ? 'allowance-effective-error' : undefined"
               fluid
             />
-            <small v-if="allowanceErrors.effective_from" class="text-red-400" role="alert">{{ allowanceErrors.effective_from }}</small>
+            <small v-if="allowanceErrors.effective_from" id="allowance-effective-error" class="text-red-400" role="alert">{{ allowanceErrors.effective_from }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="allowance-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</label>
