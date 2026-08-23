@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
@@ -9,7 +8,10 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import { vacancyTypeLabel, VACANCY_TYPE_OPTIONS } from '@/lib/personnel'
 import {
@@ -21,7 +23,7 @@ import { usePositionList } from '@/queries/usePositions'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 
 const toast = useToast()
-const confirm = useConfirm()
+const confirmDeletePrompt = useDeleteConfirm()
 
 const { data: items, isLoading, isError, error } = useVacancyRecruitmentList()
 const createMutation = useCreateVacancyRecruitment()
@@ -63,13 +65,8 @@ async function onSave(): Promise<void> {
 }
 
 function confirmDelete(item: { id: number; pay_no: string | null }): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: `ลบหลักฐานของอัตรา ${item.pay_no ?? item.id}?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(item.id)
@@ -85,14 +82,11 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">อัตราว่างพร้อมบรรจุ (หลักฐานสรรหา)</h1>
+    <PageHeader title="อัตราว่างพร้อมบรรจุ (หลักฐานสรรหา)">
       <Button label="เพิ่มหลักฐาน" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -102,7 +96,7 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีหลักฐานสรรหา</p>
+        <ListEmptyState message="ยังไม่มีหลักฐานสรรหา" />
       </template>
       <Column field="pay_no" header="เลขถือจ่าย" />
       <Column field="pos_no" header="เลขที่ตำแหน่ง">

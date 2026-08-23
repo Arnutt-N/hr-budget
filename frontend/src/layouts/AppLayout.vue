@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import {
   Landmark,
@@ -45,6 +45,15 @@ const auth = useAuthStore()
 
 const sidebarOpen = ref(false) // mobile drawer
 
+function onSidebarKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') sidebarOpen.value = false
+}
+watch(sidebarOpen, (isOpen) => {
+  if (isOpen) window.addEventListener('keydown', onSidebarKeydown)
+  else window.removeEventListener('keydown', onSidebarKeydown)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onSidebarKeydown))
+
 const pageTitle = computed(() => (route.meta.title as string | undefined) ?? 'HR Budget')
 
 // Same boundary rule as config/app.php > fiscal_year (Oct 1 starts the new BE year)
@@ -76,6 +85,7 @@ async function onLogout(): Promise<void> {
 
     <!-- Sidebar -->
     <aside
+      id="app-sidebar"
       class="fixed inset-y-0 left-0 z-30 flex w-64 flex-col overflow-hidden border-r border-dark-border bg-dark-card transition-transform duration-300 lg:translate-x-0"
       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     >
@@ -245,6 +255,8 @@ async function onLogout(): Promise<void> {
             type="button"
             class="mr-4 rounded-lg p-2 text-dark-muted hover:bg-slate-800 hover:text-white lg:hidden"
             aria-label="เปิดเมนู"
+            :aria-expanded="sidebarOpen"
+            aria-controls="app-sidebar"
             @click="sidebarOpen = !sidebarOpen"
           >
             <Menu class="h-6 w-6" />

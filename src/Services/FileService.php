@@ -66,6 +66,10 @@ final class FileService
         $storedName = uniqid() . '_' . time() . '.' . $dto->extension;
         $destination = $fullPath . '/' . $storedName;
 
+        // Detect the MIME type before move_uploaded_file() — the tmp file is
+        // gone once moved, and finfo_file() on the stale path throws.
+        $mimeType = $this->detectMimeType($dto->tmpPath, $dto->extension);
+
         if (!move_uploaded_file($dto->tmpPath, $destination)) {
             return ['success' => false, 'error' => 'บันทึกไฟล์ไม่สำเร็จ'];
         }
@@ -78,7 +82,7 @@ final class FileService
             'file_path' => $relativePath . '/' . $storedName,
             'file_type' => $dto->extension,
             'file_size' => $dto->size,
-            'mime_type' => $this->detectMimeType($dto->tmpPath, $dto->extension),
+            'mime_type' => $mimeType,
             'uploaded_by' => $userId,
         ]);
 

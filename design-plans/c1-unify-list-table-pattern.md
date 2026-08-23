@@ -16,9 +16,9 @@ Written against: f6badd4
     `<select>` filters `:101-125`, plain `+ บันทึกการเบิกจ่าย` button `:91-97`, same custom
     pagination `:190-206`). Visual language, control chrome, and pagination UX differ from the
     admin surface for the same user task.
-- Design evidence: internal contract — 21 files share the DataTable dialect; the header/CTA
-  pattern (`Button icon="pi pi-plus"`) is standard on 23 pages; the two workflow pages are the
-  only raw-table survivors. (Note: their server-side pagination itself is a *strength* to keep —
+- Design evidence: internal contract — 21 files share the DataTable dialect; the page-header
+  pattern is standard on 23 pages (the `Button icon="pi pi-plus"` CTA on 17 of them); the two
+  workflow pages are the only raw-table survivors. (Note: their server-side pagination itself is a *strength* to keep —
   `PER_PAGE = 20` + page params, `RequestListPage.vue:10`.)
 - Owner: `RequestListPage.vue`, `DisbursementListPage.vue` (page-local query composables
   unchanged); admin rows-per-page constants.

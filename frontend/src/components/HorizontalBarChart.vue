@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'chart.js'
 import type { ChartData, ChartOptions, TooltipItem } from 'chart.js'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -26,6 +27,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const baht = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const compact = new Intl.NumberFormat('th-TH', { notation: 'compact', maximumFractionDigits: 1 })
+
+const reduced = usePrefersReducedMotion()
 
 const chartData = computed<ChartData<'bar'>>(() => ({
   labels: props.labels,
@@ -45,6 +48,7 @@ const options = computed<ChartOptions<'bar'>>(() => ({
   indexAxis: 'y', // horizontal bars — long Thai labels read better on the y-axis
   responsive: true,
   maintainAspectRatio: false,
+  animation: reduced.value ? false : undefined,
   plugins: {
     legend: { display: false },
     tooltip: {

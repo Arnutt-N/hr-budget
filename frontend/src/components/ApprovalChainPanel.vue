@@ -141,7 +141,7 @@ async function onReject(): Promise<void> {
       คำขอถูกปฏิเสธ
     </p>
 
-    <Message v-if="errorMsg" severity="error" :closable="false" class="mb-3">{{ errorMsg }}</Message>
+    <Message v-if="errorMsg" id="chain-rej-error" severity="error" :closable="false" class="mb-3">{{ errorMsg }}</Message>
 
     <!-- Actions (visibility by permission; backend enforces level + scope) -->
     <div v-if="canAct" class="border-t border-dark-border pt-4">
@@ -150,12 +150,14 @@ async function onReject(): Promise<void> {
         <Button label="ปฏิเสธ" icon="pi pi-times" severity="danger" outlined :disabled="busy" @click="rejectMode = true" />
       </div>
       <div v-else class="space-y-2">
-        <label class="block text-sm font-medium text-red-400">เหตุผลการปฏิเสธ *</label>
+        <label for="chain-rej-reason" class="block text-sm font-medium text-red-400">เหตุผลการปฏิเสธ *</label>
         <textarea
+          id="chain-rej-reason"
           v-model="note"
           rows="3"
           class="w-full rounded border border-dark-border bg-dark-bg px-3 py-2 text-sm text-dark-text focus:border-red-500 focus:outline-none"
           placeholder="ระบุเหตุผล..."
+          :aria-describedby="errorMsg ? 'chain-rej-error' : undefined"
         ></textarea>
         <div class="flex gap-2">
           <Button label="ยืนยันปฏิเสธ" severity="danger" :loading="busy" @click="onReject" />

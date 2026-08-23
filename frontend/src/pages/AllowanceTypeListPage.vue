@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -11,7 +10,10 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import type { AllowanceType } from '@/types/allowance'
 import {
@@ -22,8 +24,8 @@ import {
   useDeleteAllowanceRate,
 } from '@/queries/useAllowances'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: types, isLoading, isError, error } = useAllowanceTypeList()
 const updateMutation = useUpdateAllowanceType()
@@ -152,14 +154,9 @@ async function onAddRate(): Promise<void> {
   }
 }
 
-function confirmDeleteRate(rateId: number): void {
-  confirm.require({
+function onDeleteRate(rateId: number): void {
+  confirmDelete({
     message: 'ยืนยันลบอัตรานี้?',
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       if (!activeTypeId.value) return
       try {
@@ -176,13 +173,9 @@ function confirmDeleteRate(rateId: number): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">แคตตาล็อกเงินเพิ่ม</h1>
-    </div>
+    <PageHeader title="แคตตาล็อกเงินเพิ่ม" />
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -192,7 +185,7 @@ function confirmDeleteRate(rateId: number): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลเงินเพิ่ม</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลเงินเพิ่ม" />
       </template>
 
       <Column field="short_name" header="ชื่อย่อ">
@@ -305,7 +298,7 @@ function confirmDeleteRate(rateId: number): void {
         </Column>
         <Column header="" class="text-right">
           <template #body="{ data }">
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDeleteRate(data.id)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDeleteRate(data.id)" />
           </template>
         </Column>
       </DataTable>

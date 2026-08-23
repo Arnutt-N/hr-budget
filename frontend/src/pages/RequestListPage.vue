@@ -1,38 +1,64 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import StatusBadge from '@/components/StatusBadge.vue'
 import { useBudgetRequestList } from '@/queries/useBudgetRequests'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
-import StatusBadge from '@/components/StatusBadge.vue'
 import type { ListFilters, RequestStatus } from '@/types/budget-request'
 
 const { data: fiscalYears } = useFiscalYearList()
 
 const PER_PAGE = 20
 
+const STATUS_OPTIONS: { label: string; value: RequestStatus }[] = [
+  { label: 'ร่าง', value: 'draft' },
+  { label: 'บันทึกแล้ว', value: 'saved' },
+  { label: 'รออนุมัติ', value: 'pending' },
+  { label: 'อนุมัติแล้ว', value: 'approved' },
+  { label: 'ปฏิเสธ', value: 'rejected' },
+]
+
+const fiscalYearOptions = computed(() =>
+  (fiscalYears.value ?? []).map((fy) => ({
+    label: `${fy.year}${fy.is_current ? ' (ปีปัจจุบัน)' : ''}`,
+    value: fy.year,
+  })),
+)
+
 // `filters` is the applied query input; editing the inputs is staged until "ค้นหา".
 const filters = ref<ListFilters>({ page: 1, per_page: PER_PAGE })
-const filterStatus = ref<RequestStatus | ''>('')
-const filterFiscalYear = ref<string>('')
+// nullable: PrimeVue Select emits null on clear
+const filterStatus = ref<RequestStatus | '' | null>('')
+// PrimeVue Select emits null on clear (not ''), so the empty state is `| null`.
+const filterFiscalYear = ref<number | null>(null)
 const filterSearch = ref('')
 
 const query = useBudgetRequestList(filters)
 const requests = computed(() => query.data.value?.data ?? [])
 const meta = computed(() => query.data.value?.meta ?? null)
 const currentPage = computed(() => meta.value?.page ?? 1)
-const totalPages = computed(() => meta.value?.total_pages ?? 0)
+const totalRecords = computed(() => meta.value?.total ?? 0)
 
 function applyFilters() {
   filters.value = {
     status: filterStatus.value || undefined,
-    fiscal_year: filterFiscalYear.value ? Number(filterFiscalYear.value) : undefined,
+    fiscal_year: filterFiscalYear.value === null ? undefined : Number(filterFiscalYear.value),
     search: filterSearch.value || undefined,
     page: 1,
     per_page: PER_PAGE,
   }
 }
 
-function goToPage(page: number) {
-  filters.value = { ...filters.value, page }
+function onPage(event: { page: number }) {
+  // PrimeVue pages are 0-based; the API contract is 1-based.
+  filters.value = { ...filters.value, page: event.page + 1 }
 }
 
 function formatDate(dateStr: string | null): string {
@@ -48,132 +74,122 @@ function formatAmount(amount: string | null): string {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">คำของบประมาณ</h1>
-      <router-link
-        to="/requests/create"
-        class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
-      >
-        + สร้างคำขอใหม่
-      </router-link>
-    </div>
+    <PageHeader title="คำของบประมาณ">
+      <Button label="สร้างคำขอใหม่" icon="pi pi-plus" @click="$router.push('/requests/create')" />
+    </PageHeader>
 
     <!-- Filters -->
     <div class="mb-4 rounded-lg bg-dark-card border border-dark-border p-4 shadow">
-      <div class="flex flex-wrap gap-3">
-        <select
-          v-model="filterFiscalYear"
-          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
-        >
-          <option value="">ทุกปีงบ</option>
-          <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
-            {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
-          </option>
-        </select>
-        <select
-          v-model="filterStatus"
-          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
-        >
-          <option value="">ทุกสถานะ</option>
-          <option value="draft">ร่าง</option>
-          <option value="saved">บันทึกแล้ว</option>
-          <option value="pending">รออนุมัติ</option>
-          <option value="approved">อนุมัติแล้ว</option>
-          <option value="rejected">ปฏิเสธ</option>
-        </select>
-        <input
-          v-model="filterSearch"
-          type="text"
-          placeholder="ค้นหาชื่อคำขอ..."
-          class="rounded bg-dark-card border border-dark-border text-dark-text px-3 py-1.5 text-sm focus:border-primary-500 focus:outline-none"
-          @keyup.enter="applyFilters"
-        />
-        <button
-          @click="applyFilters"
-          class="rounded bg-gray-700 px-3 py-1.5 text-sm text-white hover:bg-gray-800"
-        >
-          ค้นหา
-        </button>
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-col gap-1">
+          <label id="req-filter-fy-label" class="text-xs text-dark-muted">ปีงบประมาณ</label>
+          <Select
+            v-model="filterFiscalYear"
+            :options="fiscalYearOptions"
+            option-label="label"
+            option-value="value"
+            aria-labelledby="req-filter-fy-label"
+            placeholder="ทุกปีงบ"
+            show-clear
+            class="w-44"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label id="req-filter-status-label" class="text-xs text-dark-muted">สถานะ</label>
+          <Select
+            v-model="filterStatus"
+            :options="STATUS_OPTIONS"
+            option-label="label"
+            option-value="value"
+            aria-labelledby="req-filter-status-label"
+            placeholder="ทุกสถานะ"
+            show-clear
+            class="w-44"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label for="req-filter-search" class="text-xs text-dark-muted">ค้นหา</label>
+          <InputText
+            id="req-filter-search"
+            v-model="filterSearch"
+            placeholder="ค้นหาชื่อคำขอ..."
+            class="w-64"
+            @keyup.enter="applyFilters"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-xs text-dark-muted">&nbsp;</span>
+          <Button label="ค้นหา" severity="secondary" @click="applyFilters" />
+        </div>
       </div>
     </div>
 
-    <!-- Error -->
-    <div v-if="query.isError.value" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-      {{ (query.error.value as Error | null)?.message ?? 'เกิดข้อผิดพลาด' }}
-    </div>
+    <QueryErrorState v-if="query.isError.value" :error="query.error.value" />
 
-    <!-- Loading -->
-    <div v-if="query.isLoading.value" class="py-12 text-center text-dark-muted">กำลังโหลด...</div>
+    <DataTable
+      v-else
+      :value="requests"
+      :lazy="true"
+      :loading="query.isLoading.value"
+      paginator
+      :rows="PER_PAGE"
+      :total-records="totalRecords"
+      :first="(currentPage - 1) * PER_PAGE"
+      data-key="id"
+      class="overflow-hidden rounded-lg border border-dark-border shadow"
+      @page="onPage"
+    >
+      <template #empty>
+        <ListEmptyState message="ไม่มีคำของบประมาณ">
+          <router-link
+            to="/requests/create"
+            class="mt-4 inline-block text-primary-400 hover:text-primary-500 hover:underline text-sm"
+          >
+            สร้างคำขอใหม่
+          </router-link>
+        </ListEmptyState>
+      </template>
 
-    <!-- Table -->
-    <div v-else-if="requests.length > 0" class="overflow-x-auto rounded-lg bg-dark-card border border-dark-border shadow">
-      <table class="min-w-full divide-y divide-dark-border">
-        <thead class="bg-dark-bg">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">ชื่อคำขอ</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">สถานะ</th>
-            <th class="px-4 py-3 text-right text-xs font-medium text-dark-muted">ยอดรวม</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">ผู้สร้าง</th>
-            <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted">วันที่</th>
-            <th class="px-4 py-3 text-center text-xs font-medium text-dark-muted">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-dark-border">
-          <tr v-for="req in requests" :key="req.id" class="hover:bg-slate-800/50">
-            <td class="px-4 py-3 text-sm">
-              <router-link :to="`/requests/${req.id}`" class="text-primary-400 hover:text-primary-500 hover:underline">
-                {{ req.request_title }}
-              </router-link>
-            </td>
-            <td class="px-4 py-3">
-              <StatusBadge :status="req.request_status" />
-            </td>
-            <td class="px-4 py-3 text-right text-sm">{{ formatAmount(req.total_amount) }}</td>
-            <td class="px-4 py-3 text-sm text-dark-muted">{{ req.created_by_name || '-' }}</td>
-            <td class="px-4 py-3 text-sm text-dark-muted">{{ formatDate(req.created_at) }}</td>
-            <td class="px-4 py-3 text-center">
-              <router-link
-                :to="`/requests/${req.id}`"
-                class="text-primary-400 hover:text-primary-500 hover:underline text-sm"
-              >
-                ดู
-              </router-link>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Empty state -->
-    <div v-else class="rounded-lg bg-dark-card border border-dark-border py-16 text-center shadow">
-      <p class="text-dark-muted">ไม่มีคำของบประมาณ</p>
-      <router-link
-        to="/requests/create"
-        class="mt-4 inline-block text-primary-400 hover:text-primary-500 hover:underline text-sm"
-      >
-        สร้างคำขอใหม่
-      </router-link>
-    </div>
-
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="mt-4 flex items-center justify-center gap-2">
-      <button
-        :disabled="currentPage <= 1"
-        @click="goToPage(currentPage - 1)"
-        class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
-      >
-        ก่อนหน้า
-      </button>
-      <span class="text-sm text-dark-muted">
-        หน้า {{ currentPage }} / {{ totalPages }}
-      </span>
-      <button
-        :disabled="currentPage >= totalPages"
-        @click="goToPage(currentPage + 1)"
-        class="rounded border border-dark-border text-dark-muted px-3 py-1.5 text-sm disabled:opacity-40"
-      >
-        ถัดไป
-      </button>
-    </div>
+      <Column header="ชื่อคำขอ">
+        <template #body="{ data }">
+          <router-link
+            :to="`/requests/${data.id}`"
+            class="text-primary-400 hover:text-primary-500 hover:underline"
+          >
+            {{ data.request_title }}
+          </router-link>
+        </template>
+      </Column>
+      <Column header="สถานะ">
+        <template #body="{ data }">
+          <StatusBadge :status="data.request_status" />
+        </template>
+      </Column>
+      <Column header="ยอดรวม" class="text-right">
+        <template #body="{ data }">
+          <span class="text-sm">{{ formatAmount(data.total_amount) }}</span>
+        </template>
+      </Column>
+      <Column header="ผู้สร้าง">
+        <template #body="{ data }">
+          <span class="text-sm text-dark-muted">{{ data.created_by_name || '-' }}</span>
+        </template>
+      </Column>
+      <Column header="วันที่">
+        <template #body="{ data }">
+          <span class="text-sm text-dark-muted">{{ formatDate(data.created_at) }}</span>
+        </template>
+      </Column>
+      <Column header="จัดการ" class="text-center">
+        <template #body="{ data }">
+          <router-link
+            :to="`/requests/${data.id}`"
+            class="text-primary-400 hover:text-primary-500 hover:underline text-sm"
+          >
+            ดู
+          </router-link>
+        </template>
+      </Column>
+    </DataTable>
   </div>
 </template>

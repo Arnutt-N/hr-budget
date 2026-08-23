@@ -7,7 +7,8 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import ToggleSwitch from 'primevue/toggleswitch'
-import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
 import { formatThaiDate } from '@/lib/date'
 import type { SalaryRaiseRound, SalaryRaiseProgress } from '@/types/salary'
 import {
@@ -94,9 +95,7 @@ async function onSeedAll(): Promise<void> {
       </p>
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -106,7 +105,7 @@ async function onSeedAll(): Promise<void> {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีรอบเลื่อน</p>
+        <ListEmptyState message="ยังไม่มีรอบเลื่อน" />
       </template>
 
       <Column header="รอบ">
@@ -154,6 +153,8 @@ async function onSeedAll(): Promise<void> {
 
       <DataTable :value="progress ?? []" :loading="progressLoading" data-key="id" paginator :rows="15">
         <template #empty>
+          <!-- Progress-table empty state keeps its own py-3/multi-line copy (differs from
+               ListEmptyState's py-4 single-line default — c4 pixel-identical rule). -->
           <p class="py-3 text-center text-dark-muted">
             ยังไม่มีแถวติดตาม — กด "สร้างแถวทุกหน่วยงาน" เพื่อเริ่ม
           </p>

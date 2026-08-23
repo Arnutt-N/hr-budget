@@ -101,6 +101,7 @@ function formatAmount(qty: string, price: string): string {
                 type="button"
                 @click="removeItem(index)"
                 class="text-red-400 hover:text-red-300 text-sm"
+                aria-label="ลบรายการ"
                 title="ลบรายการ"
               >
                 ✕

@@ -10,6 +10,7 @@ import {
   Legend,
 } from 'chart.js'
 import type { ChartData, ChartOptions, TooltipItem } from 'chart.js'
+import { usePrefersReducedMotion } from '@/composables/usePrefersReducedMotion'
 
 // Register only the pieces this bar chart needs (chart.js v4 is tree-shakeable).
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -22,6 +23,8 @@ const props = defineProps<Props>()
 
 const baht = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const compact = new Intl.NumberFormat('th-TH', { notation: 'compact', maximumFractionDigits: 1 })
+
+const reduced = usePrefersReducedMotion()
 
 const chartData = computed<ChartData<'bar'>>(() => ({
   labels: props.labels,
@@ -37,9 +40,10 @@ const chartData = computed<ChartData<'bar'>>(() => ({
   ],
 }))
 
-const options: ChartOptions<'bar'> = {
+const options = computed<ChartOptions<'bar'>>(() => ({
   responsive: true,
   maintainAspectRatio: false,
+  animation: reduced.value ? false : undefined,
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -70,7 +74,7 @@ const options: ChartOptions<'bar'> = {
       },
     },
   },
-}
+}))
 </script>
 
 <template>

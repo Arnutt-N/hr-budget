@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -12,7 +11,10 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { Target, CreateTarget, UpdateTarget } from '@/types/target'
 import {
   useTargetList,
@@ -25,8 +27,8 @@ import { useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import { useCategoryList } from '@/queries/useCategories'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: targets, isLoading, isError, error } = useTargetList()
 const createMutation = useCreateTarget()
@@ -168,14 +170,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(target: Target): void {
-  confirm.require({
+function onDelete(target: Target): void {
+  confirmDelete({
     message: `ยืนยันลบเป้าหมายนี้?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(target.id)
@@ -191,14 +188,11 @@ function confirmDelete(target: Target): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">เป้าหมายงบประมาณ</h1>
+    <PageHeader title="เป้าหมายงบประมาณ">
       <Button label="เพิ่มเป้าหมาย" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -210,7 +204,7 @@ function confirmDelete(target: Target): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลเป้าหมาย</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลเป้าหมาย" />
       </template>
 
       <Column header="ประเภทเป้าหมาย">
@@ -233,7 +227,7 @@ function confirmDelete(target: Target): void {
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -245,37 +239,39 @@ function confirmDelete(target: Target): void {
           <label id="tgt-type" class="text-sm font-medium text-dark-muted">ประเภทเป้าหมาย</label>
           <Select
             v-model="targetTypeId"
-            label-id="tgt-type"
+            aria-labelledby="tgt-type"
             :options="targetTypeOptions"
             option-label="label"
             option-value="value"
             placeholder="-- เลือกประเภทเป้าหมาย --"
             :invalid="!!errors.target_type_id"
+            :aria-describedby="errors.target_type_id ? 'tgt-type-error' : undefined"
             fluid
           />
-          <small v-if="errors.target_type_id" class="text-red-600" role="alert">{{ errors.target_type_id }}</small>
+          <small v-if="errors.target_type_id" id="tgt-type-error" class="text-red-400" role="alert">{{ errors.target_type_id }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label id="tgt-year" class="text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
           <Select
             v-model="fiscalYear"
-            label-id="tgt-year"
+            aria-labelledby="tgt-year"
             :options="fiscalYearOptions"
             option-label="label"
             option-value="value"
             placeholder="-- เลือกปีงบประมาณ --"
             :invalid="!!errors.fiscal_year"
+            :aria-describedby="errors.fiscal_year ? 'tgt-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.fiscal_year" class="text-red-600" role="alert">{{ errors.fiscal_year }}</small>
+          <small v-if="errors.fiscal_year" id="tgt-year-error" class="text-red-400" role="alert">{{ errors.fiscal_year }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label id="tgt-quarter" class="text-sm font-medium text-dark-muted">ไตรมาส</label>
           <Select
             v-model="quarter"
-            label-id="tgt-quarter"
+            aria-labelledby="tgt-quarter"
             :options="quarterOptions"
             option-label="label"
             option-value="value"
@@ -289,7 +285,7 @@ function confirmDelete(target: Target): void {
           <label id="tgt-org" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
           <Select
             v-model="organizationId"
-            label-id="tgt-org"
+            aria-labelledby="tgt-org"
             :options="organizationOptions"
             option-label="label"
             option-value="value"
@@ -303,7 +299,7 @@ function confirmDelete(target: Target): void {
           <label id="tgt-cat" class="text-sm font-medium text-dark-muted">หมวดงบประมาณ</label>
           <Select
             v-model="categoryId"
-            label-id="tgt-cat"
+            aria-labelledby="tgt-cat"
             :options="categoryOptions"
             option-label="label"
             option-value="value"

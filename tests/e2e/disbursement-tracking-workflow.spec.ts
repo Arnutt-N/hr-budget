@@ -38,7 +38,7 @@ test.describe('Disbursement tracking workflow (SPA)', () => {
     await expect(
       page.getByRole('heading', { name: 'บันทึกการเบิกจ่ายงบประมาณ' }),
     ).toBeVisible();
-    await page.getByRole('button', { name: '+ บันทึกการเบิกจ่าย' }).click();
+    await page.getByRole('button', { name: 'บันทึกการเบิกจ่าย', exact: true }).click();
     await page.waitForURL(/\/disbursements\/wizard$/);
 
     // --- Step 1: org + fiscal year + month ---

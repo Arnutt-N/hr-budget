@@ -5,8 +5,9 @@ Written against: f6badd4
 ## Evidence chain
 
 - Surface: all form dialogs and native forms across the SPA
-- Problem: of 87 `<label>` elements in `frontend/src`, only 42 (12 files) are programmatically
-  associated via `for=`; `aria-describedby` and `aria-labelledby` have **0 occurrences**
+- Problem: of 87 `<label>` elements in `frontend/src`, only 46 (13 files — including 4 dynamic
+  `:for=` bindings in `CategoryItemsPanel.vue`) are programmatically associated via `for=`;
+  `aria-describedby` and `aria-labelledby` have **0 occurrences**
   codebase-wide (verified by grep). Worst verified case: the PositionListPage create/edit dialog
   (`PositionListPage.vue:392-458`) — 10 labels, none wired (no `for`, no `id`), e.g.
   `<label class="text-sm font-medium text-dark-muted">เลขถือจ่าย</label><InputText v-model="payNo" …/>`

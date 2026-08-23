@@ -316,9 +316,10 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
         <h2 class="text-lg font-semibold text-white">ขั้นที่ 1 — เลือกหน่วยงาน ปีงบ และเดือน</h2>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
+            <label for="wiz-org" class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
             <select
               v-if="isAdmin"
+              id="wiz-org"
               v-model="orgId"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
@@ -332,8 +333,9 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             </p>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+            <label for="wiz-fiscal-year" class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
             <select
+              id="wiz-fiscal-year"
               v-model.number="fiscalYear"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
@@ -343,8 +345,9 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             </select>
           </div>
           <div>
-            <label class="mb-1 block text-sm font-medium text-dark-muted">เดือน</label>
+            <label for="wiz-month" class="mb-1 block text-sm font-medium text-dark-muted">เดือน</label>
             <select
+              id="wiz-month"
               v-model.number="recordMonth"
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >

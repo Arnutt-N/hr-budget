@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import { z } from 'zod'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
@@ -11,6 +14,8 @@ import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
 import type { Role, Permission } from '@/types/rbac'
 import {
   useRoleList,
@@ -44,10 +49,6 @@ const permGroups = computed<Record<string, Permission[]>>(() => {
 // --- Create / edit dialog state ---
 const showDialog = ref(false)
 const editingRole = ref<Role | null>(null)
-const formCode = ref('')
-const formNameTh = ref('')
-const formNameEn = ref('')
-const formDescription = ref('')
 const selectedPerms = ref<string[]>([])
 const formError = ref('')
 
@@ -58,43 +59,54 @@ const dialogTitle = computed(() =>
 )
 const saving = computed(() => createMutation.isPending.value || updateMutation.isPending.value)
 
+const CODE_RE = /^[a-z][a-z0-9_]{1,49}$/
+
+const schema = toTypedSchema(
+  z.object({
+    code: z
+      .string()
+      .min(1, 'กรุณาระบุรหัสบทบาท')
+      .regex(CODE_RE, 'รหัสบทบาทต้องเป็น a-z, 0-9, _ ขึ้นต้นด้วยตัวอักษร (≤50)'),
+    name_th: z.string().min(1, 'กรุณาระบุชื่อบทบาท'),
+    name_en: z.string().optional(),
+    description: z.string().optional(),
+  }),
+)
+
+const { defineField, handleSubmit, errors, resetForm } = useForm({ validationSchema: schema })
+const [formCode] = defineField('code')
+const [formNameTh] = defineField('name_th')
+const [formNameEn] = defineField('name_en')
+const [formDescription] = defineField('description')
+
 function openCreate(): void {
   editingRole.value = null
-  formCode.value = ''
-  formNameTh.value = ''
-  formNameEn.value = ''
-  formDescription.value = ''
   selectedPerms.value = []
   formError.value = ''
+  resetForm({ values: { code: '', name_th: '', name_en: '', description: '' } })
   showDialog.value = true
 }
 
 function openEdit(role: Role): void {
   editingRole.value = role
-  formCode.value = role.code
-  formNameTh.value = role.name_th
-  formNameEn.value = role.name_en ?? ''
-  formDescription.value = role.description ?? ''
   selectedPerms.value = [...role.permissions]
   formError.value = ''
+  resetForm({
+    values: {
+      code: role.code,
+      name_th: role.name_th,
+      name_en: role.name_en ?? '',
+      description: role.description ?? '',
+    },
+  })
   showDialog.value = true
 }
 
-const CODE_RE = /^[a-z][a-z0-9_]{1,49}$/
-
-async function onSave(): Promise<void> {
+const onSave = handleSubmit(async (values) => {
   formError.value = ''
   if (isSystem.value) {
     // System roles are view-only here (backend rejects edits).
     showDialog.value = false
-    return
-  }
-  if (!isEditing.value && !CODE_RE.test(formCode.value)) {
-    formError.value = 'รหัสบทบาทต้องเป็น a-z, 0-9, _ ขึ้นต้นด้วยตัวอักษร (≤50)'
-    return
-  }
-  if (!formNameTh.value.trim()) {
-    formError.value = 'กรุณาระบุชื่อบทบาท'
     return
   }
   try {
@@ -102,19 +114,19 @@ async function onSave(): Promise<void> {
       await updateMutation.mutateAsync({
         id: editingRole.value.id,
         data: {
-          name_th: formNameTh.value.trim(),
-          name_en: formNameEn.value.trim() || null,
-          description: formDescription.value.trim() || null,
+          name_th: values.name_th.trim(),
+          name_en: values.name_en?.trim() || null,
+          description: values.description?.trim() || null,
           permissions: selectedPerms.value,
         },
       })
       toast.add({ severity: 'success', summary: 'แก้ไขบทบาทสำเร็จ', life: 3000 })
     } else {
       await createMutation.mutateAsync({
-        code: formCode.value.trim(),
-        name_th: formNameTh.value.trim(),
-        name_en: formNameEn.value.trim() || null,
-        description: formDescription.value.trim() || null,
+        code: values.code.trim(),
+        name_th: values.name_th.trim(),
+        name_en: values.name_en?.trim() || null,
+        description: values.description?.trim() || null,
         permissions: selectedPerms.value,
       })
       toast.add({ severity: 'success', summary: 'สร้างบทบาทสำเร็จ', life: 3000 })
@@ -123,7 +135,7 @@ async function onSave(): Promise<void> {
   } catch (e: unknown) {
     formError.value = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
   }
-}
+})
 
 function confirmToggle(role: Role): void {
   const turningOff = !!role.is_active
@@ -148,7 +160,9 @@ function confirmToggle(role: Role): void {
   })
 }
 
-function confirmDelete(role: Role): void {
+function onDelete(role: Role): void {
+  // This page's delete-confirm copy differs from the shared default
+  // ('ยืนยันลบบทบาท' + custom message), so c4's stop-condition keeps it inline.
   confirm.require({
     message: `ลบบทบาท "${role.name_th}" อย่างถาวร? ผู้ใช้ที่ถูกมอบบทบาทนี้จะถูกถอนสิทธิ์`,
     header: 'ยืนยันลบบทบาท',
@@ -181,21 +195,19 @@ function confirmDelete(role: Role): void {
       <Button label="เพิ่มบทบาท" icon="pi pi-plus" @click="openCreate" />
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
       :value="roles ?? []"
       :loading="isLoading"
       paginator
-      :rows="15"
+      :rows="10"
       data-key="id"
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีบทบาท</p>
+        <ListEmptyState message="ยังไม่มีบทบาท" />
       </template>
 
       <Column header="บทบาท" sortable field="name_th">
@@ -256,7 +268,7 @@ function confirmDelete(role: Role): void {
               text
               severity="danger"
               icon="pi pi-trash"
-              @click="confirmDelete(data)"
+              @click="onDelete(data)"
             />
           </div>
         </template>
@@ -277,14 +289,25 @@ function confirmDelete(role: Role): void {
               id="role-code"
               v-model.trim="formCode"
               :disabled="isEditing"
+              :invalid="!!errors.code"
+              :aria-describedby="errors.code ? 'role-code-error' : undefined"
               placeholder="เช่น regional_supervisor"
               fluid
             />
-            <small v-if="isEditing" class="text-dark-muted">รหัสบทบาทแก้ไขไม่ได้</small>
+            <small v-if="errors.code" id="role-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
+            <small v-else-if="isEditing" class="text-dark-muted">รหัสบทบาทแก้ไขไม่ได้</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="role-name-th" class="text-sm font-medium text-dark-muted">ชื่อ (ไทย)</label>
-            <InputText id="role-name-th" v-model="formNameTh" :disabled="isSystem" fluid />
+            <InputText
+              id="role-name-th"
+              v-model="formNameTh"
+              :disabled="isSystem"
+              :invalid="!!errors.name_th"
+              :aria-describedby="errors.name_th ? 'role-name-th-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.name_th" id="role-name-th-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="role-name-en" class="text-sm font-medium text-dark-muted">ชื่อ (อังกฤษ)</label>

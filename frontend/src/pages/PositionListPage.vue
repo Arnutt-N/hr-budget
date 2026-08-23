@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -13,7 +12,10 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import { formatThaiDate } from '@/lib/date'
 import type { Position, EmployeeCategory } from '@/types/position'
 import {
@@ -34,7 +36,7 @@ import { useAllowanceTypeList } from '@/queries/useAllowances'
 import { CATEGORY_OPTIONS, OCCUPANCY_OPTIONS, categoryLabel, occupancyTag } from '@/lib/personnel'
 import type { PositionFilters } from '@/api/positions'
 
-const confirm = useConfirm()
+const confirmDeletePrompt = useDeleteConfirm()
 const toast = useToast()
 
 const filters = ref<PositionFilters>({})
@@ -149,13 +151,8 @@ const onSave = handleSubmit(async (values) => {
 })
 
 function confirmDelete(p: Position): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: `ยืนยันลบอัตราเลขถือจ่าย ${p.pay_no}?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(p.id)
@@ -171,56 +168,75 @@ function confirmDelete(p: Position): void {
 // ---------- versions dialog ----------
 const showVersions = ref(false)
 const activePositionId = ref<number | null>(null)
+const versionPosNo = ref('')
 const { data: versions, isLoading: versionsLoading } = usePositionVersions(activePositionId)
 const createVersionMutation = useCreatePositionVersion()
 
-const versionForm = ref({
-  organization_id: 0,
-  pos_no: '',
-  level_code: '',
-  base_salary: 0,
-  salary_basis: 'estimated' as 'actual' | 'estimated',
-  occupancy: 'occupied',
-  months_counted: 12,
-  approval_status: 'approved' as 'approved' | 'requested',
-  effective_from: '',
-  order_doc_no: '',
-})
+const versionSchema = toTypedSchema(
+  z.object({
+    effective_from: z.string({ required_error: 'กรุณาเลือกวันเริ่มมีผล' }).min(1, 'กรุณาเลือกวันเริ่มมีผล'),
+    base_salary: z.coerce.number({ invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
+    level_code: z.string().optional(),
+    organization_id: z.coerce.number({ invalid_type_error: 'กรุณาเลือกหน่วยงาน' }).int().min(1, 'กรุณาเลือกหน่วยงาน'),
+    occupancy: z.string().min(1, 'กรุณาเลือกสถานะการครอง'),
+    months_counted: z.coerce.number().int().min(1, '1-12').max(12, '1-12'),
+    salary_basis: z.string().min(1, 'กรุณาเลือกสถานะเงินเดือน'),
+    approval_status: z.string().min(1, 'กรุณาเลือกสถานะการอนุมัติ'),
+    order_doc_no: z.string().optional(),
+  }),
+)
+const {
+  defineField: defineVersionField,
+  handleSubmit: handleVersionSubmit,
+  errors: versionErrors,
+  resetForm: resetVersionForm,
+} = useForm({ validationSchema: versionSchema })
+const [vEffectiveFrom] = defineVersionField('effective_from')
+const [vBaseSalary] = defineVersionField('base_salary')
+const [vLevelCode] = defineVersionField('level_code')
+const [vOrganizationId] = defineVersionField('organization_id')
+const [vOccupancy] = defineVersionField('occupancy')
+const [vMonthsCounted] = defineVersionField('months_counted')
+const [vSalaryBasis] = defineVersionField('salary_basis')
+const [vApprovalStatus] = defineVersionField('approval_status')
+const [vOrderDocNo] = defineVersionField('order_doc_no')
 
 function openVersions(p: Position): void {
   activePositionId.value = p.id
-  versionForm.value = {
-    organization_id: p.organization_id ?? 0,
-    pos_no: p.pos_no ?? '',
-    level_code: p.level_code ?? '',
-    base_salary: p.base_salary ?? 0,
-    salary_basis: 'estimated',
-    occupancy: p.occupancy ?? 'occupied',
-    months_counted: p.months_counted ?? 12,
-    approval_status: 'approved',
-    effective_from: '',
-    order_doc_no: '',
-  }
+  versionPosNo.value = p.pos_no ?? ''
+  resetVersionForm({
+    values: {
+      effective_from: '',
+      base_salary: p.base_salary ?? 0,
+      level_code: p.level_code ?? '',
+      organization_id: p.organization_id ?? 0,
+      occupancy: p.occupancy ?? 'occupied',
+      months_counted: p.months_counted ?? 12,
+      salary_basis: 'estimated',
+      approval_status: 'approved',
+      order_doc_no: '',
+    },
+  })
   showVersions.value = true
 }
 
-async function onAddVersion(): Promise<void> {
-  if (!activePositionId.value || !versionForm.value.effective_from) return
+const onAddVersion = handleVersionSubmit(async (values) => {
+  if (!activePositionId.value) return
   try {
     await createVersionMutation.mutateAsync({
       id: activePositionId.value,
       data: {
-        organization_id: versionForm.value.organization_id,
-        pos_no: versionForm.value.pos_no || null,
-        level_code: versionForm.value.level_code || null,
-        base_salary: versionForm.value.base_salary,
-        salary_basis: versionForm.value.salary_basis,
-        occupancy: versionForm.value.occupancy as Position['occupancy'] & string,
+        organization_id: values.organization_id,
+        pos_no: versionPosNo.value || null,
+        level_code: values.level_code || null,
+        base_salary: values.base_salary,
+        salary_basis: values.salary_basis as 'actual' | 'estimated',
+        occupancy: values.occupancy as Position['occupancy'] & string,
         lifecycle: 'active',
-        months_counted: versionForm.value.months_counted,
-        approval_status: versionForm.value.approval_status,
-        effective_from: versionForm.value.effective_from,
-        order_doc_no: versionForm.value.order_doc_no || null,
+        months_counted: values.months_counted,
+        approval_status: values.approval_status as 'approved' | 'requested',
+        effective_from: values.effective_from,
+        order_doc_no: values.order_doc_no || null,
       },
     })
     toast.add({ severity: 'success', summary: 'เพิ่มเวอร์ชันสำเร็จ (เวอร์ชันเดิมถูกปิดอัตโนมัติ)', life: 3000 })
@@ -228,7 +244,7 @@ async function onAddVersion(): Promise<void> {
     const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
     toast.add({ severity: 'error', summary: 'เพิ่มเวอร์ชันไม่สำเร็จ', detail: message, life: 5000 })
   }
-}
+})
 
 // ---------- allowances dialog ----------
 const showAllowances = ref(false)
@@ -238,45 +254,54 @@ const createAllowanceMutation = useCreatePositionAllowance()
 const deleteAllowanceMutation = useDeletePositionAllowance()
 const { data: allowanceTypes } = useAllowanceTypeList()
 
-const allowanceForm = ref({
-  allowance_type_id: 0,
-  effective_from: '',
-  doc_no: '',
-})
+const allowanceSchema = toTypedSchema(
+  z.object({
+    allowance_type_id: z.coerce
+      .number({ invalid_type_error: 'กรุณาเลือกชนิดเงินเพิ่ม' })
+      .int()
+      .min(1, 'กรุณาเลือกชนิดเงินเพิ่ม'),
+    effective_from: z.string({ required_error: 'กรุณาเลือกวันเริ่มมีสิทธิ์' }).min(1, 'กรุณาเลือกวันเริ่มมีสิทธิ์'),
+    doc_no: z.string().optional(),
+  }),
+)
+const {
+  defineField: defineAllowanceField,
+  handleSubmit: handleAllowanceSubmit,
+  errors: allowanceErrors,
+  resetForm: resetAllowanceForm,
+} = useForm({ validationSchema: allowanceSchema })
+const [aTypeId] = defineAllowanceField('allowance_type_id')
+const [aEffectiveFrom] = defineAllowanceField('effective_from')
+const [aDocNo] = defineAllowanceField('doc_no')
 
 function openAllowances(p: Position): void {
   allowancePositionId.value = p.id
-  allowanceForm.value = { allowance_type_id: 0, effective_from: '', doc_no: '' }
+  resetAllowanceForm({ values: { allowance_type_id: 0, effective_from: '', doc_no: '' } })
   showAllowances.value = true
 }
 
-async function onAddAllowance(): Promise<void> {
-  if (!allowancePositionId.value || !allowanceForm.value.allowance_type_id || !allowanceForm.value.effective_from) return
+const onAddAllowance = handleAllowanceSubmit(async (values) => {
+  if (!allowancePositionId.value) return
   try {
     await createAllowanceMutation.mutateAsync({
       positionId: allowancePositionId.value,
       data: {
-        allowance_type_id: allowanceForm.value.allowance_type_id,
-        effective_from: allowanceForm.value.effective_from,
-        doc_no: allowanceForm.value.doc_no || null,
+        allowance_type_id: values.allowance_type_id,
+        effective_from: values.effective_from,
+        doc_no: values.doc_no || null,
       },
     })
     toast.add({ severity: 'success', summary: 'เพิ่มสิทธิ์สำเร็จ', life: 3000 })
-    allowanceForm.value = { allowance_type_id: 0, effective_from: '', doc_no: '' }
+    resetAllowanceForm({ values: { allowance_type_id: 0, effective_from: '', doc_no: '' } })
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'เกิดข้อผิดพลาด'
     toast.add({ severity: 'error', summary: 'เพิ่มสิทธิ์ไม่สำเร็จ', detail: message, life: 5000 })
   }
-}
+})
 
 function confirmDeleteAllowance(allowanceId: number): void {
-  confirm.require({
+  confirmDeletePrompt({
     message: 'ลบสิทธิ์เงินเพิ่มนี้?',
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       if (!allowancePositionId.value) return
       try {
@@ -293,10 +318,9 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">อัตรากำลัง</h1>
+    <PageHeader title="อัตรากำลัง">
       <Button label="เพิ่มอัตรากำลัง" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
     <div class="mb-4 flex flex-wrap gap-2">
       <Select
@@ -320,21 +344,19 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <InputText v-model="filters.q" placeholder="ค้นหาเลขถือจ่าย / เลขที่ตำแหน่ง" class="w-72" />
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
       :value="positions ?? []"
       :loading="isLoading"
       paginator
-      :rows="15"
+      :rows="10"
       data-key="id"
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลอัตรากำลัง</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลอัตรากำลัง" />
       </template>
 
       <Column field="pay_no" header="เลขถือจ่าย" sortable />
@@ -390,71 +412,111 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">เลขถือจ่าย</label>
-            <InputText v-model="payNo" :invalid="!!errors.pay_no" fluid />
-            <small v-if="errors.pay_no" class="text-red-600" role="alert">{{ errors.pay_no }}</small>
+            <label for="pos-pay-no" class="text-sm font-medium text-dark-muted">เลขถือจ่าย</label>
+            <InputText
+              id="pos-pay-no"
+              v-model="payNo"
+              :invalid="!!errors.pay_no"
+              :aria-describedby="errors.pay_no ? 'pos-pay-no-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.pay_no" id="pos-pay-no-error" class="text-red-400" role="alert">{{ errors.pay_no }}</small>
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">เลขที่ตำแหน่ง</label>
-            <InputText v-model="posNo" fluid :disabled="!!editingId" />
+            <label for="pos-pos-no" class="text-sm font-medium text-dark-muted">เลขที่ตำแหน่ง</label>
+            <InputText id="pos-pos-no" v-model="posNo" fluid :disabled="!!editingId" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
+            <label id="pos-category-label" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
             <Select
               v-model="employeeCategory"
+              aria-labelledby="pos-category-label"
               :options="CATEGORY_OPTIONS"
               option-label="label"
               option-value="value"
               :invalid="!!errors.employee_category"
+              :aria-describedby="errors.employee_category ? 'pos-category-error' : undefined"
               fluid
             />
-            <small v-if="errors.employee_category" class="text-red-600" role="alert">{{ errors.employee_category }}</small>
+            <small v-if="errors.employee_category" id="pos-category-error" class="text-red-400" role="alert">{{ errors.employee_category }}</small>
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">หน่วยงานเจ้าของงบ</label>
+            <label id="pos-org-label" class="text-sm font-medium text-dark-muted">หน่วยงานเจ้าของงบ</label>
             <Select
               v-model="organizationId"
+              aria-labelledby="pos-org-label"
               :options="organizations ?? []"
               option-label="name_th"
               option-value="id"
               :invalid="!!errors.organization_id"
+              :aria-describedby="errors.organization_id ? 'pos-org-error' : undefined"
               :disabled="!!editingId"
-              fluid
               filter
+              fluid
             />
-            <small v-if="errors.organization_id" class="text-red-600" role="alert">{{ errors.organization_id }}</small>
+            <small v-if="errors.organization_id" id="pos-org-error" class="text-red-400" role="alert">{{ errors.organization_id }}</small>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">ระดับ</label>
-            <InputText v-model="levelCode" fluid :disabled="!!editingId" />
+            <label for="pos-level" class="text-sm font-medium text-dark-muted">ระดับ</label>
+            <InputText id="pos-level" v-model="levelCode" fluid :disabled="!!editingId" />
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">เงินเดือน</label>
-            <InputNumber v-model="baseSalary" :min="0" :invalid="!!errors.base_salary" fluid :disabled="!!editingId" />
-            <small v-if="errors.base_salary" class="text-red-600" role="alert">{{ errors.base_salary }}</small>
+            <label for="pos-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
+            <InputNumber
+              v-model="baseSalary"
+              input-id="pos-salary"
+              :min="0"
+              :invalid="!!errors.base_salary"
+              :aria-describedby="errors.base_salary ? 'pos-salary-error' : undefined"
+              fluid
+              :disabled="!!editingId"
+            />
+            <small v-if="errors.base_salary" id="pos-salary-error" class="text-red-400" role="alert">{{ errors.base_salary }}</small>
           </div>
         </div>
 
         <div v-if="!editingId" class="grid grid-cols-3 gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
-            <Select v-model="occupancy" :options="OCCUPANCY_OPTIONS" option-label="label" option-value="value" fluid />
+            <label id="pos-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
+            <Select
+              v-model="occupancy"
+              aria-labelledby="pos-occupancy-label"
+              :options="OCCUPANCY_OPTIONS"
+              option-label="label"
+              option-value="value"
+              fluid
+            />
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">เดือนที่นับ (1-12)</label>
-            <InputNumber v-model="monthsCounted" :min="1" :max="12" :invalid="!!errors.months_counted" fluid />
-            <small v-if="errors.months_counted" class="text-red-600" role="alert">{{ errors.months_counted }}</small>
+            <label for="pos-months" class="text-sm font-medium text-dark-muted">เดือนที่นับ (1-12)</label>
+            <InputNumber
+              v-model="monthsCounted"
+              input-id="pos-months"
+              :min="1"
+              :max="12"
+              :invalid="!!errors.months_counted"
+              :aria-describedby="errors.months_counted ? 'pos-months-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.months_counted" id="pos-months-error" class="text-red-400" role="alert">{{ errors.months_counted }}</small>
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
-            <InputText v-model="effectiveFrom" type="date" :invalid="!!errors.effective_from" fluid />
-            <small v-if="errors.effective_from" class="text-red-600" role="alert">{{ errors.effective_from }}</small>
+            <label for="pos-effective" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+            <InputText
+              id="pos-effective"
+              v-model="effectiveFrom"
+              type="date"
+              :invalid="!!errors.effective_from"
+              :aria-describedby="errors.effective_from ? 'pos-effective-error' : undefined"
+              fluid
+            />
+            <small v-if="errors.effective_from" id="pos-effective-error" class="text-red-400" role="alert">{{ errors.effective_from }}</small>
           </div>
         </div>
         <p v-else class="text-xs text-dark-muted">
@@ -462,8 +524,8 @@ function confirmDeleteAllowance(allowanceId: number): void {
         </p>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-dark-muted">เลขที่คำสั่งตั้งอัตรา</label>
-          <InputText v-model="createdDocNo" fluid />
+          <label for="pos-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่งตั้งอัตรา</label>
+          <InputText id="pos-doc-no" v-model="createdDocNo" fluid />
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
@@ -477,7 +539,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
     <Dialog v-model:visible="showVersions" header="เวอร์ชันของอัตรา (เรียงใหม่สุดก่อน)" modal class="w-full max-w-3xl">
       <DataTable :value="versions ?? []" :loading="versionsLoading" data-key="id">
         <template #empty>
-          <p class="py-3 text-center text-dark-muted">ยังไม่มีเวอร์ชัน</p>
+          <ListEmptyState message="ยังไม่มีเวอร์ชัน" />
         </template>
         <Column header="ช่วงมีผล">
           <template #body="{ data }">
@@ -509,42 +571,105 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มเวอร์ชันใหม่ (ปิดเวอร์ชันเดิมอัตโนมัติ)</h3>
         <div class="grid grid-cols-3 gap-3">
-          <InputText v-model="versionForm.effective_from" type="date" placeholder="วันเริ่มมีผล" />
-          <InputNumber v-model="versionForm.base_salary" :min="0" placeholder="เงินเดือน" fluid />
-          <InputText v-model="versionForm.level_code" placeholder="ระดับ" />
-          <Select
-            v-model="versionForm.organization_id"
-            :options="organizations ?? []"
-            option-label="name_th"
-            option-value="id"
-            placeholder="หน่วยงาน"
-            filter
-            fluid
-          />
-          <Select v-model="versionForm.occupancy" :options="OCCUPANCY_OPTIONS" option-label="label" option-value="value" fluid />
-          <InputNumber v-model="versionForm.months_counted" :min="1" :max="12" placeholder="เดือนที่นับ" fluid />
-          <Select
-            v-model="versionForm.salary_basis"
-            :options="[{ value: 'estimated', label: 'ประมาณการ' }, { value: 'actual', label: 'ยืนยันแล้ว' }]"
-            option-label="label"
-            option-value="value"
-            fluid
-          />
-          <Select
-            v-model="versionForm.approval_status"
-            :options="[{ value: 'approved', label: 'อนุมัติแล้ว' }, { value: 'requested', label: 'รออนุมัติ (ไม่นับงบ)' }]"
-            option-label="label"
-            option-value="value"
-            fluid
-          />
-          <InputText v-model="versionForm.order_doc_no" placeholder="เลขที่คำสั่ง" />
+          <div class="flex flex-col gap-1">
+            <label for="version-effective-from" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+            <InputText
+              id="version-effective-from"
+              v-model="vEffectiveFrom"
+              type="date"
+              :invalid="!!versionErrors.effective_from"
+              :aria-describedby="versionErrors.effective_from ? 'version-effective-error' : undefined"
+              fluid
+            />
+            <small v-if="versionErrors.effective_from" id="version-effective-error" class="text-red-400" role="alert">{{ versionErrors.effective_from }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="version-base-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
+            <InputNumber
+              input-id="version-base-salary"
+              v-model="vBaseSalary"
+              :min="0"
+              :invalid="!!versionErrors.base_salary"
+              :aria-describedby="versionErrors.base_salary ? 'version-salary-error' : undefined"
+              fluid
+            />
+            <small v-if="versionErrors.base_salary" id="version-salary-error" class="text-red-400" role="alert">{{ versionErrors.base_salary }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="version-level-code" class="text-sm font-medium text-dark-muted">ระดับ</label>
+            <InputText id="version-level-code" v-model="vLevelCode" fluid />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label id="version-organization-label" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
+            <Select
+              v-model="vOrganizationId"
+              :options="organizations ?? []"
+              option-label="name_th"
+              option-value="id"
+              aria-labelledby="version-organization-label"
+              :invalid="!!versionErrors.organization_id"
+              :aria-describedby="versionErrors.organization_id ? 'version-org-error' : undefined"
+              filter
+              fluid
+            />
+            <small v-if="versionErrors.organization_id" id="version-org-error" class="text-red-400" role="alert">{{ versionErrors.organization_id }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label id="version-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
+            <Select
+              v-model="vOccupancy"
+              :options="OCCUPANCY_OPTIONS"
+              option-label="label"
+              option-value="value"
+              aria-labelledby="version-occupancy-label"
+              fluid
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="version-months-counted" class="text-sm font-medium text-dark-muted">เดือนที่นับ</label>
+            <InputNumber
+              input-id="version-months-counted"
+              v-model="vMonthsCounted"
+              :min="1"
+              :max="12"
+              :invalid="!!versionErrors.months_counted"
+              :aria-describedby="versionErrors.months_counted ? 'version-months-error' : undefined"
+              fluid
+            />
+            <small v-if="versionErrors.months_counted" id="version-months-error" class="text-red-400" role="alert">{{ versionErrors.months_counted }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label id="version-salary-basis-label" class="text-sm font-medium text-dark-muted">สถานะเงินเดือน</label>
+            <Select
+              v-model="vSalaryBasis"
+              :options="[{ value: 'estimated', label: 'ประมาณการ' }, { value: 'actual', label: 'ยืนยันแล้ว' }]"
+              option-label="label"
+              option-value="value"
+              aria-labelledby="version-salary-basis-label"
+              fluid
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label id="version-approval-label" class="text-sm font-medium text-dark-muted">สถานะการอนุมัติ</label>
+            <Select
+              v-model="vApprovalStatus"
+              :options="[{ value: 'approved', label: 'อนุมัติแล้ว' }, { value: 'requested', label: 'รออนุมัติ (ไม่นับงบ)' }]"
+              option-label="label"
+              option-value="value"
+              aria-labelledby="version-approval-label"
+              fluid
+            />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="version-order-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</label>
+            <InputText id="version-order-doc-no" v-model="vOrderDocNo" fluid />
+          </div>
         </div>
         <div class="mt-3 flex justify-end">
           <Button
             label="เพิ่มเวอร์ชัน"
             icon="pi pi-plus"
             :loading="createVersionMutation.isPending.value"
-            :disabled="!versionForm.effective_from"
             @click="onAddVersion"
           />
         </div>
@@ -555,7 +680,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
     <Dialog v-model:visible="showAllowances" header="สิทธิ์เงินเพิ่มของอัตรา" modal class="w-full max-w-2xl">
       <DataTable :value="allowances ?? []" :loading="allowancesLoading" data-key="id">
         <template #empty>
-          <p class="py-3 text-center text-dark-muted">ยังไม่มีสิทธิ์ (ไม่มีแถว = ไม่มีสิทธิ์)</p>
+          <ListEmptyState message="ยังไม่มีสิทธิ์ (ไม่มีแถว = ไม่มีสิทธิ์)" />
         </template>
         <Column header="เงินเพิ่ม">
           <template #body="{ data }">{{ data.short_name ?? data.allowance_name ?? '—' }}</template>
@@ -578,24 +703,43 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มสิทธิ์</h3>
         <div class="grid grid-cols-3 gap-3">
-          <Select
-            v-model="allowanceForm.allowance_type_id"
-            :options="allowanceTypes ?? []"
-            option-label="name_th"
-            option-value="id"
-            placeholder="ชนิดเงินเพิ่ม"
-            filter
-            fluid
-          />
-          <InputText v-model="allowanceForm.effective_from" type="date" placeholder="วันเริ่มมีสิทธิ์" />
-          <InputText v-model="allowanceForm.doc_no" placeholder="เลขที่คำสั่ง" />
+          <div class="flex flex-col gap-1">
+            <label id="allowance-type-label" class="text-sm font-medium text-dark-muted">ชนิดเงินเพิ่ม</label>
+            <Select
+              v-model="aTypeId"
+              :options="allowanceTypes ?? []"
+              option-label="name_th"
+              option-value="id"
+              aria-labelledby="allowance-type-label"
+              :invalid="!!allowanceErrors.allowance_type_id"
+              :aria-describedby="allowanceErrors.allowance_type_id ? 'allowance-type-error' : undefined"
+              filter
+              fluid
+            />
+            <small v-if="allowanceErrors.allowance_type_id" id="allowance-type-error" class="text-red-400" role="alert">{{ allowanceErrors.allowance_type_id }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="allowance-effective-from" class="text-sm font-medium text-dark-muted">วันเริ่มมีสิทธิ์</label>
+            <InputText
+              id="allowance-effective-from"
+              v-model="aEffectiveFrom"
+              type="date"
+              :invalid="!!allowanceErrors.effective_from"
+              :aria-describedby="allowanceErrors.effective_from ? 'allowance-effective-error' : undefined"
+              fluid
+            />
+            <small v-if="allowanceErrors.effective_from" id="allowance-effective-error" class="text-red-400" role="alert">{{ allowanceErrors.effective_from }}</small>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="allowance-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</label>
+            <InputText id="allowance-doc-no" v-model="aDocNo" fluid />
+          </div>
         </div>
         <div class="mt-3 flex justify-end">
           <Button
             label="เพิ่มสิทธิ์"
             icon="pi pi-plus"
             :loading="createAllowanceMutation.isPending.value"
-            :disabled="!allowanceForm.allowance_type_id || !allowanceForm.effective_from"
             @click="onAddAllowance"
           />
         </div>

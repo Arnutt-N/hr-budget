@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
-import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -13,7 +12,10 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
+import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { Division } from '@/types/division'
 import {
   useDivisionList,
@@ -22,8 +24,8 @@ import {
   useDeleteDivision,
 } from '@/queries/useDivisions'
 
-const confirm = useConfirm()
 const toast = useToast()
+const confirmDelete = useDeleteConfirm()
 
 const { data: divisions, isLoading, isError, error } = useDivisionList()
 const createMutation = useCreateDivision()
@@ -96,14 +98,9 @@ const onSave = handleSubmit(async (values) => {
   }
 })
 
-function confirmDelete(division: Division): void {
-  confirm.require({
+function onDelete(division: Division): void {
+  confirmDelete({
     message: `ยืนยันลบกอง/สำนัก "${division.name_th}"?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'ลบ',
-    rejectLabel: 'ยกเลิก',
-    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(division.id)
@@ -119,14 +116,11 @@ function confirmDelete(division: Division): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">กอง/สำนัก</h1>
+    <PageHeader title="กอง/สำนัก">
       <Button label="เพิ่มกอง/สำนัก" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -138,7 +132,7 @@ function confirmDelete(division: Division): void {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีข้อมูลกอง/สำนัก</p>
+        <ListEmptyState message="ยังไม่มีข้อมูลกอง/สำนัก" />
       </template>
 
       <Column field="code" header="รหัส" sortable>
@@ -166,7 +160,7 @@ function confirmDelete(division: Division): void {
         <template #body="{ data }">
           <div class="flex justify-end gap-1">
             <Button label="แก้ไข" size="small" text @click="openEdit(data)" />
-            <Button label="ลบ" size="small" text severity="danger" @click="confirmDelete(data)" />
+            <Button label="ลบ" size="small" text severity="danger" @click="onDelete(data)" />
           </div>
         </template>
       </Column>
@@ -176,14 +170,27 @@ function confirmDelete(division: Division): void {
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="flex flex-col gap-1">
           <label for="div-code" class="text-sm font-medium text-dark-muted">รหัส</label>
-          <InputText id="div-code" v-model.trim="code" maxlength="20" :invalid="!!errors.code" fluid />
-          <small v-if="errors.code" class="text-red-600" role="alert">{{ errors.code }}</small>
+          <InputText
+            id="div-code"
+            v-model.trim="code"
+            maxlength="20"
+            :invalid="!!errors.code"
+            :aria-describedby="errors.code ? 'div-code-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.code" id="div-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
         </div>
 
         <div class="flex flex-col gap-1">
           <label for="div-name" class="text-sm font-medium text-dark-muted">ชื่อกอง/สำนัก</label>
-          <InputText id="div-name" v-model.trim="nameTh" :invalid="!!errors.name_th" fluid />
-          <small v-if="errors.name_th" class="text-red-600" role="alert">{{ errors.name_th }}</small>
+          <InputText
+            id="div-name"
+            v-model.trim="nameTh"
+            :invalid="!!errors.name_th"
+            :aria-describedby="errors.name_th ? 'div-name-error' : undefined"
+            fluid
+          />
+          <small v-if="errors.name_th" id="div-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
         </div>
 
         <div class="flex flex-col gap-1">

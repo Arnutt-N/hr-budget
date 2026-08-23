@@ -9,7 +9,8 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
-import Message from 'primevue/message'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import ListEmptyState from '@/components/ListEmptyState.vue'
 import { formatThaiDate } from '@/lib/date'
 import { vacancyTypeLabel, VACANCY_TYPE_OPTIONS, CALC_MODE_OPTIONS } from '@/lib/personnel'
 import {
@@ -99,9 +100,7 @@ async function onSave(): Promise<void> {
       <Button label="สร้างนโยบาย" icon="pi pi-plus" @click="openCreate" />
     </div>
 
-    <Message v-if="isError" severity="error" :closable="false">
-      {{ error?.message ?? 'ไม่สามารถโหลดข้อมูลได้' }}
-    </Message>
+    <QueryErrorState v-if="isError" :error="error" />
 
     <DataTable
       v-else
@@ -111,7 +110,7 @@ async function onSave(): Promise<void> {
       class="overflow-hidden rounded-lg border border-dark-border shadow"
     >
       <template #empty>
-        <p class="py-4 text-center text-dark-muted">ยังไม่มีนโยบาย</p>
+        <ListEmptyState message="ยังไม่มีนโยบาย" />
       </template>
       <Column header="ปีงบ" field="fiscal_year" />
       <Column header="เกณฑ์อัตราว่าง">
