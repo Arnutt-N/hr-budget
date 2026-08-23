@@ -65,8 +65,10 @@ cd frontend && npm run verify          # typecheck + build
     outDir `../public/app` (tracked, served by PHP).
   - Never gate the deploy base on `mode === 'production'` — a production build must stay base `/`.
   - Build the SPA from PowerShell rather than Git Bash to avoid MSYS path mangling of `VITE_BASE`.
-- **Vite dev proxies `/api` to `http://hr_budget.test`** (Laragon host) by default; override
-  with `VITE_API_URL`. Same-origin in dev exercises CORS end-to-end.
+- **Vite dev proxies `/api` to `VITE_API_URL` (default `http://hr_budget.test`)** — the
+  default target 404s because the app lives under the `/hr_budget/public/` subdirectory;
+  start the dev server with
+  `VITE_API_URL=http://hr_budget.test/hr_budget/public npm run dev` for a working proxy.
 - Test environment reads `DB_NAME=hr_budget_test` (set in `phpunit.xml` and
   `tests/bootstrap.php`). Ensure that database exists separately from `hr_budget`.
 
@@ -110,8 +112,9 @@ server-rendered surfaces (besides the kept legacy remnant below).
   helpers (e.g. hierarchy walks)
 - **No ORM / migrations framework.** Migrations are hand-written SQL files in
   `database/migrations/` numbered sequentially (`001_*.sql`… — check the latest number before
-  adding; a few unnumbered one-off SQL files also live there), applied via
-  `run_migrations.bat` / `run_migrations.sh` (each script shells out to the `mysql` CLI)
+  adding; a few unnumbered one-off SQL files also live there), applied via the runners that
+  live in the same directory: `database/migrations/run_migrations.bat` /
+  `run_migrations.sh` (each shells out to the `mysql` CLI)
 - Config from env: `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`.
   `config/database.php` is git-ignored — seed via `.env`
 
@@ -245,8 +248,10 @@ push moment; the scripts cover ad-hoc runs.
   check this flag.
 - **E2E is opt-in on CI.** The `e2e` job only runs on `workflow_dispatch` or when the PR
   carries the `run-e2e` label, and even then it executes `tests/e2e/api` only.
-- **E2E seeds `e2e@hr.local` / `pass1234`** (role `viewer`). Tests read `E2E_USER_EMAIL` /
-  `E2E_USER_PASSWORD` env.
+- **E2E credentials.** `tests/e2e/api/auth-flow.spec.ts` reads `E2E_USER_EMAIL` /
+  `E2E_USER_PASSWORD` (defaults `test@hr.local` / `pass1234` — the user must exist in the
+  target DB). The UI cookie-auth spec (`auth-login-logout.spec.ts`) hardcodes
+  `admin@moj.go.th` / `admin123`. There is no seeding step — specs assume these users.
 - **Backend in CI:** `php -S 127.0.0.1:18080 -t public/ public/index.php`. Frontend:
   `npx vite preview --port 5174` after `npm run build`. `BASE_URL` + `API_URL` env switch the
   Playwright target.
@@ -306,7 +311,8 @@ supported surface.
 ## Migration gotchas
 
 - **No migration framework.** Files in `database/migrations/` are hand-written SQL applied via
-  `run_migrations.bat` / `run_migrations.sh` (shell out to `mysql` CLI).
+  the runners in that directory (`run_migrations.bat` / `run_migrations.sh`, shell out to
+  `mysql` CLI). Range currently `001`–`093`.
 - **Number collisions exist:** `022_*` (two files), `023_*` (two files), `024_*` (two files).
   Several numbers are skipped (`005`, `006`, `020`, `030`, `039`, `042–049`, `055–059`).
   **Check the directory before adding a new one — don't just increment the highest existing number.**
