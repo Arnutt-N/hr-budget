@@ -64,15 +64,25 @@ const saving = computed(() => createMutation.isPending.value || updateMutation.i
 const CODE_RE = /^[a-z][a-z0-9_]{1,49}$/
 
 const schema = toTypedSchema(
-  z.object({
-    code: z
-      .string()
-      .min(1, 'กรุณาระบุรหัสบทบาท')
-      .regex(CODE_RE, 'รหัสบทบาทต้องเป็น a-z, 0-9, _ ขึ้นต้นด้วยตัวอักษร (≤50)'),
-    name_th: z.string().min(1, 'กรุณาระบุชื่อบทบาท'),
-    name_en: z.string().optional(),
-    description: z.string().optional(),
-  }),
+  z
+    .object({
+      code: z.string().min(1, 'กรุณาระบุรหัสบทบาท'),
+      name_th: z.string().min(1, 'กรุณาระบุชื่อบทบาท'),
+      name_en: z.string().optional(),
+      description: z.string().optional(),
+    })
+    // The code format was only ever enforced on create (backend CreateRoleDto
+    // likewise; code is not editable on update). Legacy rows may violate the
+    // pattern, so skip the check when editing an existing role.
+    .superRefine((values, ctx) => {
+      if (!isEditing.value && !CODE_RE.test(values.code)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['code'],
+          message: 'รหัสบทบาทต้องเป็น a-z, 0-9, _ ขึ้นต้นด้วยตัวอักษร (≤50)',
+        })
+      }
+    }),
 )
 
 const { defineField, handleSubmit, errors, resetForm } = useForm({ validationSchema: schema })
