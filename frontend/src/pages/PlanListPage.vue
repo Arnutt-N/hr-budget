@@ -19,7 +19,7 @@ import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { Plan } from '@/types/plan'
 import { usePlanList, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/queries/usePlans'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { useFiscalYearList, useFiscalYearOptions } from '@/queries/useFiscalYears'
 
 const toast = useToast()
 const confirmDelete = useDeleteConfirm()
@@ -30,12 +30,7 @@ const createMutation = useCreatePlan()
 const updateMutation = useUpdatePlan()
 const deleteMutation = useDeletePlan()
 
-const yearOptions = computed(() =>
-  (fiscalYears.value ?? []).map((fy) => ({
-    value: fy.year,
-    label: String(fy.year) + (fy.is_current ? ' (ปีปัจจุบัน)' : ''),
-  })),
-)
+const yearOptions = useFiscalYearOptions()
 
 function defaultFiscalYear(): number {
   const current = (fiscalYears.value ?? []).find((fy) => fy.is_current)

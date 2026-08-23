@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import ApprovalChainPanel from '@/components/ApprovalChainPanel.vue'
+import { formatAmount } from '@/lib/format'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -36,11 +37,6 @@ const showApproveReject = computed(() => canApprove.value && isAdmin.value)
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-function formatAmount(amount: string | null): string {
-  if (!amount) return '-'
-  return parseFloat(amount).toLocaleString('th-TH', { minimumFractionDigits: 2 })
 }
 
 const actionLabels: Record<string, string> = {

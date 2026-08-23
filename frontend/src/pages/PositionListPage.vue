@@ -166,6 +166,15 @@ function confirmDelete(p: Position): void {
 }
 
 // ---------- versions dialog ----------
+const SALARY_BASIS_OPTIONS = [
+  { value: 'estimated', label: 'ประมาณการ' },
+  { value: 'actual', label: 'ยืนยันแล้ว' },
+]
+const APPROVAL_STATUS_OPTIONS = [
+  { value: 'approved', label: 'อนุมัติแล้ว' },
+  { value: 'requested', label: 'รออนุมัติ (ไม่นับงบ)' },
+]
+
 const showVersions = ref(false)
 const activePositionId = ref<number | null>(null)
 const versionPosNo = ref('')
@@ -642,7 +651,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
             <label id="version-salary-basis-label" class="text-sm font-medium text-dark-muted">สถานะเงินเดือน</label>
             <Select
               v-model="vSalaryBasis"
-              :options="[{ value: 'estimated', label: 'ประมาณการ' }, { value: 'actual', label: 'ยืนยันแล้ว' }]"
+              :options="SALARY_BASIS_OPTIONS"
               option-label="label"
               option-value="value"
               aria-labelledby="version-salary-basis-label"
@@ -653,7 +662,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
             <label id="version-approval-label" class="text-sm font-medium text-dark-muted">สถานะการอนุมัติ</label>
             <Select
               v-model="vApprovalStatus"
-              :options="[{ value: 'approved', label: 'อนุมัติแล้ว' }, { value: 'requested', label: 'รออนุมัติ (ไม่นับงบ)' }]"
+              :options="APPROVAL_STATUS_OPTIONS"
               option-label="label"
               option-value="value"
               aria-labelledby="version-approval-label"
