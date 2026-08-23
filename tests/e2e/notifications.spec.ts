@@ -22,10 +22,11 @@ async function loginAsAdmin(page: Page): Promise<void> {
 test('bell badge, dropdown, list page, and mark-all-read', async ({ page }) => {
     await loginAsAdmin(page);
 
-    // Unread badge from the seeded notification.
+    // Unread badge from the seeded notification. CI seeds exactly 1; a shared
+    // dev DB may hold more, so assert any numeric badge (1–99 or "9+").
     const bell = page.getByRole('button', { name: 'การแจ้งเตือน' });
     await expect(bell).toBeVisible();
-    await expect(bell.getByText('1', { exact: true })).toBeVisible();
+    await expect(bell.getByText(/^(9\+|\d{1,2})$/)).toBeVisible();
 
     // Dropdown lists the seeded notification.
     await bell.click();
@@ -39,5 +40,5 @@ test('bell badge, dropdown, list page, and mark-all-read', async ({ page }) => {
 
     // Mark all read clears the unread badge (TanStack invalidates unread-count).
     await page.getByRole('button', { name: 'อ่านทั้งหมด' }).click();
-    await expect(bell.getByText('1', { exact: true })).toBeHidden();
+    await expect(bell.getByText(/^(9\+|\d{1,2})$/)).toBeHidden();
 });
