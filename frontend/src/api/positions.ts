@@ -4,9 +4,10 @@ import type { Position, CreatePosition, UpdatePosition, PositionVersion, CreateP
 
 export interface PositionFilters {
   organization_id?: number
-  employee_category?: string
-  occupancy?: string
-  approval_status?: string
+  // nullable: PrimeVue Select emits null on clear
+  employee_category?: string | null
+  occupancy?: string | null
+  approval_status?: string | null
   q?: string
 }
 

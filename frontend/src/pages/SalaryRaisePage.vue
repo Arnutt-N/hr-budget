@@ -153,7 +153,7 @@ async function onSeedAll(): Promise<void> {
 
       <DataTable :value="progress ?? []" :loading="progressLoading" data-key="id" paginator :rows="15">
         <template #empty>
-          <!-- Sub-dialog empty state keeps its own py-3/multi-line copy (differs from
+          <!-- Progress-table empty state keeps its own py-3/multi-line copy (differs from
                ListEmptyState's py-4 single-line default — c4 pixel-identical rule). -->
           <p class="py-3 text-center text-dark-muted">
             ยังไม่มีแถวติดตาม — กด "สร้างแถวทุกหน่วยงาน" เพื่อเริ่ม

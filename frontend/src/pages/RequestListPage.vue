@@ -34,7 +34,8 @@ const fiscalYearOptions = computed(() =>
 
 // `filters` is the applied query input; editing the inputs is staged until "ค้นหา".
 const filters = ref<ListFilters>({ page: 1, per_page: PER_PAGE })
-const filterStatus = ref<RequestStatus | ''>('')
+// nullable: PrimeVue Select emits null on clear
+const filterStatus = ref<RequestStatus | '' | null>('')
 // PrimeVue Select emits null on clear (not ''), so the empty state is `| null`.
 const filterFiscalYear = ref<number | null>(null)
 const filterSearch = ref('')

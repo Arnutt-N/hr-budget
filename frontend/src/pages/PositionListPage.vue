@@ -578,9 +578,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
               v-model="vEffectiveFrom"
               type="date"
               :invalid="!!versionErrors.effective_from"
+              :aria-describedby="versionErrors.effective_from ? 'version-effective-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.effective_from" class="text-red-400" role="alert">{{ versionErrors.effective_from }}</small>
+            <small v-if="versionErrors.effective_from" id="version-effective-error" class="text-red-400" role="alert">{{ versionErrors.effective_from }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="version-base-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
@@ -589,9 +590,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
               v-model="vBaseSalary"
               :min="0"
               :invalid="!!versionErrors.base_salary"
+              :aria-describedby="versionErrors.base_salary ? 'version-salary-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.base_salary" class="text-red-400" role="alert">{{ versionErrors.base_salary }}</small>
+            <small v-if="versionErrors.base_salary" id="version-salary-error" class="text-red-400" role="alert">{{ versionErrors.base_salary }}</small>
           </div>
           <div class="flex flex-col gap-1">
             <label for="version-level-code" class="text-sm font-medium text-dark-muted">ระดับ</label>

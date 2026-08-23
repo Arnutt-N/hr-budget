@@ -155,7 +155,7 @@ function onDelete(s: SalaryScale): void {
           <label id="ss-category" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
           <Select
             v-model="employeeCategory"
-            label-id="ss-category"
+            aria-labelledby="ss-category"
             :options="CATEGORY_OPTIONS"
             option-label="label"
             option-value="value"

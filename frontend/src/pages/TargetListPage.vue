@@ -239,7 +239,7 @@ function onDelete(target: Target): void {
           <label id="tgt-type" class="text-sm font-medium text-dark-muted">ประเภทเป้าหมาย</label>
           <Select
             v-model="targetTypeId"
-            label-id="tgt-type"
+            aria-labelledby="tgt-type"
             :options="targetTypeOptions"
             option-label="label"
             option-value="value"
@@ -255,7 +255,7 @@ function onDelete(target: Target): void {
           <label id="tgt-year" class="text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
           <Select
             v-model="fiscalYear"
-            label-id="tgt-year"
+            aria-labelledby="tgt-year"
             :options="fiscalYearOptions"
             option-label="label"
             option-value="value"
@@ -271,7 +271,7 @@ function onDelete(target: Target): void {
           <label id="tgt-quarter" class="text-sm font-medium text-dark-muted">ไตรมาส</label>
           <Select
             v-model="quarter"
-            label-id="tgt-quarter"
+            aria-labelledby="tgt-quarter"
             :options="quarterOptions"
             option-label="label"
             option-value="value"
@@ -285,7 +285,7 @@ function onDelete(target: Target): void {
           <label id="tgt-org" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
           <Select
             v-model="organizationId"
-            label-id="tgt-org"
+            aria-labelledby="tgt-org"
             :options="organizationOptions"
             option-label="label"
             option-value="value"
@@ -299,7 +299,7 @@ function onDelete(target: Target): void {
           <label id="tgt-cat" class="text-sm font-medium text-dark-muted">หมวดงบประมาณ</label>
           <Select
             v-model="categoryId"
-            label-id="tgt-cat"
+            aria-labelledby="tgt-cat"
             :options="categoryOptions"
             option-label="label"
             option-value="value"
