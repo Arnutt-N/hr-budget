@@ -15,4 +15,6 @@
 -- ให้รัน 063 ก่อนไฟล์นี้
 -- ============================================================================
 
+SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci';
+
 ALTER TABLE files MODIFY COLUMN folder_id INT NULL;
