@@ -60,7 +60,12 @@ const schema = toTypedSchema(
     organization_id: z.coerce.number({ invalid_type_error: 'กรุณาเลือกหน่วยงาน' }).int().min(1, 'กรุณาเลือกหน่วยงาน'),
     pos_no: z.string().optional(),
     level_code: z.string().optional(),
-    base_salary: z.coerce.number({ invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
+    // InputNumber emits null when cleared; z.coerce would turn that into a
+    // silent salary of 0, so map null to undefined to fire the required message.
+    base_salary: z.preprocess(
+      (v) => (v === null ? undefined : v),
+      z.number({ required_error: 'กรุณากรอกเงินเดือน', invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
+    ),
     occupancy: z.string().min(1, 'กรุณาเลือกสถานะการครอง'),
     months_counted: z.coerce.number().int().min(1, '1-12').max(12, '1-12'),
     effective_from: z.string({ required_error: 'กรุณาเลือกวันเริ่มมีผล' }).min(1, 'กรุณาเลือกวันเริ่มมีผล'),
@@ -74,6 +79,12 @@ const [organizationId] = defineField('organization_id')
 const [posNo] = defineField('pos_no')
 const [levelCode] = defineField('level_code')
 const [baseSalary] = defineField('base_salary')
+// vee-validate types the model as unknown (preprocess schema), while
+// PrimeVue InputNumber binds Nullable<number> — bridge the mismatch.
+const baseSalaryInput = computed<number | null>({
+  get: () => baseSalary.value as number | null,
+  set: (v) => (baseSalary.value = v),
+})
 const [occupancy] = defineField('occupancy')
 const [monthsCounted] = defineField('months_counted')
 const [effectiveFrom] = defineField('effective_from')
@@ -184,7 +195,12 @@ const createVersionMutation = useCreatePositionVersion()
 const versionSchema = toTypedSchema(
   z.object({
     effective_from: z.string({ required_error: 'กรุณาเลือกวันเริ่มมีผล' }).min(1, 'กรุณาเลือกวันเริ่มมีผล'),
-    base_salary: z.coerce.number({ invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
+    // InputNumber emits null when cleared; z.coerce would turn that into a
+    // silent salary of 0, so map null to undefined to fire the required message.
+    base_salary: z.preprocess(
+      (v) => (v === null ? undefined : v),
+      z.number({ required_error: 'กรุณากรอกเงินเดือน', invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
+    ),
     level_code: z.string().optional(),
     organization_id: z.coerce.number({ invalid_type_error: 'กรุณาเลือกหน่วยงาน' }).int().min(1, 'กรุณาเลือกหน่วยงาน'),
     occupancy: z.string().min(1, 'กรุณาเลือกสถานะการครอง'),
@@ -202,6 +218,10 @@ const {
 } = useForm({ validationSchema: versionSchema })
 const [vEffectiveFrom] = defineVersionField('effective_from')
 const [vBaseSalary] = defineVersionField('base_salary')
+const versionSalaryInput = computed<number | null>({
+  get: () => vBaseSalary.value as number | null,
+  set: (v) => (vBaseSalary.value = v),
+})
 const [vLevelCode] = defineVersionField('level_code')
 const [vOrganizationId] = defineVersionField('organization_id')
 const [vOccupancy] = defineVersionField('occupancy')
@@ -478,7 +498,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
           <div class="flex flex-col gap-1">
             <label for="pos-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
             <InputNumber
-              v-model="baseSalary"
+              v-model="baseSalaryInput"
               input-id="pos-salary"
               :min="0"
               :invalid="!!errors.base_salary"
@@ -596,7 +616,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
             <label for="version-base-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
             <InputNumber
               input-id="version-base-salary"
-              v-model="vBaseSalary"
+              v-model="versionSalaryInput"
               :min="0"
               :invalid="!!versionErrors.base_salary"
               :aria-describedby="versionErrors.base_salary ? 'version-salary-error' : undefined"
