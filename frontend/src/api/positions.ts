@@ -11,8 +11,9 @@ export interface PositionFilters {
   q?: string
 }
 
-export async function fetchPositions(filters: PositionFilters = {}): Promise<ApiResponse<Position[]>> {
+export async function fetchPositions(filters: PositionFilters = {}, page = 1): Promise<ApiResponse<Position[]>> {
   const params = new URLSearchParams({ per_page: '100' })
+  if (page > 1) params.set('page', String(page))
   for (const [key, value] of Object.entries(filters)) {
     if (value !== undefined && value !== null && value !== '') params.set(key, String(value))
   }

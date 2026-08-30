@@ -103,6 +103,7 @@ final class BudgetRequestService
             return $requestId;
         } catch (\Throwable $e) {
             Database::rollback();
+            error_log("[BudgetRequestService::create] {$e->getMessage()}");
             return null;
         }
     }
@@ -204,6 +205,7 @@ final class BudgetRequestService
                 Database::commit();
             } catch (\Throwable $e) {
                 Database::rollback();
+                error_log("[BudgetRequestService::update] {$e->getMessage()}");
                 return false;
             }
         }
@@ -231,14 +233,41 @@ final class BudgetRequestService
 
         Database::beginTransaction();
         try {
-            $this->requestRepo->delete($id);
+            // Capture attachment blob paths BEFORE the delete — the files table
+            // cascades with the request, so the paths are gone once committed.
+            // Best-effort: a failed capture must never block the delete itself.
+            $blobPaths = [];
+            try {
+                $blobPaths = array_map(
+                    static fn (array $row): string => (string) $row['file_path'],
+                    Database::query("SELECT file_path FROM files WHERE request_id = ?", [$id]),
+                );
+            } catch (\Throwable $e) {
+                error_log("[BudgetRequestService::delete] blob path capture: {$e->getMessage()}");
+            }
+
+            // Log BEFORE deleting: the approvals table cascades on request
+            // deletion, so logging after the delete violates the FK and the
+            // whole delete would always roll back (observed as 1452).
             $this->approvalRepo->log($id, 'deleted', $userId);
+            $this->requestRepo->delete($id);
             Database::commit();
-            return true;
         } catch (\Throwable $e) {
             Database::rollback();
+            error_log("[BudgetRequestService::delete] {$e->getMessage()}");
             return false;
         }
+
+        // Best-effort blob cleanup after a successful delete — the rows are
+        // gone (cascade), so nothing else will ever unlink these files.
+        foreach ($blobPaths as $webPath) {
+            $full = BASE_PATH . '/public/' . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+            if (is_file($full)) {
+                @unlink($full);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -278,6 +307,7 @@ final class BudgetRequestService
             return true;
         } catch (\Throwable $e) {
             Database::rollback();
+            error_log("[BudgetRequestService::submit] {$e->getMessage()}");
             return false;
         }
     }
@@ -316,6 +346,7 @@ final class BudgetRequestService
             Database::commit();
         } catch (\Throwable $e) {
             Database::rollback();
+            error_log("[BudgetRequestService::approve] {$e->getMessage()}");
             return false;
         }
 
@@ -358,6 +389,7 @@ final class BudgetRequestService
             Database::commit();
         } catch (\Throwable $e) {
             Database::rollback();
+            error_log("[BudgetRequestService::reject] {$e->getMessage()}");
             return false;
         }
 

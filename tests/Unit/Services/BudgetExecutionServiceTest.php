@@ -23,7 +23,7 @@ final class BudgetExecutionServiceTest extends TestCase
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         Database::setInstance($this->pdo);
 
-        $this->pdo->exec("CREATE TABLE organizations (id INTEGER PRIMARY KEY, name_th TEXT)");
+        $this->pdo->exec("CREATE TABLE organizations (id INTEGER PRIMARY KEY, name_th TEXT, parent_id INTEGER)");
         $this->pdo->exec("CREATE TABLE projects (id INTEGER PRIMARY KEY, name_th TEXT)");
         $this->pdo->exec("CREATE TABLE activities (id INTEGER PRIMARY KEY, project_id INTEGER, name_th TEXT)");
         $this->pdo->exec("CREATE TABLE disbursement_sessions (
@@ -36,6 +36,19 @@ final class BudgetExecutionServiceTest extends TestCase
             id INTEGER PRIMARY KEY, disbursement_record_id INTEGER,
             allocated REAL, transfer REAL, disbursed REAL, po REAL, pending REAL
         )");
+        // RBAC tables for AccessScopeResolver::orgScopeFilter (scope tests below).
+        $this->pdo->exec("CREATE TABLE user_access_grants (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, role_id INTEGER,
+            scope_type TEXT, scope_ref_id INTEGER, is_active INTEGER DEFAULT 1
+        )");
+        $this->pdo->exec("CREATE TABLE roles (
+            id INTEGER PRIMARY KEY, code TEXT, name_th TEXT, is_active INTEGER DEFAULT 1
+        )");
+        $this->pdo->exec("CREATE TABLE role_permissions (role_id INTEGER, permission_id INTEGER)");
+        $this->pdo->exec("CREATE TABLE permissions (id INTEGER PRIMARY KEY, code TEXT)");
+        $this->pdo->exec("INSERT INTO roles (id, code, name_th, is_active) VALUES (10, 'viewer', 'ผู้ดู', 1)");
+        $this->pdo->exec("INSERT INTO permissions (id, code) VALUES (10, 'request.view')");
+        $this->pdo->exec("INSERT INTO role_permissions (role_id, permission_id) VALUES (10, 10)");
 
         $this->seed();
     }
@@ -56,8 +69,8 @@ final class BudgetExecutionServiceTest extends TestCase
      */
     private function seed(): void
     {
-        $this->pdo->exec("INSERT INTO organizations (id, name_th) VALUES
-            (1, 'กองการเจ้าหน้าที่'), (2, 'กองคลัง')");
+        $this->pdo->exec("INSERT INTO organizations (id, name_th, parent_id) VALUES
+            (1, 'กองการเจ้าหน้าที่', NULL), (2, 'กองคลัง', NULL)");
         $this->pdo->exec("INSERT INTO projects (id, name_th) VALUES
             (1, 'โครงการพัฒนาบุคลากร'), (2, 'โครงการสวัสดิการ')");
         $this->pdo->exec("INSERT INTO activities (id, project_id, name_th) VALUES
@@ -199,5 +212,85 @@ final class BudgetExecutionServiceTest extends TestCase
         $this->assertSame('โครงการพัฒนาบุคลากร', $rows[0]['project_name']);
         $this->assertSame(1000.0, $rows[0]['allocated']);
         $this->assertArrayHasKey('used_percent', $rows[0]);
+    }
+
+    // ---- RBAC org scoping (H2) — $user = null stays unrestricted (above) ----
+
+    private int $nextUserId = 100;
+
+    /** Synthetic authenticated user with one organization-scope grant. */
+    private function scopedUser(int $orgId): array
+    {
+        $userId = $this->nextUserId++;
+        Database::insert('user_access_grants', [
+            'user_id' => $userId,
+            'role_id' => 10,
+            'scope_type' => 'organization',
+            'scope_ref_id' => $orgId,
+            'is_active' => 1,
+        ]);
+
+        return ['id' => $userId, 'role' => 'viewer'];
+    }
+
+    /** @test */
+    public function admin_user_sees_everything(): void
+    {
+        $report = $this->service()->report(2569, 2, ['id' => 1, 'role' => 'admin']);
+
+        $this->assertNotNull($report);
+        $this->assertSame(800.0, $report['stats']['allocated']);
+    }
+
+    /** @test */
+    public function scoped_viewer_denied_foreign_org(): void
+    {
+        $user = $this->scopedUser(1); // granted org 1 only
+
+        $this->assertNull($this->service()->report(2569, 2, $user));
+    }
+
+    /** @test */
+    public function scoped_viewer_allowed_on_granted_org(): void
+    {
+        $user = $this->scopedUser(1);
+
+        $report = $this->service()->report(2569, 1, $user);
+
+        $this->assertNotNull($report);
+        $this->assertSame(3000.0, $report['stats']['allocated']);
+    }
+
+    /** @test */
+    public function scoped_viewer_without_org_param_sees_subtree_only(): void
+    {
+        $user = $this->scopedUser(1);
+
+        $report = $this->service()->report(2569, null, $user);
+
+        $this->assertNotNull($report);
+        // org 2's project excluded from the breakdown...
+        $this->assertSame(['โครงการพัฒนาบุคลากร'], array_column($report['projects'], 'project_name'));
+        // ...and from the org chart
+        $this->assertSame(['กองการเจ้าหน้าที่'], $report['org_chart']['labels']);
+    }
+
+    /** @test */
+    public function user_with_no_grants_is_denied_entirely(): void
+    {
+        $this->assertNull($this->service()->report(2569, null, ['id' => 555, 'role' => 'viewer']));
+        $this->assertNull($this->service()->report(2569, 1, ['id' => 555, 'role' => 'viewer']));
+    }
+
+    /** @test */
+    public function export_rows_denied_for_foreign_org(): void
+    {
+        $user = $this->scopedUser(1);
+
+        $this->assertNull($this->service()->exportRows(2569, 2, $user));
+
+        $rows = $this->service()->exportRows(2569, 1, $user);
+        $this->assertNotNull($rows);
+        $this->assertCount(2, $rows);
     }
 }

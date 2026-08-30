@@ -21,14 +21,14 @@ parameters:
 		-
 			message: '#^Constant BASE_PATH not found\.$#'
 			identifier: constant.notFound
-			count: 3
-			path: src/Services/FileService.php
+			count: 1
+			path: src/Services/BudgetRequestService.php
 
 		-
-			message: '#^Access to an undefined property App\\Dtos\\CreateFileDto\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: src/Services/VaultService.php
+			message: '#^Constant BASE_PATH not found\.$#'
+			identifier: constant.notFound
+			count: 3
+			path: src/Services/FileService.php
 
 		-
 			message: '#^Constant BASE_PATH not found\.$#'

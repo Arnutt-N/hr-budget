@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '../auth'
+import { queryClient } from '@/lib/queryClient'
 import type { User } from '@/types/api'
 
 const fakeUser: User = { id: 1, email: 'a@moj.go.th', name: 'A', role: 'admin' }
@@ -19,6 +20,7 @@ describe('auth store (cookie mode)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.unstubAllGlobals()
+    queryClient.clear()
   })
 
   test('bootstrap with valid cookie session sets user', async () => {
@@ -106,5 +108,34 @@ describe('auth store (cookie mode)', () => {
     await auth.logout()
 
     expect(vi.mocked(fetch).mock.calls).toHaveLength(0)
+  })
+
+  test('logout clears the TanStack query cache (no cross-user data leak)', async () => {
+    mockFetchOnce(200, {
+      success: true,
+      data: { token: 't', expires_in: 3600, user: fakeUser },
+    })
+    const auth = useAuthStore()
+    await auth.login({ email: 'a@moj.go.th', password: 'pw' })
+
+    // Simulate cached user-scoped data from the session being logged out.
+    queryClient.setQueryData(['notifications'], [{ id: 1 }])
+    queryClient.setQueryData(['me', 'permissions'], ['request.view'])
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(2)
+
+    await auth.logout()
+
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0)
+  })
+
+  test('login network failure returns a Thai connect error instead of throwing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')))
+    const auth = useAuthStore()
+
+    const result = await auth.login({ email: 'a@moj.go.th', password: 'pw' })
+
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้')
+    expect(auth.isAuthenticated).toBe(false)
   })
 })

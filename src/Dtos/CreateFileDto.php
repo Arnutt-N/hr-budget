@@ -16,6 +16,7 @@ final class CreateFileDto
         public readonly int $size = 0,
         public readonly ?string $extension = null,
         public readonly int $uploadError = UPLOAD_ERR_OK,
+        public readonly ?string $description = null,
     ) {}
 
     public function validate(): array
@@ -47,6 +48,7 @@ final class CreateFileDto
 
         $originalName = $file['name'] ?? '';
         $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+        $description = trim((string) ($_POST['description'] ?? ''));
 
         return new self(
             originalName: $originalName,
@@ -55,6 +57,7 @@ final class CreateFileDto
             size: (int) ($file['size'] ?? 0),
             extension: $extension !== '' ? strtolower($extension) : null,
             uploadError: (int) ($file['error'] ?? UPLOAD_ERR_OK),
+            description: $description !== '' ? $description : null,
         );
     }
 

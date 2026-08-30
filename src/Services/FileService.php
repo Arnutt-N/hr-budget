@@ -111,22 +111,28 @@ final class FileService
             return null;
         }
 
-        if ((int) $file['request_id'] > 0) {
-            $request = Database::queryOne("SELECT created_by, org_id FROM budget_requests WHERE id = ?", [(int) $file['request_id']]);
-            if ($request !== null && !$this->canReadRequest($userId, $role, $request)) {
+        $requestId = (int) $file['request_id'];
+        if ($requestId > 0) {
+            $request = Database::queryOne("SELECT created_by, org_id FROM budget_requests WHERE id = ?", [$requestId]);
+            if ($request === null) {
+                // Stale attachment whose parent request is gone: only admins may read it.
+                if ($role !== 'admin') {
+                    return null;
+                }
+            } elseif (!$this->canReadRequest($userId, $role, $request)) {
                 return null;
             }
         }
+        // request_id NULL/0 = vault file → readable by any authenticated user
+        // (VaultService read policy), so no extra check falls through here.
 
-        $osPath = str_replace('/', DIRECTORY_SEPARATOR, $file['file_path']);
-        $fullPath = BASE_PATH . '/public/' . $osPath;
-
-        if (!file_exists($fullPath)) {
+        $full = $this->containedPath((string) $file['file_path']);
+        if ($full === null || !is_file($full)) {
             return null;
         }
 
         return [
-            'path' => $fullPath,
+            'path' => $full,
             'name' => $file['original_name'],
             'mime' => $file['mime_type'],
         ];
@@ -139,20 +145,49 @@ final class FileService
             return false;
         }
 
-        if ((int) $file['request_id'] > 0) {
-            $request = Database::queryOne("SELECT created_by FROM budget_requests WHERE id = ?", [(int) $file['request_id']]);
-            if ($request !== null && $role !== 'admin' && (int) $request['created_by'] !== $userId) {
+        $requestId = (int) $file['request_id'];
+        if ($requestId > 0) {
+            $request = Database::queryOne("SELECT created_by FROM budget_requests WHERE id = ?", [$requestId]);
+            if ($request === null) {
+                // Stale attachment: parent request gone → admin only.
+                if ($role !== 'admin') {
+                    return false;
+                }
+            } elseif ($role !== 'admin' && (int) $request['created_by'] !== $userId) {
                 return false;
             }
+        } elseif (!in_array($role, ['admin', 'editor'], true)) {
+            // Vault file (request_id NULL/0): the request-attachment ownership
+            // check cannot apply, so fall back to the vault mutate policy
+            // (admin|editor) — otherwise any viewer could delete vault blobs
+            // through this endpoint, bypassing VaultService's gate.
+            return false;
         }
 
-        $osPath = str_replace('/', DIRECTORY_SEPARATOR, $file['file_path']);
-        $fullPath = BASE_PATH . '/public/' . $osPath;
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
+        $full = $this->containedPath((string) $file['file_path']);
+        if ($full !== null && is_file($full)) {
+            unlink($full);
         }
 
         return $this->repo->delete($id);
+    }
+
+    /**
+     * Resolve a stored web path and ensure it stays under public/ — mirrors
+     * VaultService::containedPath() so files.file_path can never turn this
+     * service's delete/download into an arbitrary-path primitive.
+     */
+    private function containedPath(string $webPath): ?string
+    {
+        $osPath = str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+        $real = realpath(BASE_PATH . '/public/' . $osPath);
+        $root = realpath(BASE_PATH . '/public');
+
+        if ($real === false || $root === false || !str_starts_with($real, $root . DIRECTORY_SEPARATOR)) {
+            return null;
+        }
+
+        return $real;
     }
 
     private function detectMimeType(string $tmpPath, string $extension): string

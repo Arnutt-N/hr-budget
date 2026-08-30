@@ -12,9 +12,15 @@ export interface ItemRow {
 const props = defineModel<ItemRow[]>({ required: true })
 const items = computed(() => props.value)
 
-const totalAmount = computed(() =>
-  items.value.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0), 0),
-)
+// Integer-cent math: qty × price rounded once per row, so the displayed
+// total never shows float drift (e.g. 0.1+0.2 style artifacts).
+const rowCents = (qty: string, price: string): number =>
+  Math.round((parseFloat(qty) || 0) * (parseFloat(price) || 0) * 100)
+
+const totalCents = computed(() => items.value.reduce((sum, item) => sum + rowCents(item.quantity, item.unit_price), 0))
+
+const formatCents = (cents: number): string =>
+  (cents / 100).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function addItem() {
   const updated = [...items.value, { item_name: '', quantity: '0', unit_price: '0', remark: null, category_item_id: null }]
@@ -34,8 +40,7 @@ function updateField(index: number, field: keyof ItemRow, value: string | number
 }
 
 function formatAmount(qty: string, price: string): string {
-  const amount = (parseFloat(qty) || 0) * (parseFloat(price) || 0)
-  return amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return formatCents(rowCents(qty, price))
 }
 </script>
 
@@ -121,7 +126,7 @@ function formatAmount(qty: string, price: string): string {
       </button>
       <div class="text-sm font-medium text-dark-muted">
         ยอดรวม:
-        <span class="text-base ml-1">{{ totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} บาท</span>
+        <span class="text-base ml-1">{{ formatCents(totalCents) }} บาท</span>
       </div>
     </div>
   </div>

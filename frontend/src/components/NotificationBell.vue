@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import { Bell } from '@lucide/vue'
 import {
   useUnreadCount,
@@ -11,6 +12,7 @@ import {
 import { useEscapeClose } from '@/composables/useEscapeClose'
 
 const router = useRouter()
+const toast = useToast()
 const open = ref(false)
 const triggerEl = ref<HTMLButtonElement | null>(null)
 
@@ -36,13 +38,22 @@ function close() {
 useEscapeClose(open, close)
 
 async function handleClick(id: number, link: string | null) {
-  await markRead.mutateAsync(id)
+  try {
+    await markRead.mutateAsync(id)
+  } catch {
+    toast.add({ severity: 'error', summary: 'ทำรายการไม่สำเร็จ', detail: 'ลองใหม่อีกครั้ง', life: 5000 })
+    return
+  }
   open.value = false
   if (link && link.startsWith('/')) router.push(link)
 }
 
 async function handleMarkAllRead() {
-  await markAllRead.mutateAsync()
+  try {
+    await markAllRead.mutateAsync()
+  } catch {
+    toast.add({ severity: 'error', summary: 'ทำรายการไม่สำเร็จ', detail: 'ลองใหม่อีกครั้ง', life: 5000 })
+  }
 }
 
 function viewAll() {

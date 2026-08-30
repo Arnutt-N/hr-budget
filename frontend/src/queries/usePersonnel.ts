@@ -218,15 +218,13 @@ export function useDeletePersonnelAssignment() {
 
 // ---------- compute ----------
 export function useComputePersonnelBudget() {
-  const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ fiscalYearId, dryRun }: { fiscalYearId: number; dryRun: boolean }): Promise<ComputeBudgetResult> => {
       const res = await computePersonnelBudget(fiscalYearId, dryRun)
       if (!res.success || !res.data) throw new Error(res.error ?? 'คำนวณไม่สำเร็จ')
       return res.data
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['budget-line-items'] })
-    },
+    // No query currently caches budget-line-items; the compute result is
+    // surfaced through the mutation's return value instead.
   })
 }

@@ -1,6 +1,10 @@
 <?php
 /**
- * Integration Tests for recalculateTotal functionality
+ * Integration Tests for the budget-request total_amount computation.
+ *
+ * Drives the real BudgetRequestService (create/update) against hr_budget_test
+ * and asserts the PERSISTED total_amount, so the production bcmath pipeline —
+ * not a re-implementation of it — is what's under test.
  */
 
 namespace Tests\Integration;
@@ -8,141 +12,89 @@ namespace Tests\Integration;
 use Tests\TestCase;
 use App\Models\BudgetRequest;
 use App\Models\BudgetRequestItem;
+use App\Dtos\BudgetRequestItemDto;
+use App\Dtos\CreateBudgetRequestDto;
+use App\Dtos\UpdateBudgetRequestDto;
+use App\Services\BudgetRequestService;
 
 class BudgetRequestTotalCalculationTest extends TestCase
 {
-    /** @test */
-    public function total_is_recalculated_when_item_added()
+    private BudgetRequestService $service;
+
+    protected function setUp(): void
     {
-        $user = $this->createUser();
-        
-        $requestId = BudgetRequest::create([
-            'fiscal_year' => 2568,
-            'request_title' => 'Test Request',
-            'created_by' => $user['id'],
-            'total_amount' => 0
-        ]);
-        
-        // Add first item
-        BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Item 1',
-            'quantity' => 5,
-            'unit_price' => 100
-        ]);
-        
-        // Simulate controller recalculation
-        $items = BudgetRequestItem::getByRequestId($requestId);
-        $total = 0;
-        foreach ($items as $item) {
-            $total += $item['quantity'] * $item['unit_price'];
-        }
-        BudgetRequest::update($requestId, ['total_amount' => $total]);
-        
-        $request = BudgetRequest::find($requestId);
-        $this->assertEquals(500, $request['total_amount']);
-        
-        // Add second item
-        BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Item 2',
-            'quantity' => 3,
-            'unit_price' => 200
-        ]);
-        
-        // Recalculate
-        $items = BudgetRequestItem::getByRequestId($requestId);
-        $total = 0;
-        foreach ($items as $item) {
-            $total += $item['quantity'] * $item['unit_price'];
-        }
-        BudgetRequest::update($requestId, ['total_amount' => $total]);
-        
-        $request = BudgetRequest::find($requestId);
-        $this->assertEquals(1100, $request['total_amount']); // 500 + 600
+        parent::setUp();
+        $this->service = new BudgetRequestService();
+    }
+
+    private function createRequest(int $userId, array $items): int
+    {
+        $dtos = array_map(
+            static fn (array $i): BudgetRequestItemDto => new BudgetRequestItemDto($i[0], $i[1], $i[2]),
+            $items,
+        );
+
+        $requestId = $this->service->create(
+            $userId,
+            new CreateBudgetRequestDto('Test Request', 2568, null, $dtos),
+        );
+        $this->assertNotNull($requestId, 'service create() failed');
+
+        return $requestId;
     }
 
     /** @test */
-    public function total_is_recalculated_when_item_deleted()
+    public function create_persists_the_bcmath_total_of_all_items()
     {
         $user = $this->createUser();
-        
-        $requestId = BudgetRequest::create([
-            'fiscal_year' => 2568,
-            'request_title' => 'Test Request',
-            'created_by' => $user['id']
+
+        $requestId = $this->createRequest($user['id'], [
+            ['Item 1', '5', '100'],   // 500.00
+            ['Item 2', '3', '200'],   // 600.00
         ]);
-        
-        $item1Id = BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Item 1',
-            'quantity' => 5,
-            'unit_price' => 100
-        ]);
-        
-        $item2Id = BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Item 2',
-            'quantity' => 3,
-            'unit_price' => 200
-        ]);
-        
-        // Initial total should be 500 + 600 = 1100
-        $items = BudgetRequestItem::getByRequestId($requestId);
-        $total = 0;
-        foreach ($items as $item) {
-            $total += $item['quantity'] * $item['unit_price'];
-        }
-        BudgetRequest::update($requestId, ['total_amount' => $total]);
-        
-        // Delete item 2
-        BudgetRequestItem::delete($item2Id);
-        
-        // Recalculate
-        $items = BudgetRequestItem::getByRequestId($requestId);
-        $total = 0;
-        foreach ($items as $item) {
-            $total += $item['quantity'] * $item['unit_price'];
-        }
-        BudgetRequest::update($requestId, ['total_amount' => $total]);
-        
+
         $request = BudgetRequest::find($requestId);
-        $this->assertEquals(500, $request['total_amount']); // Only item 1 remains
+        $this->assertSame('1100.00', (string) $request['total_amount']);
     }
 
     /** @test */
-    public function total_is_zero_when_all_items_deleted()
+    public function update_replaces_items_and_recomputes_the_total()
     {
         $user = $this->createUser();
-        
-        $requestId = BudgetRequest::create([
-            'fiscal_year' => 2568,
-            'request_title' => 'Test Request',
-            'created_by' => $user['id']
+        $requestId = $this->createRequest($user['id'], [
+            ['Item 1', '5', '100'],   // 500.00
         ]);
-        
-        $itemId = BudgetRequestItem::create([
-            'budget_request_id' => $requestId,
-            'item_name' => 'Item',
-            'quantity' => 5,
-            'unit_price' => 100
-        ]);
-        
-        // Set initial total
-        BudgetRequest::update($requestId, ['total_amount' => 500]);
-        
-        // Delete the item
-        BudgetRequestItem::delete($itemId);
-        
-        // Recalculate
-        $items = BudgetRequestItem::getByRequestId($requestId);
-        $total = 0;
-        foreach ($items as $item) {
-            $total += $item['quantity'] * $item['unit_price'];
-        }
-        BudgetRequest::update($requestId, ['total_amount' => $total]);
-        
+
+        $ok = $this->service->update(
+            (int) $user['id'],
+            'viewer',
+            $requestId,
+            new UpdateBudgetRequestDto(items: [new BudgetRequestItemDto('Item 2', '3', '200')]),
+        );
+
+        $this->assertTrue($ok);
         $request = BudgetRequest::find($requestId);
-        $this->assertEquals(0, $request['total_amount']);
+        $this->assertSame('600.00', (string) $request['total_amount']);
+        $this->assertCount(1, BudgetRequestItem::getByRequestId($requestId));
+    }
+
+    /** @test */
+    public function clearing_all_items_zeroes_the_total()
+    {
+        $user = $this->createUser();
+        $requestId = $this->createRequest($user['id'], [
+            ['Item 1', '5', '100'],   // 500.00
+        ]);
+
+        $ok = $this->service->update(
+            (int) $user['id'],
+            'viewer',
+            $requestId,
+            new UpdateBudgetRequestDto(items: []),
+        );
+
+        $this->assertTrue($ok);
+        $request = BudgetRequest::find($requestId);
+        $this->assertSame('0.00', (string) $request['total_amount']);
     }
 }

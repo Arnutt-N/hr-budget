@@ -15,9 +15,10 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * Read-only budget-execution report API. Any authenticated user may read
- * (no admin gate) — mirrors the legacy /budgets web page which only required
- * a logged-in session. Replaces App\Controllers\BudgetExecutionController.
+ * Read-only budget-execution report API. Any authenticated user may read,
+ * scoped to their RBAC org subtree via AccessScopeResolver (admins / 'all'
+ * grants see everything; a foreign ?org= is a 403). Replaces
+ * App\Controllers\BudgetExecutionController.
  */
 final class BudgetExecutionController
 {
@@ -28,10 +29,15 @@ final class BudgetExecutionController
     public function report(): void
     {
         CorsMiddleware::apply();
-        AuthMiddleware::require();
+        $user = AuthMiddleware::require();
 
         try {
-            ApiResponse::ok($this->service->report($this->resolveFiscalYear(), $this->resolveOrg()));
+            $result = $this->service->report($this->resolveFiscalYear(), $this->resolveOrg(), $user);
+            if ($result === null) {
+                ApiResponse::forbidden('ไม่มีสิทธิ์เข้าถึงข้อมูลหน่วยงานนี้');
+                return;
+            }
+            ApiResponse::ok($result);
         } catch (\Throwable $e) {
             error_log("[BudgetExecutionController::report] {$e->getMessage()}");
             ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);
@@ -54,11 +60,15 @@ final class BudgetExecutionController
     public function export(): void
     {
         CorsMiddleware::apply();
-        AuthMiddleware::require();
+        $user = AuthMiddleware::require();
 
         try {
             $fiscalYear = $this->resolveFiscalYear();
-            $rows = $this->service->exportRows($fiscalYear, $this->resolveOrg());
+            $rows = $this->service->exportRows($fiscalYear, $this->resolveOrg(), $user);
+            if ($rows === null) {
+                ApiResponse::forbidden('ไม่มีสิทธิ์เข้าถึงข้อมูลหน่วยงานนี้');
+                return;
+            }
             $this->streamXlsx($rows, $fiscalYear);
         } catch (\Throwable $e) {
             error_log("[BudgetExecutionController::export] {$e->getMessage()}");

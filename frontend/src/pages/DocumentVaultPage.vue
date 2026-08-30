@@ -206,6 +206,7 @@ function confirmDeleteFile(file: VaultFile): void {
           :options="yearOptions"
           option-label="label"
           option-value="value"
+          aria-label="เลือกปีงบประมาณ"
           class="w-40"
           @change="onYearChange"
         />
