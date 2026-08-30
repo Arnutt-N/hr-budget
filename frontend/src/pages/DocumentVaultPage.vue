@@ -27,6 +27,7 @@ import {
   useInitializeVaultYear,
 } from '@/queries/useVault'
 import type { VaultFolder, VaultFile, Breadcrumb } from '@/types/vault'
+import { formatSize } from '@/lib/format'
 
 const auth = useAuthStore()
 const confirmDeletePrompt = useDeleteConfirm()
@@ -192,12 +193,6 @@ function confirmDeleteFile(file: VaultFile): void {
   })
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────
-function formatSize(bytes: number): string {
-  if (bytes >= 1048576) return `${(bytes / 1048576).toFixed(2)} MB`
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(2)} KB`
-  return `${bytes} bytes`
-}
 </script>
 
 <template>

@@ -8,6 +8,7 @@ import {
   useDeleteRequestFile,
 } from '@/queries/useRequestFiles'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
+import { formatSize } from '@/lib/format'
 
 const props = defineProps<{
   requestId: number
@@ -85,12 +86,6 @@ function handleDelete(fileId: number, fileName: string): void {
       }
     },
   })
-}
-
-function formatSize(bytes: number): string {
-  if (bytes >= 1_048_576) return (bytes / 1_048_576).toFixed(1) + ' MB'
-  if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return bytes + ' B'
 }
 
 const files = computed(() => filesQuery.data.value ?? [])
