@@ -6,6 +6,7 @@ import Aura from '@primeuix/themes/aura'
 import ToastService from 'primevue/toastservice'
 import ConfirmationService from 'primevue/confirmationservice'
 import { VueQueryPlugin } from '@tanstack/vue-query'
+import { queryClient } from '@/lib/queryClient'
 import App from './App.vue'
 import router from './router'
 import './style.css'
@@ -40,5 +41,5 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.use(ConfirmationService)
-app.use(VueQueryPlugin)
+app.use(VueQueryPlugin, { queryClient })
 app.mount('#app')

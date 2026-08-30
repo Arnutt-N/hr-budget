@@ -241,9 +241,10 @@ async function handleReject() {
         </div>
       </div>
 
-      <!-- File attachments -->
+      <!-- File attachments — viewers granted read access still see the list;
+            only the upload affordance is gated (backend: owner or admin). -->
       <div class="mb-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
-        <FileUploader :request-id="req.id" :disabled="false" />
+        <FileUploader :request-id="req.id" :disabled="!(isOwner || isAdmin)" />
       </div>
     </template>
   </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import DataTable from 'primevue/datatable'
@@ -14,6 +15,7 @@ import { useExpenseStructure } from '@/queries/useDisbursements'
 import type { ComputeBudgetResult } from '@/types/personnel'
 
 const toast = useToast()
+const confirm = useConfirm()
 const { data: fiscalYears } = useFiscalYearList()
 const { data: expenseStructure } = useExpenseStructure()
 const computeMutation = useComputePersonnelBudget()
@@ -77,6 +79,18 @@ async function runCommit(): Promise<void> {
     toast.add({ severity: 'error', summary: 'เขียนงบไม่สำเร็จ', detail: message, life: 5000 })
   }
 }
+
+/** Destructive year-wide write — always confirm before replacing computed rows. */
+function confirmCommit(): void {
+  confirm.require({
+    header: 'ยืนยันการคำนวณและบันทึกงบ',
+    message: 'จะคำนวณงบบุคลากรและแทนที่รายการที่คำนวณแล้ว (source=computed) ของปีงบนี้ทั้งหมด ต้องการดำเนินการต่อหรือไม่?',
+    icon: 'pi pi-exclamation-triangle',
+    accept: () => {
+      void runCommit()
+    },
+  })
+}
 </script>
 
 <template>
@@ -94,6 +108,7 @@ async function runCommit(): Promise<void> {
           :options="fiscalYears ?? []"
           option-label="year"
           option-value="id"
+          aria-label="เลือกปีงบประมาณ"
           placeholder="เลือกปีงบ"
           class="w-52"
         />
@@ -111,7 +126,7 @@ async function runCommit(): Promise<void> {
         icon="pi pi-save"
         :loading="computeMutation.isPending.value"
         :disabled="!selectedYearId"
-        @click="runCommit"
+        @click="confirmCommit"
       />
     </div>
 

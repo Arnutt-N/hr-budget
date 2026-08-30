@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiUrl } from '@/api/base'
+import { queryClient } from '@/lib/queryClient'
 import type { User, LoginRequest, AuthResponse, ApiResponse } from '@/types/api'
 
 /**
@@ -36,16 +37,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(payload: LoginRequest): Promise<{ ok: boolean; error?: string }> {
-    const res = await fetch(apiUrl('/auth/login'), {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify(payload),
-    })
-    const json = (await res.json()) as ApiResponse<AuthResponse>
+    let json: ApiResponse<AuthResponse>
+    try {
+      const res = await fetch(apiUrl('/auth/login'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(payload),
+      })
+      json = (await res.json()) as ApiResponse<AuthResponse>
+    } catch {
+      // Network failure / non-JSON response — surface it, don't silently no-op.
+      return { ok: false, error: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้' }
+    }
 
     if (!json.success || !json.data) {
       const msg = json.details
@@ -79,6 +86,9 @@ export const useAuthStore = defineStore('auth', () => {
     // Force the next navigation to re-check the server: if the logout API
     // call failed, the cookie may still be valid and bootstrap() must see it.
     initialized.value = false
+    // Drop every cached query (notifications, requests, permissions, ...) so
+    // the next login on this tab can never render the previous user's data.
+    queryClient.clear()
   }
 
   return { user, initialized, isAuthenticated, bootstrap, login, logout }

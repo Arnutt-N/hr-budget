@@ -18,9 +18,17 @@ export function usePositionList(filters: Ref<PositionFilters>) {
   return useQuery({
     queryKey: computed(() => [...QUERY_KEY, filters.value]),
     queryFn: async () => {
-      const res = await fetchPositions(filters.value)
-      if (!res.success || !res.data) throw new Error(res.error ?? 'โหลดข้อมูลไม่สำเร็จ')
-      return res.data
+      const first = await fetchPositions(filters.value)
+      if (!first.success || !first.data) throw new Error(first.error ?? 'โหลดข้อมูลไม่สำเร็จ')
+      // Fetch every page — the server caps per_page at 100, so a single fetch
+      // would silently hide positions past the 100th from the table and selects.
+      const totalPages = Number(first.meta?.total_pages ?? 1)
+      if (!(totalPages > 1)) return first.data
+      const rest = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) => fetchPositions(filters.value, i + 2)),
+      )
+      if (rest.some((r) => !r.success || !r.data)) throw new Error('โหลดข้อมูลไม่สำเร็จ')
+      return [...first.data, ...rest.flatMap((r) => r.data ?? [])]
     },
   })
 }

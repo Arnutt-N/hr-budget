@@ -40,9 +40,15 @@ class BudgetPlan
         return $tree;
     }
 
+    private const ALLOWED_WHERE_COLUMNS = ['fiscal_year', 'code', 'name_th', 'plan_type', 'parent_id', 'division_id', 'level'];
+
     public static function where(string $column, $value)
     {
-        return Database::query("SELECT * FROM plans WHERE $column = ? ORDER BY sort_order ASC, id ASC", [$value]);
+        if (!in_array($column, self::ALLOWED_WHERE_COLUMNS, true)) {
+            throw new \InvalidArgumentException("Unsupported plan column: {$column}");
+        }
+
+        return Database::query("SELECT * FROM plans WHERE {$column} = ? ORDER BY sort_order ASC, id ASC", [$value]);
     }
 
     public static function create($data)

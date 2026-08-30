@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
 import PageHeader from '@/components/PageHeader.vue'
 import FormField from '@/components/FormField.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import {
   MONTH_LABELS,
   MONTH_OPTIONS,
@@ -103,7 +104,12 @@ async function submitStep2(): Promise<void> {
 
 // ---- Step 3: expense structure + amounts ----
 const recordId = computed(() => wizard.record?.id ?? 0)
-const { data: recordDetail, isLoading: recordLoading } = useDisbursementRecord(recordId)
+const {
+  data: recordDetail,
+  isLoading: recordLoading,
+  isError: recordFailed,
+  error: recordError,
+} = useDisbursementRecord(recordId)
 
 const emptyAmount = (expenseItemId: number): SaveTrackingItem => ({
   expense_item_id: expenseItemId,
@@ -420,6 +426,9 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
         <h2 class="text-lg font-semibold text-white">ขั้นที่ 3 — กรอกยอดเบิกจ่าย</h2>
         <p class="text-sm text-dark-muted">กิจกรรม: {{ selectedActivityName }}</p>
         <div v-if="recordLoading" class="py-6 text-center text-dark-muted">กำลังโหลดข้อมูล...</div>
+        <!-- A failed detail fetch must NOT render an editable zero-table over an
+             existing record — that would invite overwriting saved amounts. -->
+        <QueryErrorState v-else-if="recordFailed" :error="recordError" />
         <div v-else class="space-y-6">
           <div v-for="type in expenseTree ?? []" :key="type.id" class="space-y-3">
             <h3 class="text-base font-semibold text-primary-300">{{ type.name_th }}</h3>
@@ -550,7 +559,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
           <button
             type="button"
             @click="submitFinal"
-            :disabled="saveRecordMut.isPending.value"
+            :disabled="saveRecordMut.isPending.value || recordFailed"
             class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
           >
             {{ saveRecordMut.isPending.value ? 'กำลังบันทึก...' : 'บันทึก' }}

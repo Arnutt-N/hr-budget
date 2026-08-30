@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import { CheckCheck, Inbox } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
 import {
@@ -11,6 +12,7 @@ import {
 } from '@/queries/useNotifications'
 
 const router = useRouter()
+const toast = useToast()
 const listQuery = useNotificationList(true)
 const unreadQuery = useUnreadCount()
 const markRead = useMarkRead()
@@ -23,12 +25,21 @@ const pageSubtitle = computed(() =>
 )
 
 async function open(id: number, link: string | null, isRead: boolean) {
-  if (!isRead) await markRead.mutateAsync(id)
+  try {
+    if (!isRead) await markRead.mutateAsync(id)
+  } catch {
+    toast.add({ severity: 'error', summary: 'ทำรายการไม่สำเร็จ', detail: 'ลองใหม่อีกครั้ง', life: 5000 })
+    return
+  }
   if (link && link.startsWith('/')) router.push(link)
 }
 
 async function markAll() {
-  await markAllRead.mutateAsync()
+  try {
+    await markAllRead.mutateAsync()
+  } catch {
+    toast.add({ severity: 'error', summary: 'ทำรายการไม่สำเร็จ', detail: 'ลองใหม่อีกครั้ง', life: 5000 })
+  }
 }
 
 function formatDate(dateStr: string): string {

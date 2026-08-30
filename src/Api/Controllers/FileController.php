@@ -7,6 +7,7 @@ namespace App\Api\Controllers;
 use App\Api\Middleware\AuthMiddleware;
 use App\Api\Middleware\CorsMiddleware;
 use App\Api\Responses\ApiResponse;
+use App\Core\Download;
 use App\Dtos\CreateFileDto;
 use App\Services\FileService;
 
@@ -68,12 +69,8 @@ final class FileController
                 return;
             }
 
-            header('Content-Type: ' . $info['mime']);
-            $safeName = str_replace(["\r", "\n", '"'], '', basename($info['name']));
-            header('Content-Disposition: attachment; filename="' . $safeName . '"');
-            header('Content-Length: ' . filesize($info['path']));
-            readfile($info['path']);
-            exit;
+            // Hardened streaming: CRLF/MIME guard, nosniff, RFC 5987 filename*.
+            Download::sendFile($info['path'], $info['name'], $info['mime']);
         } catch (\Throwable $e) {
             error_log("[FileController::download] {$e->getMessage()}");
             ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);

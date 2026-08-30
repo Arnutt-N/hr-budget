@@ -107,6 +107,7 @@ const isScoped = computed<boolean>(() => {
           :options="yearOptions"
           option-label="label"
           option-value="value"
+          aria-label="เลือกปีงบประมาณ"
           class="w-40"
           :disabled="yearSelectorDisabled"
         />

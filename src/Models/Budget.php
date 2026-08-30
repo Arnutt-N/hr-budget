@@ -73,7 +73,7 @@ class Budget
             $params[] = $fiscalYear;
         }
         
-        $sql .= " ORDER BY bc.sort_order ASC, b.id DESC LIMIT {$limit} OFFSET {$offset}";
+        $sql .= " ORDER BY bc.sort_order ASC, b.id DESC LIMIT " . (int) $limit . " OFFSET " . (int) $offset;
         
         return Database::query($sql, $params);
     }

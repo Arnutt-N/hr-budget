@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\BudgetExecutionRepository;
+use App\Services\AccessScopeResolver;
 
 /**
  * Budget-execution report orchestration for the SPA.
@@ -31,23 +32,30 @@ final class BudgetExecutionService
 
     public function __construct(
         private readonly BudgetExecutionRepository $repo = new BudgetExecutionRepository(),
+        private readonly AccessScopeResolver $scopeResolver = new AccessScopeResolver(),
     ) {}
 
     /**
      * Full execution report for one fiscal year (Buddhist era), optionally
      * scoped to a single organization.
      *
-     * @return array{
-     *   fiscal_year:int, organization_id:?int, stats:array<string,float|int>,
-     *   projects:array<int,array<string,mixed>>,
-     *   category_chart:array{labels:list<string>,values:list<float>},
-     *   org_chart:array{labels:list<string>,values:list<float>}
-     * }
+     * When `$user` is given the report is constrained to the caller's RBAC org
+     * subtree (AccessScopeResolver::orgScopeFilter) and an explicit `$orgId`
+     * outside that subtree denies the whole report; admins / 'all' grants see
+     * everything. `$user = null` (legacy callers / tests) is unrestricted.
+     *
+     * @return array|null null = caller denied (org outside scope / no scope)
      */
-    public function report(int $fiscalYear, ?int $orgId): array
+    public function report(int $fiscalYear, ?int $orgId, ?array $user = null): ?array
     {
+        $scope = $this->scopeFor($user, $orgId);
+        if ($scope['denied']) {
+            return null;
+        }
+        $filter = $scope['filter'];
+
         $grouped = [];
-        foreach ($this->repo->breakdownRows($fiscalYear, $orgId) as $row) {
+        foreach ($this->repo->breakdownRows($fiscalYear, $orgId, $filter) as $row) {
             $pid = (int) $row['project_id'];
             if (!isset($grouped[$pid])) {
                 $grouped[$pid] = $this->newProject($pid, $row);
@@ -77,7 +85,7 @@ final class BudgetExecutionService
             'stats' => $this->grandTotals($projects),
             'projects' => $projects,
             'category_chart' => $this->categoryChart($projects),
-            'org_chart' => $this->orgChart($fiscalYear, $orgId),
+            'org_chart' => $this->orgChart($fiscalYear, $orgId, $filter),
         ];
     }
 
@@ -88,14 +96,20 @@ final class BudgetExecutionService
     }
 
     /**
-     * Flat per-activity rows for the xlsx export.
+     * Flat per-activity rows for the xlsx export. Denial propagates from
+     * report() (null) so /export can never widen what /report hides.
      *
-     * @return array<int,array<string,mixed>>
+     * @return array<int,array<string,mixed>>|null null = caller denied
      */
-    public function exportRows(int $fiscalYear, ?int $orgId): array
+    public function exportRows(int $fiscalYear, ?int $orgId, ?array $user = null): ?array
     {
+        $report = $this->report($fiscalYear, $orgId, $user);
+        if ($report === null) {
+            return null;
+        }
+
         $rows = [];
-        foreach ($this->report($fiscalYear, $orgId)['projects'] as $project) {
+        foreach ($report['projects'] as $project) {
             foreach ($project['activities'] as $activity) {
                 $rows[] = [
                     'org_name' => $project['org_name'],
@@ -243,10 +257,38 @@ final class BudgetExecutionService
         return ['labels' => array_values($labels), 'values' => array_values($values)];
     }
 
-    /** @return array{labels:list<string>,values:list<float>} */
-    private function orgChart(int $fiscalYear, ?int $orgId): array
+    /**
+     * Resolve the caller's report scope: denied (org outside granted subtree,
+     * or '1=0' no-scope-at-all), unrestricted (admin / 'all' grant → no filter),
+     * or a filter fragment constraining queries to the granted org ids.
+     *
+     * @param array<string,mixed>|null $user
+     * @return array{denied:bool, filter:?array{sql:string,params:array<int,mixed>}}
+     */
+    private function scopeFor(?array $user, ?int $orgId): array
     {
-        $rows = $this->repo->orgTotals($fiscalYear, $orgId, self::ORG_CHART_LIMIT);
+        if ($user === null) {
+            return ['denied' => false, 'filter' => null];
+        }
+
+        $filter = $this->scopeResolver->orgScopeFilter($user, 'ds.organization_id');
+        if ($filter['sql'] === '1=0') {
+            return ['denied' => true, 'filter' => null];
+        }
+        if ($filter['sql'] === '1=1') {
+            return ['denied' => false, 'filter' => null];
+        }
+        if ($orgId !== null && !in_array($orgId, array_map(static fn ($v) => (int) $v, $filter['params']), true)) {
+            return ['denied' => true, 'filter' => null];
+        }
+
+        return ['denied' => false, 'filter' => $filter];
+    }
+
+    /** @return array{labels:list<string>,values:list<float>} */
+    private function orgChart(int $fiscalYear, ?int $orgId, ?array $filter): array
+    {
+        $rows = $this->repo->orgTotals($fiscalYear, $orgId, self::ORG_CHART_LIMIT, $filter);
 
         return [
             'labels' => array_map(static fn (array $r): string => (string) $r['name'], $rows),

@@ -53,7 +53,6 @@ Router::get('/api/v1/health', function () {
     ApiResponse::ok([
         'version' => '0.1.0',
         'time'    => date('c'),
-        'env'     => $_ENV['APP_ENV'] ?? 'unknown',
     ]);
 });
 Router::post('/api/v1/auth/login', [ApiAuthController::class, 'login']);

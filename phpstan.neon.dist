@@ -6,8 +6,8 @@ parameters:
     # defines are known to phpstan when analysing src/ files that reference them.
     scanFiles:
         - public/index.php
-    excludePaths:
-        - src/Core/Http/*
+    # src/Core/Http was previously excluded wholesale; it is now analysed like
+    # the rest of src/ (new errors gate pushes instead of hiding).
 
 includes:
     - phpstan-baseline.neon

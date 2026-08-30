@@ -93,6 +93,7 @@ watch([selectedYear, selectedOrg], () => {
           :options="yearOptions"
           option-label="label"
           option-value="value"
+          aria-label="เลือกปีงบประมาณ"
           class="w-40"
         />
         <Select
@@ -100,6 +101,7 @@ watch([selectedYear, selectedOrg], () => {
           :options="orgOptions"
           option-label="label"
           option-value="value"
+          aria-label="เลือกหน่วยงาน"
           placeholder="ทุกหน่วยงาน"
           class="w-56"
           :loading="orgQuery.isLoading.value"

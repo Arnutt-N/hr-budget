@@ -32,7 +32,7 @@ final class BudgetExecutionRepository
      *
      * @return array<int,array<string,mixed>>
      */
-    public function breakdownRows(int $fiscalYear, ?int $orgId): array
+    public function breakdownRows(int $fiscalYear, ?int $orgId, ?array $scopeFilter = null): array
     {
         $sql = "SELECT
                     p.id AS project_id,
@@ -60,6 +60,7 @@ final class BudgetExecutionRepository
             $sql .= " AND ds.organization_id = ?";
             $params[] = $orgId;
         }
+        $params = $this->appendScope($sql, $params, $scopeFilter);
         $sql .= " GROUP BY p.id, a.id ORDER BY p.id, a.id";
 
         return Database::query($sql, $params);
@@ -70,7 +71,7 @@ final class BudgetExecutionRepository
      *
      * @return array<int,array<string,mixed>>
      */
-    public function orgTotals(int $fiscalYear, ?int $orgId, int $limit): array
+    public function orgTotals(int $fiscalYear, ?int $orgId, int $limit, ?array $scopeFilter = null): array
     {
         $sql = "SELECT MAX(o.name_th) AS name, COALESCE(SUM(bt.allocated), 0) AS allocated"
             . self::FROM_JOINED
@@ -82,10 +83,32 @@ final class BudgetExecutionRepository
             $sql .= " AND ds.organization_id = ?";
             $params[] = $orgId;
         }
+        // Scope params must precede the trailing LIMIT ? param.
+        $params = $this->appendScope($sql, $params, $scopeFilter);
         $sql .= " GROUP BY o.id ORDER BY SUM(bt.allocated) DESC LIMIT ?";
         $params[] = $limit;
 
         return Database::query($sql, $params);
+    }
+
+    /**
+     * Append the caller's org-scope fragment (AccessScopeResolver::orgScopeFilter
+     * shape) to the WHERE clause. '1=1' (unrestricted) adds nothing.
+     *
+     * @param array{sql:string, params:array<int,mixed>}|null $scopeFilter
+     * @param array<int,mixed> $params
+     * @return array<int,mixed>
+     */
+    private function appendScope(string &$sql, array $params, ?array $scopeFilter): array
+    {
+        if ($scopeFilter !== null && $scopeFilter['sql'] !== '1=1') {
+            $sql .= " AND {$scopeFilter['sql']}";
+            foreach ($scopeFilter['params'] as $param) {
+                $params[] = $param;
+            }
+        }
+
+        return $params;
     }
 
     /**
