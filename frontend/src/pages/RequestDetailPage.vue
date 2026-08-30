@@ -9,6 +9,7 @@ import {
 } from '@/queries/useBudgetRequests'
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import ApprovalChainPanel from '@/components/ApprovalChainPanel.vue'
 import { formatBaht } from '@/lib/format'
@@ -84,12 +85,11 @@ async function handleReject() {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">รายละเอียดคำขอ</h1>
+    <PageHeader title="รายละเอียดคำขอ">
       <router-link to="/requests" class="text-sm text-dark-muted hover:text-dark-text">
         &larr; กลับ
       </router-link>
-    </div>
+    </PageHeader>
 
     <div v-if="requestQuery.isLoading.value" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 

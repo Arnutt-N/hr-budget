@@ -14,6 +14,7 @@ import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -192,15 +193,12 @@ function onDelete(role: Role): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-white">บทบาทและสิทธิ์</h1>
-        <p class="mt-1 text-sm text-dark-muted">
-          สร้าง/แก้บทบาท กำหนดชุดสิทธิ์ และเปิด/ปิดการใช้งาน
-        </p>
-      </div>
+    <PageHeader
+      title="บทบาทและสิทธิ์"
+      subtitle="สร้าง/แก้บทบาท กำหนดชุดสิทธิ์ และเปิด/ปิดการใช้งาน"
+    >
       <Button label="เพิ่มบทบาท" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 

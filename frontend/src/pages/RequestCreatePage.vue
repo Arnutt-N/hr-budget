@@ -5,6 +5,7 @@ import { useToast } from 'primevue/usetoast'
 import { useCreateBudgetRequest, useSubmitBudgetRequest } from '@/queries/useBudgetRequests'
 import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
+import PageHeader from '@/components/PageHeader.vue'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
@@ -89,12 +90,11 @@ async function doCreate(): Promise<number | null> {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">สร้างคำของบประมาณ</h1>
+    <PageHeader title="สร้างคำของบประมาณ">
       <router-link to="/requests" class="text-sm text-dark-muted hover:text-dark-text">
         &larr; กลับ
       </router-link>
-    </div>
+    </PageHeader>
 
     <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
       {{ errorMsg }}
