@@ -10,12 +10,13 @@ import {
   useDisbursementRecord,
   useExpenseStructure,
 } from '@/queries/useDisbursements'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import { useAuthStore } from '@/stores/auth'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
 import {
   MONTH_LABELS,
+  MONTH_OPTIONS,
   type ExpenseItem,
   type SaveTrackingItem,
 } from '@/types/disbursement'
@@ -37,10 +38,6 @@ const orgId = ref<number | null>(null)
 const fiscalYear = ref<number>(0)
 const recordMonth = ref<number>(0)
 const errorMsg = ref('')
-
-const monthOptions = computed(() =>
-  Object.entries(MONTH_LABELS).map(([value, label]) => ({ value: Number(value), label })),
-)
 
 // Default the fiscal year to the current one once the list arrives.
 watch(
@@ -340,7 +337,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
               <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
-                {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
+                {{ fiscalYearLabel(fy) }}
               </option>
             </select>
           </div>
@@ -352,7 +349,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
               <option :value="0">-- เลือกเดือน --</option>
-              <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+              <option v-for="m in MONTH_OPTIONS" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
           </div>
         </div>

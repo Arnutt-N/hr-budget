@@ -11,7 +11,7 @@ import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import ApprovalChainPanel from '@/components/ApprovalChainPanel.vue'
-import { formatAmount } from '@/lib/format'
+import { formatBaht } from '@/lib/format'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -118,7 +118,7 @@ async function handleReject() {
         <div class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
             <span class="text-dark-muted">ยอดรวม</span>
-            <p class="font-semibold text-white">{{ formatAmount(req.total_amount) }} บาท</p>
+            <p class="font-semibold text-white">{{ formatBaht(req.total_amount) }} บาท</p>
           </div>
           <div>
             <span class="text-dark-muted">ผู้สร้าง</span>

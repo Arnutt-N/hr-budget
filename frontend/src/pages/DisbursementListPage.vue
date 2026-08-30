@@ -14,7 +14,7 @@ import { useFiscalYearOptions } from '@/queries/useFiscalYears'
 import { formatThaiDate } from '@/lib/date'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
-import { MONTH_LABELS, type SessionFilters } from '@/types/disbursement'
+import { MONTH_LABELS, MONTH_OPTIONS, type SessionFilters } from '@/types/disbursement'
 
 const router = useRouter()
 const confirmDelete = useDeleteConfirm()
@@ -34,10 +34,6 @@ const currentPage = computed(() => meta.value?.page ?? 1)
 const totalRecords = computed(() => meta.value?.total ?? 0)
 
 const deleteMut = useDeleteSession()
-
-const monthOptions = computed(() =>
-  Object.entries(MONTH_LABELS).map(([value, label]) => ({ value: Number(value), label })),
-)
 
 const fiscalYearOptions = useFiscalYearOptions()
 
@@ -106,7 +102,7 @@ function confirmDeleteSession(id: number, orgName: string): void {
           <label id="disb-filter-month-label" class="text-xs text-dark-muted">เดือน</label>
           <Select
             v-model="filterMonth"
-            :options="monthOptions"
+            :options="MONTH_OPTIONS"
             option-label="label"
             option-value="value"
             aria-labelledby="disb-filter-month-label"

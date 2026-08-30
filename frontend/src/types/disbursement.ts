@@ -157,6 +157,11 @@ export const MONTH_LABELS: Record<number, string> = {
   12: 'ธันวาคม',
 }
 
+/** Select-option shape over MONTH_LABELS (value = calendar month 1-12). */
+export const MONTH_OPTIONS: { value: number; label: string }[] = Object.entries(
+  MONTH_LABELS,
+).map(([value, label]) => ({ value: Number(value), label }))
+
 export const RECORD_STATUS_LABELS: Record<RecordStatus, string> = {
   draft: 'ร่าง',
   completed: 'บันทึกแล้ว',

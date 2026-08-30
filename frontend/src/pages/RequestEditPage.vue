@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequest, useUpdateBudgetRequest } from '@/queries/useBudgetRequests'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import FileUploader from '@/components/FileUploader.vue'
@@ -111,7 +111,7 @@ async function handleSave() {
               class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             >
               <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
-                {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
+                {{ fiscalYearLabel(fy) }}
               </option>
             </select>
           </div>

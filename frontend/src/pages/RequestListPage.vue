@@ -12,7 +12,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 import { useBudgetRequestList } from '@/queries/useBudgetRequests'
 import { useFiscalYearOptions } from '@/queries/useFiscalYears'
 import { formatThaiDate } from '@/lib/date'
-import { formatAmount } from '@/lib/format'
+import { formatBaht } from '@/lib/format'
 import { STATUS_LABELS } from '@/types/budget-request'
 import type { ListFilters, RequestStatus } from '@/types/budget-request'
 
@@ -150,7 +150,7 @@ function onPage(event: { page: number }) {
       </Column>
       <Column header="ยอดรวม" class="text-right">
         <template #body="{ data }">
-          <span class="text-sm">{{ formatAmount(data.total_amount) }}</span>
+          <span class="text-sm">{{ formatBaht(data.total_amount) }}</span>
         </template>
       </Column>
       <Column header="ผู้สร้าง">

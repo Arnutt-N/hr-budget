@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { useCreateBudgetRequest, useSubmitBudgetRequest } from '@/queries/useBudgetRequests'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
@@ -120,7 +120,7 @@ async function doCreate(): Promise<number | null> {
             class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
           >
             <option v-for="fy in fiscalYears ?? []" :key="fy.id" :value="fy.year">
-              {{ fy.year }}{{ fy.is_current ? ' (ปีปัจจุบัน)' : '' }}
+              {{ fiscalYearLabel(fy) }}
             </option>
           </select>
         </div>
