@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import {
   Landmark,
@@ -35,6 +35,7 @@ import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useAuthStore } from '@/stores/auth'
 import NotificationBell from '@/components/NotificationBell.vue'
+import { useEscapeClose } from '@/composables/useEscapeClose'
 
 const router = useRouter()
 const route = useRoute()
@@ -44,15 +45,7 @@ const auth = useAuthStore()
 // this layout renders, auth.user is already resolved.
 
 const sidebarOpen = ref(false) // mobile drawer
-
-function onSidebarKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') sidebarOpen.value = false
-}
-watch(sidebarOpen, (isOpen) => {
-  if (isOpen) window.addEventListener('keydown', onSidebarKeydown)
-  else window.removeEventListener('keydown', onSidebarKeydown)
-})
-onBeforeUnmount(() => window.removeEventListener('keydown', onSidebarKeydown))
+useEscapeClose(sidebarOpen, () => (sidebarOpen.value = false))
 
 const pageTitle = computed(() => (route.meta.title as string | undefined) ?? 'HR Budget')
 

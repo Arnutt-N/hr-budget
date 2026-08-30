@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/vue-query'
 import { computed, toValue, type MaybeRef } from 'vue'
 import {
   fetchRequests,
@@ -30,6 +30,9 @@ export function useBudgetRequestList(filters: MaybeRef<ListFilters> = {}) {
       if (!res.success || !res.data) throw new Error(res.error ?? 'โหลดคำขอไม่สำเร็จ')
       return { data: res.data, meta: (res.meta as ListMeta | undefined) ?? null }
     },
+    // Keep the previous page's rows visible while the next page loads —
+    // without this the lazy table blanks and the paginator jumps.
+    placeholderData: keepPreviousData,
   })
 }
 
