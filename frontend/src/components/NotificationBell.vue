@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Bell } from '@lucide/vue'
 import {
@@ -8,22 +8,15 @@ import {
   useMarkRead,
   useMarkAllRead,
 } from '@/queries/useNotifications'
+import { useEscapeClose } from '@/composables/useEscapeClose'
 
 const router = useRouter()
 const open = ref(false)
 const triggerEl = ref<HTMLButtonElement | null>(null)
 
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') close()
-}
 watch(open, (isOpen) => {
-  if (isOpen) window.addEventListener('keydown', onKeydown)
-  else {
-    window.removeEventListener('keydown', onKeydown)
-    triggerEl.value?.focus() // return focus to trigger on close
-  }
+  if (!isOpen) triggerEl.value?.focus() // return focus to trigger on close
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 const unreadQuery = useUnreadCount()
 const listQuery = useNotificationList(open) // lazy: fetches only while the dropdown is open
@@ -40,6 +33,7 @@ function toggleDropdown() {
 function close() {
   open.value = false
 }
+useEscapeClose(open, close)
 
 async function handleClick(id: number, link: string | null) {
   await markRead.mutateAsync(id)
