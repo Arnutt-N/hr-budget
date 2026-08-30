@@ -28,6 +28,7 @@ import {
 } from '@/queries/useVault'
 import type { VaultFolder, VaultFile, Breadcrumb } from '@/types/vault'
 import { formatSize } from '@/lib/format'
+import FormField from '@/components/FormField.vue'
 
 const auth = useAuthStore()
 const confirmDeletePrompt = useDeleteConfirm()
@@ -365,15 +366,12 @@ function confirmDeleteFile(file: VaultFile): void {
     <!-- Create folder dialog -->
     <Dialog v-model:visible="showDialog" header="สร้างโฟลเดอร์ใหม่" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="folder-name" class="text-sm font-medium text-dark-muted">ชื่อโฟลเดอร์</label>
+        <FormField id="folder-name" label="ชื่อโฟลเดอร์" :error="errors.name">
           <InputText id="folder-name" v-model.trim="name" maxlength="255" :invalid="!!errors.name" :aria-describedby="errors.name ? 'folder-name-error' : undefined" fluid />
-          <small v-if="errors.name" id="folder-name-error" class="text-red-400" role="alert">{{ errors.name }}</small>
-        </div>
-        <div class="flex flex-col gap-1">
-          <label for="folder-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย (ไม่บังคับ)</label>
+        </FormField>
+        <FormField id="folder-desc" label="คำอธิบาย (ไม่บังคับ)">
           <InputText id="folder-desc" v-model.trim="description" fluid />
-        </div>
+        </FormField>
         <p class="text-xs text-dark-muted">
           {{ currentFolderId === null ? `สร้างที่ระดับราก (ปีงบ ${year})` : 'สร้างเป็นโฟลเดอร์ย่อย' }}
         </p>

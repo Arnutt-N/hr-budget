@@ -14,6 +14,7 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -179,8 +180,7 @@ function onDelete(plan: Plan): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="plan-code" class="text-sm font-medium text-dark-muted">รหัส</label>
+        <FormField id="plan-code" label="รหัส" :error="errors.code">
           <InputText
             id="plan-code"
             v-model.trim="code"
@@ -189,11 +189,9 @@ function onDelete(plan: Plan): void {
             :aria-describedby="errors.code ? 'plan-code-error' : undefined"
             fluid
           />
-          <small v-if="errors.code" id="plan-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="plan-name" class="text-sm font-medium text-dark-muted">ชื่อแผนงาน/ผลผลิต</label>
+        <FormField id="plan-name" label="ชื่อแผนงาน/ผลผลิต" :error="errors.name_th">
           <InputText
             id="plan-name"
             v-model.trim="nameTh"
@@ -201,21 +199,17 @@ function onDelete(plan: Plan): void {
             :aria-describedby="errors.name_th ? 'plan-name-error' : undefined"
             fluid
           />
-          <small v-if="errors.name_th" id="plan-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="plan-name-en" class="text-sm font-medium text-dark-muted">ชื่อ (อังกฤษ)</label>
+        <FormField id="plan-name-en" label="ชื่อ (อังกฤษ)">
           <InputText id="plan-name-en" v-model.trim="nameEn" fluid />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="plan-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย</label>
+        <FormField id="plan-desc" label="คำอธิบาย">
           <Textarea id="plan-desc" v-model.trim="description" rows="3" fluid />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="plan-year" class="text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+        <FormField id="plan-year" label="ปีงบประมาณ" :error="errors.fiscal_year">
           <Select
             v-model="fiscalYear"
             label-id="plan-year"
@@ -227,8 +221,7 @@ function onDelete(plan: Plan): void {
             :aria-describedby="errors.fiscal_year ? 'plan-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.fiscal_year" id="plan-year-error" class="text-red-400" role="alert">{{ errors.fiscal_year }}</small>
-        </div>
+        </FormField>
 
         <label v-if="editingId" class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isActive" binary input-id="plan-is-active" />

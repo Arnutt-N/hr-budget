@@ -13,6 +13,7 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Message from 'primevue/message'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -151,11 +152,10 @@ function onDelete(s: SalaryScale): void {
 
     <Dialog v-model:visible="showDialog" header="เพิ่มอัตราเงินเดือน" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label id="ss-category" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
+        <FormField id="ss-category" labelled-by label="ประเภทบุคลากร" :error="errors.employee_category">
           <Select
             v-model="employeeCategory"
-            aria-labelledby="ss-category"
+            aria-labelledby="ss-category-label"
             :options="CATEGORY_OPTIONS"
             option-label="label"
             option-value="value"
@@ -163,11 +163,9 @@ function onDelete(s: SalaryScale): void {
             :aria-describedby="errors.employee_category ? 'ss-category-error' : undefined"
             fluid
           />
-          <small v-if="errors.employee_category" id="ss-category-error" class="text-red-400" role="alert">{{ errors.employee_category }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="ss-level" class="text-sm font-medium text-dark-muted">ระดับ</label>
+        <FormField id="ss-level" label="ระดับ" :error="errors.level_code">
           <InputText
             id="ss-level"
             v-model="levelCode"
@@ -175,12 +173,10 @@ function onDelete(s: SalaryScale): void {
             :aria-describedby="errors.level_code ? 'ss-level-error' : undefined"
             fluid
           />
-          <small v-if="errors.level_code" id="ss-level-error" class="text-red-400" role="alert">{{ errors.level_code }}</small>
-        </div>
+        </FormField>
 
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label for="ss-min" class="text-sm font-medium text-dark-muted">ขั้นต่ำ</label>
+          <FormField id="ss-min" label="ขั้นต่ำ" :error="errors.min_amount">
             <InputNumber
               v-model="minAmount"
               input-id="ss-min"
@@ -189,10 +185,8 @@ function onDelete(s: SalaryScale): void {
               :aria-describedby="errors.min_amount ? 'ss-min-error' : undefined"
               fluid
             />
-            <small v-if="errors.min_amount" id="ss-min-error" class="text-red-400" role="alert">{{ errors.min_amount }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="ss-max" class="text-sm font-medium text-dark-muted">ขั้นสูง (เพดาน)</label>
+          </FormField>
+          <FormField id="ss-max" label="ขั้นสูง (เพดาน)" :error="errors.max_amount">
             <InputNumber
               v-model="maxAmount"
               input-id="ss-max"
@@ -201,12 +195,10 @@ function onDelete(s: SalaryScale): void {
               :aria-describedby="errors.max_amount ? 'ss-max-error' : undefined"
               fluid
             />
-            <small v-if="errors.max_amount" id="ss-max-error" class="text-red-400" role="alert">{{ errors.max_amount }}</small>
-          </div>
+          </FormField>
         </div>
 
-        <div class="flex flex-col gap-1">
-          <label for="ss-effective" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+        <FormField id="ss-effective" label="วันเริ่มมีผล" :error="errors.effective_from">
           <InputText
             id="ss-effective"
             v-model="effectiveFrom"
@@ -215,13 +207,11 @@ function onDelete(s: SalaryScale): void {
             :aria-describedby="errors.effective_from ? 'ss-effective-error' : undefined"
             fluid
           />
-          <small v-if="errors.effective_from" id="ss-effective-error" class="text-red-400" role="alert">{{ errors.effective_from }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="ss-doc" class="text-sm font-medium text-dark-muted">เลขที่เอกสาร</label>
+        <FormField id="ss-doc" label="เลขที่เอกสาร">
           <InputText id="ss-doc" v-model="docNo" fluid />
-        </div>
+        </FormField>
 
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />

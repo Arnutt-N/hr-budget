@@ -13,6 +13,7 @@ import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -156,8 +157,7 @@ function onDelete(tt: TargetType): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="tt-code" class="text-sm font-medium text-dark-muted">รหัสประเภทเป้าหมาย</label>
+        <FormField id="tt-code" label="รหัสประเภทเป้าหมาย" :error="errors.code">
           <InputText
             id="tt-code"
             v-model.trim="code"
@@ -166,11 +166,9 @@ function onDelete(tt: TargetType): void {
             :aria-describedby="errors.code ? 'tt-code-error' : undefined"
             fluid
           />
-          <small v-if="errors.code" id="tt-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="tt-name" class="text-sm font-medium text-dark-muted">ชื่อประเภทเป้าหมาย</label>
+        <FormField id="tt-name" label="ชื่อประเภทเป้าหมาย" :error="errors.name_th">
           <InputText
             id="tt-name"
             v-model.trim="nameTh"
@@ -178,13 +176,11 @@ function onDelete(tt: TargetType): void {
             :aria-describedby="errors.name_th ? 'tt-name-error' : undefined"
             fluid
           />
-          <small v-if="errors.name_th" id="tt-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="tt-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย</label>
+        <FormField id="tt-desc" label="คำอธิบาย">
           <Textarea id="tt-desc" v-model.trim="description" rows="3" fluid />
-        </div>
+        </FormField>
 
         <label v-if="editingId" class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isActive" binary input-id="tt-is-active" />

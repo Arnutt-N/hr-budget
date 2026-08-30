@@ -12,6 +12,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import FormField from '@/components/FormField.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
 import type { BudgetCategoryItem } from '@/types/budget-category'
 import {
@@ -177,26 +178,21 @@ async function restore(item: BudgetCategoryItem): Promise<void> {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label :for="`item-name-${categoryId}`" class="text-sm font-medium text-dark-muted">ชื่อรายการ</label>
+        <FormField :id="`item-name-${categoryId}`" label="ชื่อรายการ" :error="errors.name">
           <InputText :id="`item-name-${categoryId}`" v-model.trim="name" :invalid="!!errors.name" :aria-describedby="errors.name ? `item-name-${categoryId}-error` : undefined" fluid />
-          <small v-if="errors.name" :id="`item-name-${categoryId}-error`" class="text-red-400" role="alert">{{ errors.name }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label :for="`item-code-${categoryId}`" class="text-sm font-medium text-dark-muted">รหัส</label>
+        <FormField :id="`item-code-${categoryId}`" label="รหัส">
           <InputText :id="`item-code-${categoryId}`" v-model.trim="code" fluid />
-        </div>
+        </FormField>
 
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label :for="`item-level-${categoryId}`" class="text-sm font-medium text-dark-muted">ระดับ</label>
+          <FormField :id="`item-level-${categoryId}`" label="ระดับ">
             <InputNumber v-model="level" :input-id="`item-level-${categoryId}`" :use-grouping="false" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label :for="`item-sort-${categoryId}`" class="text-sm font-medium text-dark-muted">ลำดับ</label>
+          </FormField>
+          <FormField :id="`item-sort-${categoryId}`" label="ลำดับ">
             <InputNumber v-model="sortOrder" :input-id="`item-sort-${categoryId}`" :use-grouping="false" fluid />
-          </div>
+          </FormField>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">

@@ -11,6 +11,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -155,8 +156,7 @@ function onDelete(cat: BudgetCategory): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="cat-code" class="text-sm font-medium text-dark-muted">รหัส</label>
+        <FormField id="cat-code" label="รหัส" :error="errors.code">
           <InputText
             id="cat-code"
             v-model.trim="code"
@@ -165,11 +165,9 @@ function onDelete(cat: BudgetCategory): void {
             :aria-describedby="errors.code ? 'cat-code-error' : undefined"
             fluid
           />
-          <small v-if="errors.code" id="cat-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="cat-name-th" class="text-sm font-medium text-dark-muted">ชื่อหมวด (ไทย)</label>
+        <FormField id="cat-name-th" label="ชื่อหมวด (ไทย)" :error="errors.name_th">
           <InputText
             id="cat-name-th"
             v-model.trim="nameTh"
@@ -177,18 +175,15 @@ function onDelete(cat: BudgetCategory): void {
             :aria-describedby="errors.name_th ? 'cat-name-th-error' : undefined"
             fluid
           />
-          <small v-if="errors.name_th" id="cat-name-th-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="cat-name-en" class="text-sm font-medium text-dark-muted">ชื่อหมวด (อังกฤษ)</label>
+        <FormField id="cat-name-en" label="ชื่อหมวด (อังกฤษ)">
           <InputText id="cat-name-en" v-model.trim="nameEn" fluid />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="cat-sort" class="text-sm font-medium text-dark-muted">ลำดับ</label>
+        <FormField id="cat-sort" label="ลำดับ">
           <InputNumber v-model="sortOrder" input-id="cat-sort" :use-grouping="false" fluid />
-        </div>
+        </FormField>
 
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />

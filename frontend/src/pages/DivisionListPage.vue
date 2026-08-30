@@ -13,6 +13,7 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -168,8 +169,7 @@ function onDelete(division: Division): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="div-code" class="text-sm font-medium text-dark-muted">รหัส</label>
+        <FormField id="div-code" label="รหัส" :error="errors.code">
           <InputText
             id="div-code"
             v-model.trim="code"
@@ -178,11 +178,9 @@ function onDelete(division: Division): void {
             :aria-describedby="errors.code ? 'div-code-error' : undefined"
             fluid
           />
-          <small v-if="errors.code" id="div-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="div-name" class="text-sm font-medium text-dark-muted">ชื่อกอง/สำนัก</label>
+        <FormField id="div-name" label="ชื่อกอง/สำนัก" :error="errors.name_th">
           <InputText
             id="div-name"
             v-model.trim="nameTh"
@@ -190,16 +188,13 @@ function onDelete(division: Division): void {
             :aria-describedby="errors.name_th ? 'div-name-error' : undefined"
             fluid
           />
-          <small v-if="errors.name_th" id="div-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="div-short" class="text-sm font-medium text-dark-muted">ชื่อย่อ</label>
+        <FormField id="div-short" label="ชื่อย่อ">
           <InputText id="div-short" v-model.trim="shortName" fluid />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="div-type" class="text-sm font-medium text-dark-muted">ประเภท</label>
+        <FormField id="div-type" label="ประเภท">
           <Select
             v-model="type"
             label-id="div-type"
@@ -209,7 +204,7 @@ function onDelete(division: Division): void {
             placeholder="-- เลือก --"
             fluid
           />
-        </div>
+        </FormField>
 
         <label v-if="editingId" class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isActive" binary input-id="div-is-active" />

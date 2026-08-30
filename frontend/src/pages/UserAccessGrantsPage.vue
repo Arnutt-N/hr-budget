@@ -11,6 +11,7 @@ import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import type { AccessGrant, ScopeType, AssignGrantPayload } from '@/types/rbac'
@@ -187,8 +188,7 @@ function confirmRevoke(g: AccessGrant): void {
       <form class="space-y-4" @submit.prevent="onSave">
         <Message v-if="formError" severity="error" :closable="false">{{ formError }}</Message>
 
-        <div class="flex flex-col gap-1">
-          <label for="grant-role" class="text-sm font-medium text-dark-muted">บทบาท</label>
+        <FormField id="grant-role" label="บทบาท">
           <Select
             v-model="formRoleId"
             label-id="grant-role"
@@ -199,10 +199,9 @@ function confirmRevoke(g: AccessGrant): void {
             filter
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="grant-scope" class="text-sm font-medium text-dark-muted">ขอบเขตสิทธิ์</label>
+        <FormField id="grant-scope" label="ขอบเขตสิทธิ์">
           <Select
             v-model="formScopeType"
             label-id="grant-scope"
@@ -211,10 +210,9 @@ function confirmRevoke(g: AccessGrant): void {
             option-value="value"
             fluid
           />
-        </div>
+        </FormField>
 
-        <div v-if="needsOrg" class="flex flex-col gap-1">
-          <label for="grant-org" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
+        <FormField v-if="needsOrg" id="grant-org" label="หน่วยงาน">
           <Select
             v-model="formOrgId"
             label-id="grant-org"
@@ -226,7 +224,7 @@ function confirmRevoke(g: AccessGrant): void {
             fluid
           />
           <small class="text-dark-muted">สิทธิ์จะครอบคลุมหน่วยงานนี้และหน่วยงานลูกทั้งหมด</small>
-        </div>
+        </FormField>
 
         <div class="flex justify-end gap-2 pt-2">
           <Button

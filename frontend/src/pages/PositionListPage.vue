@@ -13,6 +13,7 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -440,8 +441,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-lg">
       <form class="space-y-4" @submit.prevent="onSave">
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label for="pos-pay-no" class="text-sm font-medium text-dark-muted">เลขถือจ่าย</label>
+          <FormField id="pos-pay-no" label="เลขถือจ่าย" :error="errors.pay_no">
             <InputText
               id="pos-pay-no"
               v-model="payNo"
@@ -449,17 +449,14 @@ function confirmDeleteAllowance(allowanceId: number): void {
               :aria-describedby="errors.pay_no ? 'pos-pay-no-error' : undefined"
               fluid
             />
-            <small v-if="errors.pay_no" id="pos-pay-no-error" class="text-red-400" role="alert">{{ errors.pay_no }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="pos-pos-no" class="text-sm font-medium text-dark-muted">เลขที่ตำแหน่ง</label>
+          </FormField>
+          <FormField id="pos-pos-no" label="เลขที่ตำแหน่ง">
             <InputText id="pos-pos-no" v-model="posNo" fluid :disabled="!!editingId" />
-          </div>
+          </FormField>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label id="pos-category-label" class="text-sm font-medium text-dark-muted">ประเภทบุคลากร</label>
+          <FormField id="pos-category" labelled-by label="ประเภทบุคลากร" :error="errors.employee_category">
             <Select
               v-model="employeeCategory"
               aria-labelledby="pos-category-label"
@@ -470,10 +467,8 @@ function confirmDeleteAllowance(allowanceId: number): void {
               :aria-describedby="errors.employee_category ? 'pos-category-error' : undefined"
               fluid
             />
-            <small v-if="errors.employee_category" id="pos-category-error" class="text-red-400" role="alert">{{ errors.employee_category }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label id="pos-org-label" class="text-sm font-medium text-dark-muted">หน่วยงานเจ้าของงบ</label>
+          </FormField>
+          <FormField id="pos-org" labelled-by label="หน่วยงานเจ้าของงบ" :error="errors.organization_id">
             <Select
               v-model="organizationId"
               aria-labelledby="pos-org-label"
@@ -486,17 +481,14 @@ function confirmDeleteAllowance(allowanceId: number): void {
               filter
               fluid
             />
-            <small v-if="errors.organization_id" id="pos-org-error" class="text-red-400" role="alert">{{ errors.organization_id }}</small>
-          </div>
+          </FormField>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <label for="pos-level" class="text-sm font-medium text-dark-muted">ระดับ</label>
+          <FormField id="pos-level" label="ระดับ">
             <InputText id="pos-level" v-model="levelCode" fluid :disabled="!!editingId" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="pos-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
+          </FormField>
+          <FormField id="pos-salary" label="เงินเดือน" :error="errors.base_salary">
             <InputNumber
               v-model="baseSalaryInput"
               input-id="pos-salary"
@@ -506,13 +498,11 @@ function confirmDeleteAllowance(allowanceId: number): void {
               fluid
               :disabled="!!editingId"
             />
-            <small v-if="errors.base_salary" id="pos-salary-error" class="text-red-400" role="alert">{{ errors.base_salary }}</small>
-          </div>
+          </FormField>
         </div>
 
         <div v-if="!editingId" class="grid grid-cols-3 gap-3">
-          <div class="flex flex-col gap-1">
-            <label id="pos-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
+          <FormField id="pos-occupancy" labelled-by label="สถานะการครอง">
             <Select
               v-model="occupancy"
               aria-labelledby="pos-occupancy-label"
@@ -521,9 +511,8 @@ function confirmDeleteAllowance(allowanceId: number): void {
               option-value="value"
               fluid
             />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="pos-months" class="text-sm font-medium text-dark-muted">เดือนที่นับ (1-12)</label>
+          </FormField>
+          <FormField id="pos-months" label="เดือนที่นับ (1-12)" :error="errors.months_counted">
             <InputNumber
               v-model="monthsCounted"
               input-id="pos-months"
@@ -533,10 +522,8 @@ function confirmDeleteAllowance(allowanceId: number): void {
               :aria-describedby="errors.months_counted ? 'pos-months-error' : undefined"
               fluid
             />
-            <small v-if="errors.months_counted" id="pos-months-error" class="text-red-400" role="alert">{{ errors.months_counted }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="pos-effective" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+          </FormField>
+          <FormField id="pos-effective" label="วันเริ่มมีผล" :error="errors.effective_from">
             <InputText
               id="pos-effective"
               v-model="effectiveFrom"
@@ -545,17 +532,15 @@ function confirmDeleteAllowance(allowanceId: number): void {
               :aria-describedby="errors.effective_from ? 'pos-effective-error' : undefined"
               fluid
             />
-            <small v-if="errors.effective_from" id="pos-effective-error" class="text-red-400" role="alert">{{ errors.effective_from }}</small>
-          </div>
+          </FormField>
         </div>
         <p v-else class="text-xs text-dark-muted">
           แก้เฉพาะเลขถือจ่าย/ประเภท/คำสั่งตั้งอัตรา — การเปลี่ยนเงินเดือน/ระดับ/หน่วยงาน ให้เพิ่ม "เวอร์ชัน" ใหม่แทน
         </p>
 
-        <div class="flex flex-col gap-1">
-          <label for="pos-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่งตั้งอัตรา</label>
+        <FormField id="pos-doc-no" label="เลขที่คำสั่งตั้งอัตรา">
           <InputText id="pos-doc-no" v-model="createdDocNo" fluid />
-        </div>
+        </FormField>
 
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />
@@ -600,36 +585,30 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มเวอร์ชันใหม่ (ปิดเวอร์ชันเดิมอัตโนมัติ)</h3>
         <div class="grid grid-cols-3 gap-3">
-          <div class="flex flex-col gap-1">
-            <label for="version-effective-from" class="text-sm font-medium text-dark-muted">วันเริ่มมีผล</label>
+          <FormField id="version-effective-from" label="วันเริ่มมีผล" :error="versionErrors.effective_from">
             <InputText
               id="version-effective-from"
               v-model="vEffectiveFrom"
               type="date"
               :invalid="!!versionErrors.effective_from"
-              :aria-describedby="versionErrors.effective_from ? 'version-effective-error' : undefined"
+              :aria-describedby="versionErrors.effective_from ? 'version-effective-from-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.effective_from" id="version-effective-error" class="text-red-400" role="alert">{{ versionErrors.effective_from }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="version-base-salary" class="text-sm font-medium text-dark-muted">เงินเดือน</label>
+          </FormField>
+          <FormField id="version-base-salary" label="เงินเดือน" :error="versionErrors.base_salary">
             <InputNumber
               input-id="version-base-salary"
               v-model="versionSalaryInput"
               :min="0"
               :invalid="!!versionErrors.base_salary"
-              :aria-describedby="versionErrors.base_salary ? 'version-salary-error' : undefined"
+              :aria-describedby="versionErrors.base_salary ? 'version-base-salary-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.base_salary" id="version-salary-error" class="text-red-400" role="alert">{{ versionErrors.base_salary }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="version-level-code" class="text-sm font-medium text-dark-muted">ระดับ</label>
+          </FormField>
+          <FormField id="version-level-code" label="ระดับ">
             <InputText id="version-level-code" v-model="vLevelCode" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label id="version-organization-label" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
+          </FormField>
+          <FormField id="version-organization" labelled-by label="หน่วยงาน" :error="versionErrors.organization_id">
             <Select
               v-model="vOrganizationId"
               :options="organizations ?? []"
@@ -637,14 +616,12 @@ function confirmDeleteAllowance(allowanceId: number): void {
               option-value="id"
               aria-labelledby="version-organization-label"
               :invalid="!!versionErrors.organization_id"
-              :aria-describedby="versionErrors.organization_id ? 'version-org-error' : undefined"
+              :aria-describedby="versionErrors.organization_id ? 'version-organization-error' : undefined"
               filter
               fluid
             />
-            <small v-if="versionErrors.organization_id" id="version-org-error" class="text-red-400" role="alert">{{ versionErrors.organization_id }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label id="version-occupancy-label" class="text-sm font-medium text-dark-muted">สถานะการครอง</label>
+          </FormField>
+          <FormField id="version-occupancy" labelled-by label="สถานะการครอง">
             <Select
               v-model="vOccupancy"
               :options="OCCUPANCY_OPTIONS"
@@ -653,22 +630,19 @@ function confirmDeleteAllowance(allowanceId: number): void {
               aria-labelledby="version-occupancy-label"
               fluid
             />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="version-months-counted" class="text-sm font-medium text-dark-muted">เดือนที่นับ</label>
+          </FormField>
+          <FormField id="version-months-counted" label="เดือนที่นับ" :error="versionErrors.months_counted">
             <InputNumber
               input-id="version-months-counted"
               v-model="vMonthsCounted"
               :min="1"
               :max="12"
               :invalid="!!versionErrors.months_counted"
-              :aria-describedby="versionErrors.months_counted ? 'version-months-error' : undefined"
+              :aria-describedby="versionErrors.months_counted ? 'version-months-counted-error' : undefined"
               fluid
             />
-            <small v-if="versionErrors.months_counted" id="version-months-error" class="text-red-400" role="alert">{{ versionErrors.months_counted }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label id="version-salary-basis-label" class="text-sm font-medium text-dark-muted">สถานะเงินเดือน</label>
+          </FormField>
+          <FormField id="version-salary-basis" labelled-by label="สถานะเงินเดือน">
             <Select
               v-model="vSalaryBasis"
               :options="SALARY_BASIS_OPTIONS"
@@ -677,9 +651,8 @@ function confirmDeleteAllowance(allowanceId: number): void {
               aria-labelledby="version-salary-basis-label"
               fluid
             />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label id="version-approval-label" class="text-sm font-medium text-dark-muted">สถานะการอนุมัติ</label>
+          </FormField>
+          <FormField id="version-approval" labelled-by label="สถานะการอนุมัติ">
             <Select
               v-model="vApprovalStatus"
               :options="APPROVAL_STATUS_OPTIONS"
@@ -688,11 +661,10 @@ function confirmDeleteAllowance(allowanceId: number): void {
               aria-labelledby="version-approval-label"
               fluid
             />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="version-order-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</label>
+          </FormField>
+          <FormField id="version-order-doc-no" label="เลขที่คำสั่ง">
             <InputText id="version-order-doc-no" v-model="vOrderDocNo" fluid />
-          </div>
+          </FormField>
         </div>
         <div class="mt-3 flex justify-end">
           <Button
@@ -732,8 +704,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มสิทธิ์</h3>
         <div class="grid grid-cols-3 gap-3">
-          <div class="flex flex-col gap-1">
-            <label id="allowance-type-label" class="text-sm font-medium text-dark-muted">ชนิดเงินเพิ่ม</label>
+          <FormField id="allowance-type" labelled-by label="ชนิดเงินเพิ่ม" :error="allowanceErrors.allowance_type_id">
             <Select
               v-model="aTypeId"
               :options="allowanceTypes ?? []"
@@ -745,24 +716,20 @@ function confirmDeleteAllowance(allowanceId: number): void {
               filter
               fluid
             />
-            <small v-if="allowanceErrors.allowance_type_id" id="allowance-type-error" class="text-red-400" role="alert">{{ allowanceErrors.allowance_type_id }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="allowance-effective-from" class="text-sm font-medium text-dark-muted">วันเริ่มมีสิทธิ์</label>
+          </FormField>
+          <FormField id="allowance-effective-from" label="วันเริ่มมีสิทธิ์" :error="allowanceErrors.effective_from">
             <InputText
               id="allowance-effective-from"
               v-model="aEffectiveFrom"
               type="date"
               :invalid="!!allowanceErrors.effective_from"
-              :aria-describedby="allowanceErrors.effective_from ? 'allowance-effective-error' : undefined"
+              :aria-describedby="allowanceErrors.effective_from ? 'allowance-effective-from-error' : undefined"
               fluid
             />
-            <small v-if="allowanceErrors.effective_from" id="allowance-effective-error" class="text-red-400" role="alert">{{ allowanceErrors.effective_from }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="allowance-doc-no" class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</label>
+          </FormField>
+          <FormField id="allowance-doc-no" label="เลขที่คำสั่ง">
             <InputText id="allowance-doc-no" v-model="aDocNo" fluid />
-          </div>
+          </FormField>
         </div>
         <div class="mt-3 flex justify-end">
           <Button

@@ -40,6 +40,7 @@ Thai-first: "ระบบจัดการงบประมาณทรัพ�
 | `QueryErrorState` | `<Message severity="error">` load-error banner | `error?: unknown`; Thai fallback "ไม่สามารถโหลดข้อมูลได้" — single owner of that string |
 | `ListEmptyState` | DataTable `#empty` `<p class="py-4 text-center text-dark-muted">` | message prop + CTA slot. Richer empty states (icon, multi-line) stay inline |
 | `useDeleteConfirm` | the ~15-line delete `confirm.require` block | single owner of header "ยืนยันการลบ" + danger styling. Pages with **distinct** confirm copy (e.g. RoleListPage "ยืนยันลบบทบาท") pass overrides (`header`, custom message) through its options; inline `confirm.require` is reserved for non-delete confirmations (toggles, revokes) |
+| `FormField` | the per-field `div.flex.flex-col.gap-1` + `<label>` + error `<small id="X-error" role="alert">` wrapper | `id` + `label` props (+ optional `error`); pass `labelled-by` for the Select idiom (label gets `${id}-label`, Select binds `aria-labelledby`). The control in the slot still binds `:aria-describedby="errors.x ? 'X-error' : undefined"` itself. Checkbox rows (label to the right of the control) are a different pattern and stay inline |
 
 Never reintroduce a copy of these patterns in a page — import the primitive.
 
@@ -58,7 +59,9 @@ Never reintroduce a copy of these patterns in a page — import the primitive.
 
 Dialect: `useForm({ validationSchema: toTypedSchema(z.object({...})) })` +
 `defineField`, per-field Thai errors in
-`<small class="text-red-400" role="alert">`. Wiring rules:
+`<small class="text-red-400" role="alert">`. Wrap each field in the
+**`FormField`** primitive (see table above) so labels, ids, and error elements
+stay single-sourced. Wiring rules:
 
 1. `InputText` / `Textarea` / native inputs → `<label for="X">` + control `id="X"`.
 2. `InputNumber` / `Checkbox` → wrapper `input-id="X"`, label `for="X"`.
