@@ -9,6 +9,7 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { formatThaiDate } from '@/lib/date'
@@ -92,13 +93,12 @@ async function onSave(): Promise<void> {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-white">นโยบายการคำนวณงบบุคลากร</h1>
-        <p class="mt-1 text-sm text-dark-muted">เกณฑ์รายปีงบ — หนึ่งแถวต่อปี (ตัวคำนวณใช้แถวนี้ตัดสินวิธีคิด)</p>
-      </div>
+    <PageHeader
+      title="นโยบายการคำนวณงบบุคลากร"
+      subtitle="เกณฑ์รายปีงบ — หนึ่งแถวต่อปี (ตัวคำนวณใช้แถวนี้ตัดสินวิธีคิด)"
+    >
       <Button label="สร้างนโยบาย" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 

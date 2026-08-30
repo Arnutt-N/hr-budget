@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequest, useUpdateBudgetRequest } from '@/queries/useBudgetRequests'
 import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
+import PageHeader from '@/components/PageHeader.vue'
 import ItemEditor from '@/components/ItemEditor.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
@@ -78,12 +79,11 @@ async function handleSave() {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">แก้ไขคำของบประมาณ</h1>
+    <PageHeader title="แก้ไขคำของบประมาณ">
       <router-link :to="`/requests/${route.params.id}`" class="text-sm text-dark-muted hover:text-dark-text">
         &larr; กลับ
       </router-link>
-    </div>
+    </PageHeader>
 
     <div v-if="!loaded" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 

@@ -14,6 +14,7 @@ import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import { useAuthStore } from '@/stores/auth'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
+import PageHeader from '@/components/PageHeader.vue'
 import {
   MONTH_LABELS,
   MONTH_OPTIONS,
@@ -277,12 +278,11 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-white">บันทึกการเบิกจ่ายงบประมาณ</h1>
+    <PageHeader title="บันทึกการเบิกจ่ายงบประมาณ">
       <button type="button" @click="cancel" class="text-sm text-dark-muted hover:text-dark-text">
         &larr; กลับสู่รายการ
       </button>
-    </div>
+    </PageHeader>
 
     <!-- Stepper -->
     <ol class="mb-6 flex flex-wrap items-center gap-2 text-sm">

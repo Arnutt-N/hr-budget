@@ -8,6 +8,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -80,13 +81,12 @@ function confirmDelete(id: number): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-white">ไปช่วยราชการ</h1>
-        <p class="mt-1 text-sm text-dark-muted">งบยังอยู่ต้นสังกัดเสมอ — ตารางนี้ใช้รายงานเท่านั้น</p>
-      </div>
+    <PageHeader
+      title="ไปช่วยราชการ"
+      subtitle="งบยังอยู่ต้นสังกัดเสมอ — ตารางนี้ใช้รายงานเท่านั้น"
+    >
       <Button label="เพิ่มการไปช่วย" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 

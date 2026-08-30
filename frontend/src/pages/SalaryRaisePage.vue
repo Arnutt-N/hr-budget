@@ -7,6 +7,7 @@ import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 import ToggleSwitch from 'primevue/toggleswitch'
+import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { formatThaiDate } from '@/lib/date'
@@ -88,12 +89,10 @@ async function onSeedAll(): Promise<void> {
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-white">รอบเลื่อนเงินเดือน</h1>
-      <p class="mt-1 text-sm text-dark-muted">
-        สวิตช์ "นับในงบ" ตัดสินว่ารอบไหนเข้าคำนวณ · สถานะรายหน่วยตัดสินว่าเงินเดือนหน่วยนั้น "ยืนยัน" หรือ "ประมาณ"
-      </p>
-    </div>
+    <PageHeader
+      title="รอบเลื่อนเงินเดือน"
+      subtitle='สวิตช์ "นับในงบ" ตัดสินว่ารอบไหนเข้าคำนวณ · สถานะรายหน่วยตัดสินว่าเงินเดือนหน่วยนั้น "ยืนยัน" หรือ "ประมาณ"'
+    />
 
     <QueryErrorState v-if="isError" :error="error" />
 

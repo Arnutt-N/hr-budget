@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCheck, Inbox } from '@lucide/vue'
+import PageHeader from '@/components/PageHeader.vue'
 import {
   useNotificationList,
   useUnreadCount,
@@ -17,6 +18,9 @@ const markAllRead = useMarkAllRead()
 
 const notifications = computed(() => listQuery.data.value ?? [])
 const unreadCount = computed(() => unreadQuery.data.value ?? 0)
+const pageSubtitle = computed(() =>
+  unreadCount.value > 0 ? `ยังไม่ได้อ่าน ${unreadCount.value} รายการ` : 'อ่านครบทุกรายการแล้ว',
+)
 
 async function open(id: number, link: string | null, isRead: boolean) {
   if (!isRead) await markRead.mutateAsync(id)
@@ -40,14 +44,7 @@ function typeIcon(type: string): string {
 
 <template>
   <div class="mx-auto max-w-3xl space-y-5">
-    <header class="flex items-center justify-between gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-white">การแจ้งเตือน</h1>
-        <p class="mt-1 text-sm text-dark-muted">
-          <span v-if="unreadCount > 0">ยังไม่ได้อ่าน {{ unreadCount }} รายการ</span>
-          <span v-else>อ่านครบทุกรายการแล้ว</span>
-        </p>
-      </div>
+    <PageHeader title="การแจ้งเตือน" :subtitle="pageSubtitle">
       <button
         v-if="unreadCount > 0"
         @click="markAll"
@@ -57,7 +54,7 @@ function typeIcon(type: string): string {
         <CheckCheck class="h-4 w-4" />
         อ่านทั้งหมด
       </button>
-    </header>
+    </PageHeader>
 
     <!-- Loading -->
     <div v-if="listQuery.isLoading.value" class="space-y-3">

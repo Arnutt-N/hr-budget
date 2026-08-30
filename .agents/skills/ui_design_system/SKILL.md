@@ -36,7 +36,7 @@ Thai-first: "ระบบจัดการงบประมาณทรัพ�
 
 | Primitive | Replaces | Notes |
 |:----------|:---------|:------|
-| `PageHeader` | header div `mb-6 flex items-center justify-between` + h1 + CTA | title prop + action slot. Pages with subtitles / multi-control headers stay **inline** (stop-condition) |
+| `PageHeader` | header div `mb-6 flex items-center justify-between` + h1 (+ optional `subtitle` prop) + CTA/back action | title + subtitle props + action slot. Headers holding several filter controls (e.g. Analytics, Budget Execution, Document Vault) stay **inline** (stop-condition) |
 | `QueryErrorState` | `<Message severity="error">` load-error banner | `error?: unknown`; Thai fallback "ไม่สามารถโหลดข้อมูลได้" — single owner of that string |
 | `ListEmptyState` | DataTable `#empty` `<p class="py-4 text-center text-dark-muted">` | message prop + CTA slot. Richer empty states (icon, multi-line) stay inline |
 | `useDeleteConfirm` | the ~15-line delete `confirm.require` block | single owner of header "ยืนยันการลบ" + danger styling. Pages with **distinct** confirm copy (e.g. RoleListPage "ยืนยันลบบทบาท") pass overrides (`header`, custom message) through its options; inline `confirm.require` is reserved for non-delete confirmations (toggles, revokes) |

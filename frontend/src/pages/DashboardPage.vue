@@ -3,10 +3,17 @@ import { computed } from 'vue'
 import { Landmark, Banknote, Wallet, Percent, Inbox } from '@lucide/vue'
 import StatCard from '@/components/StatCard.vue'
 import MonthlyExpenditureChart from '@/components/MonthlyExpenditureChart.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import { useDashboardSummary, useMonthlyChart } from '@/queries/useDashboard'
 
 const summaryQuery = useDashboardSummary()
 const chartQuery = useMonthlyChart()
+
+const pageSubtitle = computed(() =>
+  summaryQuery.data.value
+    ? `สรุปสถานะงบประมาณประจำปี พ.ศ. ${summaryQuery.data.value.fiscal_year}`
+    : 'สรุปสถานะงบประมาณประจำปี',
+)
 
 const baht = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' })
 
@@ -33,13 +40,7 @@ const hasChartData = computed(() => (chartQuery.data.value?.data ?? []).some((n)
 <template>
   <div class="space-y-6">
     <!-- The ONE page heading (name contains "Dashboard" for the e2e assertion) -->
-    <header>
-      <h1 class="text-2xl font-bold text-white">ภาพรวมงบประมาณ (Dashboard)</h1>
-      <p class="mt-1 text-sm text-dark-muted">
-        สรุปสถานะงบประมาณประจำปี
-        <span v-if="summaryQuery.data.value">พ.ศ. {{ summaryQuery.data.value.fiscal_year }}</span>
-      </p>
-    </header>
+    <PageHeader title="ภาพรวมงบประมาณ (Dashboard)" :subtitle="pageSubtitle" />
 
     <!-- Summary error -->
     <div

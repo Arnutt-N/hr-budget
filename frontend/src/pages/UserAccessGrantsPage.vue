@@ -10,6 +10,7 @@ import Button from 'primevue/button'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import type { AccessGrant, ScopeType, AssignGrantPayload } from '@/types/rbac'
@@ -123,18 +124,14 @@ function confirmRevoke(g: AccessGrant): void {
 
 <template>
   <div>
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-white">สิทธิ์การเข้าถึง</h1>
-        <p class="mt-1 text-sm text-dark-muted">ผู้ใช้: {{ userName }}</p>
-      </div>
+    <PageHeader title="สิทธิ์การเข้าถึง" :subtitle="`ผู้ใช้: ${userName}`">
       <div class="flex gap-2">
         <router-link to="/users" class="self-center text-sm text-dark-muted hover:text-dark-text">
           &larr; กลับ
         </router-link>
         <Button label="มอบบทบาท/สิทธิ์" icon="pi pi-plus" @click="openCreate" />
       </div>
-    </div>
+    </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 

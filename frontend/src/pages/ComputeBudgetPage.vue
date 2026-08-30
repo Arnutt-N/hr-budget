@@ -7,6 +7,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
+import PageHeader from '@/components/PageHeader.vue'
 import { useComputePersonnelBudget } from '@/queries/usePersonnel'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
 import { useExpenseStructure } from '@/queries/useDisbursements'
@@ -80,12 +81,10 @@ async function runCommit(): Promise<void> {
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-white">คำนวณงบบุคลากร</h1>
-      <p class="mt-1 text-sm text-dark-muted">
-        อัตรากำลัง × อัตราเงินเพิ่ม → ยอดลง budget_line_items (source=computed) — แทนที่เฉพาะแถว computed เดิม ไม่แตะแถวพิมพ์มือ
-      </p>
-    </div>
+    <PageHeader
+      title="คำนวณงบบุคลากร"
+      subtitle="อัตรากำลัง × อัตราเงินเพิ่ม → ยอดลง budget_line_items (source=computed) — แทนที่เฉพาะแถว computed เดิม ไม่แตะแถวพิมพ์มือ"
+    />
 
     <div class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-dark-border p-4">
       <div class="flex flex-col gap-1">
