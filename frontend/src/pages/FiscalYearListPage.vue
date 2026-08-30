@@ -14,6 +14,7 @@ import InputNumber from 'primevue/inputnumber'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -203,8 +204,7 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="fy-year" class="text-sm font-medium text-dark-muted">ปีงบประมาณ (พ.ศ.)</label>
+        <FormField id="fy-year" label="ปีงบประมาณ (พ.ศ.)" :error="errors.year">
           <InputNumber
             v-model="year"
             input-id="fy-year"
@@ -213,11 +213,9 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
             :aria-describedby="errors.year ? 'fy-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.year" id="fy-year-error" class="text-red-400" role="alert">{{ errors.year }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="fy-start" class="text-sm font-medium text-dark-muted">วันเริ่มต้น</label>
+        <FormField id="fy-start" label="วันเริ่มต้น" :error="errors.start_date">
           <InputText
             id="fy-start"
             v-model="startDate"
@@ -226,11 +224,9 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
             :aria-describedby="errors.start_date ? 'fy-start-error' : undefined"
             fluid
           />
-          <small v-if="errors.start_date" id="fy-start-error" class="text-red-400" role="alert">{{ errors.start_date }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="fy-end" class="text-sm font-medium text-dark-muted">วันสิ้นสุด</label>
+        <FormField id="fy-end" label="วันสิ้นสุด" :error="errors.end_date">
           <InputText
             id="fy-end"
             v-model="endDate"
@@ -239,8 +235,7 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
             :aria-describedby="errors.end_date ? 'fy-end-error' : undefined"
             fluid
           />
-          <small v-if="errors.end_date" id="fy-end-error" class="text-red-400" role="alert">{{ errors.end_date }}</small>
-        </div>
+        </FormField>
 
         <label class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isCurrent" binary input-id="fy-is-current" />

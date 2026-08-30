@@ -12,6 +12,7 @@ import Select from 'primevue/select'
 import InputNumber from 'primevue/inputnumber'
 import Textarea from 'primevue/textarea'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -235,11 +236,10 @@ function onDelete(target: Target): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label id="tgt-type" class="text-sm font-medium text-dark-muted">ประเภทเป้าหมาย</label>
+        <FormField id="tgt-type" labelled-by label="ประเภทเป้าหมาย" :error="errors.target_type_id">
           <Select
             v-model="targetTypeId"
-            aria-labelledby="tgt-type"
+            aria-labelledby="tgt-type-label"
             :options="targetTypeOptions"
             option-label="label"
             option-value="value"
@@ -248,14 +248,12 @@ function onDelete(target: Target): void {
             :aria-describedby="errors.target_type_id ? 'tgt-type-error' : undefined"
             fluid
           />
-          <small v-if="errors.target_type_id" id="tgt-type-error" class="text-red-400" role="alert">{{ errors.target_type_id }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label id="tgt-year" class="text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+        <FormField id="tgt-year" labelled-by label="ปีงบประมาณ" :error="errors.fiscal_year">
           <Select
             v-model="fiscalYear"
-            aria-labelledby="tgt-year"
+            aria-labelledby="tgt-year-label"
             :options="fiscalYearOptions"
             option-label="label"
             option-value="value"
@@ -264,14 +262,12 @@ function onDelete(target: Target): void {
             :aria-describedby="errors.fiscal_year ? 'tgt-year-error' : undefined"
             fluid
           />
-          <small v-if="errors.fiscal_year" id="tgt-year-error" class="text-red-400" role="alert">{{ errors.fiscal_year }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label id="tgt-quarter" class="text-sm font-medium text-dark-muted">ไตรมาส</label>
+        <FormField id="tgt-quarter" labelled-by label="ไตรมาส">
           <Select
             v-model="quarter"
-            aria-labelledby="tgt-quarter"
+            aria-labelledby="tgt-quarter-label"
             :options="quarterOptions"
             option-label="label"
             option-value="value"
@@ -279,13 +275,12 @@ function onDelete(target: Target): void {
             show-clear
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label id="tgt-org" class="text-sm font-medium text-dark-muted">หน่วยงาน</label>
+        <FormField id="tgt-org" labelled-by label="หน่วยงาน">
           <Select
             v-model="organizationId"
-            aria-labelledby="tgt-org"
+            aria-labelledby="tgt-org-label"
             :options="organizationOptions"
             option-label="label"
             option-value="value"
@@ -293,13 +288,12 @@ function onDelete(target: Target): void {
             show-clear
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label id="tgt-cat" class="text-sm font-medium text-dark-muted">หมวดงบประมาณ</label>
+        <FormField id="tgt-cat" labelled-by label="หมวดงบประมาณ">
           <Select
             v-model="categoryId"
-            aria-labelledby="tgt-cat"
+            aria-labelledby="tgt-cat-label"
             :options="categoryOptions"
             option-label="label"
             option-value="value"
@@ -307,10 +301,9 @@ function onDelete(target: Target): void {
             show-clear
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="tgt-percent" class="text-sm font-medium text-dark-muted">เป้าหมาย (%)</label>
+        <FormField id="tgt-percent" label="เป้าหมาย (%)">
           <InputNumber
             v-model="targetPercent"
             input-id="tgt-percent"
@@ -319,22 +312,20 @@ function onDelete(target: Target): void {
             :max="100"
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="tgt-amount" class="text-sm font-medium text-dark-muted">เป้าหมาย (บาท)</label>
+        <FormField id="tgt-amount" label="เป้าหมาย (บาท)">
           <InputNumber
             v-model="targetAmount"
             input-id="tgt-amount"
             :min-fraction-digits="2"
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="tgt-notes" class="text-sm font-medium text-dark-muted">หมายเหตุ</label>
+        <FormField id="tgt-notes" label="หมายเหตุ">
           <Textarea id="tgt-notes" v-model="notes" rows="2" fluid />
-        </div>
+        </FormField>
 
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />

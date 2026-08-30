@@ -15,6 +15,7 @@ import { useOrganizationList } from '@/queries/useOrganizations'
 import { useAuthStore } from '@/stores/auth'
 import { useDisbursementWizard } from '@/stores/disbursementWizard'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import {
   MONTH_LABELS,
   MONTH_OPTIONS,
@@ -312,8 +313,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
       <section v-if="wizard.step === 1" class="space-y-4">
         <h2 class="text-lg font-semibold text-white">ขั้นที่ 1 — เลือกหน่วยงาน ปีงบ และเดือน</h2>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div>
-            <label for="wiz-org" class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
+          <FormField id="wiz-org" label="หน่วยงาน">
             <select
               v-if="isAdmin"
               id="wiz-org"
@@ -328,9 +328,8 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             <p v-else class="rounded bg-dark-bg px-3 py-2 text-sm text-dark-muted">
               หน่วยงานของคุณ (กำหนดอัตโนมัติ)
             </p>
-          </div>
-          <div>
-            <label for="wiz-fiscal-year" class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+          </FormField>
+          <FormField id="wiz-fiscal-year" label="ปีงบประมาณ">
             <select
               id="wiz-fiscal-year"
               v-model.number="fiscalYear"
@@ -340,9 +339,8 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
                 {{ fiscalYearLabel(fy) }}
               </option>
             </select>
-          </div>
-          <div>
-            <label for="wiz-month" class="mb-1 block text-sm font-medium text-dark-muted">เดือน</label>
+          </FormField>
+          <FormField id="wiz-month" label="เดือน">
             <select
               id="wiz-month"
               v-model.number="recordMonth"
@@ -351,7 +349,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
               <option :value="0">-- เลือกเดือน --</option>
               <option v-for="m in MONTH_OPTIONS" :key="m.value" :value="m.value">{{ m.label }}</option>
             </select>
-          </div>
+          </FormField>
         </div>
         <div class="flex justify-end gap-3 border-t border-dark-border pt-4">
           <button

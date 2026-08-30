@@ -6,6 +6,7 @@ import { useCreateBudgetRequest, useSubmitBudgetRequest } from '@/queries/useBud
 import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
 
@@ -102,8 +103,7 @@ async function doCreate(): Promise<number | null> {
 
     <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label for="req-title" class="mb-1 block text-sm font-medium text-dark-muted">ชื่อคำขอ *</label>
+        <FormField id="req-title" label="ชื่อคำขอ *">
           <input
             id="req-title"
             v-model="requestTitle"
@@ -111,9 +111,8 @@ async function doCreate(): Promise<number | null> {
             class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
             placeholder="เช่น คำของบประมาณเดือนตุลาคม 2569"
           />
-        </div>
-        <div>
-          <label for="req-fiscal-year" class="mb-1 block text-sm font-medium text-dark-muted">ปีงบประมาณ</label>
+        </FormField>
+        <FormField id="req-fiscal-year" label="ปีงบประมาณ">
           <select
             id="req-fiscal-year"
             v-model.number="fiscalYear"
@@ -123,9 +122,8 @@ async function doCreate(): Promise<number | null> {
               {{ fiscalYearLabel(fy) }}
             </option>
           </select>
-        </div>
-        <div>
-          <label for="req-org" class="mb-1 block text-sm font-medium text-dark-muted">หน่วยงาน</label>
+        </FormField>
+        <FormField id="req-org" label="หน่วยงาน">
           <select
             id="req-org"
             v-model="orgId"
@@ -136,7 +134,7 @@ async function doCreate(): Promise<number | null> {
               {{ org.name_th }}
             </option>
           </select>
-        </div>
+        </FormField>
       </div>
 
       <div>

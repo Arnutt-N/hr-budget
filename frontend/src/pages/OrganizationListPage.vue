@@ -13,6 +13,7 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -171,8 +172,7 @@ function onDelete(org: Organization): void {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="org-code" class="text-sm font-medium text-dark-muted">รหัสหน่วยงาน</label>
+        <FormField id="org-code" label="รหัสหน่วยงาน" :error="errors.code">
           <InputText
             id="org-code"
             v-model.trim="code"
@@ -181,11 +181,9 @@ function onDelete(org: Organization): void {
             :aria-describedby="errors.code ? 'org-code-error' : undefined"
             fluid
           />
-          <small v-if="errors.code" id="org-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="org-name" class="text-sm font-medium text-dark-muted">ชื่อหน่วยงาน</label>
+        <FormField id="org-name" label="ชื่อหน่วยงาน" :error="errors.name_th">
           <InputText
             id="org-name"
             v-model.trim="nameTh"
@@ -193,16 +191,13 @@ function onDelete(org: Organization): void {
             :aria-describedby="errors.name_th ? 'org-name-error' : undefined"
             fluid
           />
-          <small v-if="errors.name_th" id="org-name-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="org-abbr" class="text-sm font-medium text-dark-muted">ชื่อย่อ</label>
+        <FormField id="org-abbr" label="ชื่อย่อ">
           <InputText id="org-abbr" v-model.trim="abbreviation" fluid />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="org-type" class="text-sm font-medium text-dark-muted">ประเภท</label>
+        <FormField id="org-type" label="ประเภท">
           <Select
             v-model="orgType"
             label-id="org-type"
@@ -213,7 +208,7 @@ function onDelete(org: Organization): void {
             show-clear
             fluid
           />
-        </div>
+        </FormField>
 
         <label v-if="editingId" class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isActive" binary input-id="org-is-active" />

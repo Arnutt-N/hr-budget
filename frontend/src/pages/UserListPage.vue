@@ -15,6 +15,7 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -188,8 +189,7 @@ function roleSeverity(r: string): string {
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
-        <div class="flex flex-col gap-1">
-          <label for="user-email" class="text-sm font-medium text-dark-muted">อีเมล</label>
+        <FormField id="user-email" label="อีเมล" :error="errors.email">
           <InputText
             id="user-email"
             v-model.trim="email"
@@ -198,13 +198,13 @@ function roleSeverity(r: string): string {
             :aria-describedby="errors.email ? 'user-email-error' : undefined"
             fluid
           />
-          <small v-if="errors.email" id="user-email-error" class="text-red-400" role="alert">{{ errors.email }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="user-password" class="text-sm font-medium text-dark-muted">
-            {{ editingId ? 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)' : 'รหัสผ่าน' }}
-          </label>
+        <FormField
+          id="user-password"
+          :label="editingId ? 'รหัสผ่านใหม่ (เว้นว่างถ้าไม่เปลี่ยน)' : 'รหัสผ่าน'"
+          :error="errors.password"
+        >
           <Password
             v-model="password"
             input-id="user-password"
@@ -214,11 +214,9 @@ function roleSeverity(r: string): string {
             toggle-mask
             fluid
           />
-          <small v-if="errors.password" id="user-password-error" class="text-red-400" role="alert">{{ errors.password }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="user-name" class="text-sm font-medium text-dark-muted">ชื่อ</label>
+        <FormField id="user-name" label="ชื่อ" :error="errors.name">
           <InputText
             id="user-name"
             v-model.trim="name"
@@ -226,11 +224,9 @@ function roleSeverity(r: string): string {
             :aria-describedby="errors.name ? 'user-name-error' : undefined"
             fluid
           />
-          <small v-if="errors.name" id="user-name-error" class="text-red-400" role="alert">{{ errors.name }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="user-role" class="text-sm font-medium text-dark-muted">บทบาท</label>
+        <FormField id="user-role" label="บทบาท" :error="errors.role">
           <Select
             v-model="role"
             label-id="user-role"
@@ -239,13 +235,11 @@ function roleSeverity(r: string): string {
             :aria-describedby="errors.role ? 'user-role-error' : undefined"
             fluid
           />
-          <small v-if="errors.role" id="user-role-error" class="text-red-400" role="alert">{{ errors.role }}</small>
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <label for="user-department" class="text-sm font-medium text-dark-muted">แผนก</label>
+        <FormField id="user-department" label="แผนก">
           <InputText id="user-department" v-model.trim="department" fluid />
-        </div>
+        </FormField>
 
         <label class="flex items-center gap-2 text-sm">
           <Checkbox v-model="isActive" binary input-id="user-is-active" />

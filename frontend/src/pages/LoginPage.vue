@@ -10,6 +10,7 @@ import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import Dialog from 'primevue/dialog'
+import FormField from '@/components/FormField.vue'
 import { useAuthStore } from '@/stores/auth'
 import { fetchThaidStatus, thaidLoginUrl } from '@/api/auth'
 
@@ -90,15 +91,14 @@ const onSubmit = handleSubmit(async (values) => {
         <p class="text-sm text-dark-muted mt-1">เข้าสู่ระบบจัดการข้อมูล</p>
       </div>
 
-      <div class="flex flex-col gap-1">
-        <label for="email" class="text-sm font-medium text-dark-muted">อีเมล</label>
+      <FormField id="login-email" label="อีเมล" :error="errors.email">
         <div class="relative">
           <Mail
             class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-muted"
             aria-hidden="true"
           />
           <InputText
-            id="email"
+            id="login-email"
             v-model.trim="email"
             type="email"
             name="email"
@@ -109,18 +109,16 @@ const onSubmit = handleSubmit(async (values) => {
             fluid
           />
         </div>
-        <small v-if="errors.email" id="login-email-error" class="text-red-400" role="alert">{{ errors.email }}</small>
-      </div>
+      </FormField>
 
-      <div class="flex flex-col gap-1">
-        <label for="password" class="text-sm font-medium text-dark-muted">รหัสผ่าน</label>
+      <FormField id="login-password" label="รหัสผ่าน" :error="errors.password">
         <div class="relative">
           <Lock
             class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-muted"
             aria-hidden="true"
           />
           <InputText
-            id="password"
+            id="login-password"
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             name="password"
@@ -141,8 +139,7 @@ const onSubmit = handleSubmit(async (values) => {
             <Eye v-else class="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <small v-if="errors.password" id="login-password-error" class="text-red-400" role="alert">{{ errors.password }}</small>
-      </div>
+      </FormField>
 
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">

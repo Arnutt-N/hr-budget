@@ -15,6 +15,7 @@ import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import Message from 'primevue/message'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -288,8 +289,7 @@ function onDelete(role: Role): void {
         </Message>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div class="flex flex-col gap-1">
-            <label for="role-code" class="text-sm font-medium text-dark-muted">รหัสบทบาท</label>
+          <FormField id="role-code" label="รหัสบทบาท" :error="errors.code">
             <InputText
               id="role-code"
               v-model.trim="formCode"
@@ -299,11 +299,9 @@ function onDelete(role: Role): void {
               placeholder="เช่น regional_supervisor"
               fluid
             />
-            <small v-if="errors.code" id="role-code-error" class="text-red-400" role="alert">{{ errors.code }}</small>
-            <small v-else-if="isEditing" class="text-dark-muted">รหัสบทบาทแก้ไขไม่ได้</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="role-name-th" class="text-sm font-medium text-dark-muted">ชื่อ (ไทย)</label>
+            <small v-if="!errors.code && isEditing" class="text-dark-muted">รหัสบทบาทแก้ไขไม่ได้</small>
+          </FormField>
+          <FormField id="role-name-th" label="ชื่อ (ไทย)" :error="errors.name_th">
             <InputText
               id="role-name-th"
               v-model="formNameTh"
@@ -312,16 +310,13 @@ function onDelete(role: Role): void {
               :aria-describedby="errors.name_th ? 'role-name-th-error' : undefined"
               fluid
             />
-            <small v-if="errors.name_th" id="role-name-th-error" class="text-red-400" role="alert">{{ errors.name_th }}</small>
-          </div>
-          <div class="flex flex-col gap-1">
-            <label for="role-name-en" class="text-sm font-medium text-dark-muted">ชื่อ (อังกฤษ)</label>
+          </FormField>
+          <FormField id="role-name-en" label="ชื่อ (อังกฤษ)">
             <InputText id="role-name-en" v-model.trim="formNameEn" :disabled="isSystem" fluid />
-          </div>
-          <div class="flex flex-col gap-1 sm:col-span-2">
-            <label for="role-desc" class="text-sm font-medium text-dark-muted">คำอธิบาย</label>
+          </FormField>
+          <FormField id="role-desc" class="sm:col-span-2" label="คำอธิบาย">
             <Textarea id="role-desc" v-model="formDescription" :disabled="isSystem" rows="2" fluid />
-          </div>
+          </FormField>
         </div>
 
         <div>
