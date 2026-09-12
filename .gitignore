@@ -145,3 +145,10 @@ project-log-md/
 research/
 # One-off analysis/dump error logs from python/ scratch work
 python/*_err*.txt
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/
+# Knowledge-graph local outputs (regenerable, ~23MB, never commit)
+graphify-out/
+# Local-only editor search config (do not commit; rationale in commit body)
+/.ignore
