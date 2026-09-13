@@ -143,6 +143,14 @@ jobs:
         # fails on NEW static-analysis regressions.
         run: vendor/bin/phpstan analyse --memory-limit=512M --no-progress
 
+      - name: Composer audit
+        # DB-independent, like the PHPStan step above (PR #39 pattern).
+        # BLOCKING: fails the job on security advisories — mirrors the local
+        # verify gate's fail-fast intent. Not part of `composer verify` locally;
+        # this CI step is the wiring (a composer script would recurse with the
+        # native `audit` command).
+        run: composer audit --no-interaction
+
   # -------------------------------------------------------------------
   # Frontend: typecheck + production build
   # -------------------------------------------------------------------

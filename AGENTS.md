@@ -227,7 +227,10 @@ push moment; the scripts cover ad-hoc runs.
 - **`vendor/bin/phpstan` IS wired** — exposed via `composer analyse`, included in
   `.github/workflows/ci.yml` as a DB-independent step (PR #39). Pre-existing findings are
   captured in `phpstan-baseline.neon`.
-- **`composer audit` is still NOT wired** (not in CI, not in composer scripts).
+- **`composer audit` IS wired in CI** — a blocking step in `.github/workflows/ci.yml`
+  (backend job, after PHPStan, `--no-interaction`). Still not part of `composer verify`
+  locally and not a composer script (a script named `audit` would recurse with the native
+  command).
 
 ### CI facts (accurate if/when the workflow is re-enabled)
 
@@ -311,6 +314,9 @@ supported surface.
   there deletes it from version control. Restore retired files with
   `git checkout <tag> -- <path>`. Tags: `pre-spa-cutover`, `pre-budgets-retire`,
   `pre-files-retire`, `pre-views-sweep`.
+- **Local-only `.ignore` re-admits `graft/` to ripgrep search results** (pattern: `!graft/`
+  plus excluding its caches). Intentionally untracked — copy the pattern to your machine for
+  the same search behavior.
 
 ## Migration gotchas
 
