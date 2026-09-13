@@ -15,8 +15,9 @@ MySQL/MariaDB. Deployed under Laragon at the subdirectory `/hr_budget/public/`.
 
 > **Phase 6 cutover (2026-06-15):** the SPA replaced the server-rendered web/MVC pages. PHP
 > now serves only `/api/v1/*` plus the compiled SPA shell (`public/app/index.html`, via the
-> `Router::notFound()` catch-all). A single **legacy web remnant** with no SPA equivalent is
-> still wired up: ThaID login (`/thaid/login`, a 302 alias to the SPA-facing API flow).
+> `Router::notFound()` catch-all). A single **legacy web remnant** is still wired up as a
+> compatibility alias: ThaID login (`/thaid/login`, a 302 to the SPA-facing API flow — the
+> SPA itself has the full ThaID flow).
 > Budget-execution reporting (`/budgets`, `/budgets/export`) and the document vault
 > (`/files`, `/folders`) were both retired post-cutover once the SPA reached parity (recover
 > from the `pre-budgets-retire` / `pre-files-retire` tags). Other retired controllers/views
@@ -143,10 +144,11 @@ stay correct under the `/hr_budget/public/` subdirectory deployment.
 session-login routes/methods (`GET/POST /login`, `/logout`, forgot-password) were removed in
 the Phase 6 cutover. `src/Core/Auth.php` is unchanged and still in use: `Auth::init()` runs in
 bootstrap (and in the PHPUnit bootstrap) to start the session and hydrate
-`$_SESSION[session.key]`. The one remaining session-login path is **ThaID**
-(`/thaid/login` → `AuthController::thaidLogin`), a documented parity gap (the SPA has no ThaID
-flow yet) — it mints a session via `Auth::mockThaIDLogin()` and redirects to the SPA shell at
-`/`. The API `AuthController` (`App\Api\Controllers\AuthController`) is a separate JWT class,
+`$_SESSION[session.key]`. The SPA has the full **ThaID** flow (login button gated by
+`/api/v1/auth/thaid/status`, full-page OAuth navigation to `/api/v1/auth/thaid/login`, and the
+one-time flash error surfaced on the login page via `/api/v1/auth/thaid/flash`); the remaining
+server-side bits are the `/thaid/login` 302 alias and the `/logout` session clear. The API
+`AuthController` (`App\Api\Controllers\AuthController`) is a separate JWT class,
 independent of the web `Auth` session login.
 
 ### Domain modules
@@ -167,7 +169,9 @@ SPA over `/api/v1/vault/*` (folders/files CRUD + `POST /api/v1/vault/years` to s
 year's system folders):
 
 - **ThaID login** (`/thaid/login` → 302 alias to `/api/v1/auth/thaid/login`, handled by
-  `App\Api\Controllers\ThaIdController`).
+  `App\Api\Controllers\ThaIdController`). The SPA already has the full ThaID flow
+  (status-gated login button + one-time flash error), so the alias is only a 302
+  convenience for external links.
 
 > Not a remnant: **request-attachment** upload (`/api/v1/requests/{id}/files`) is a live SPA
 > feature served by `App\Api\Controllers\FileController` + `App\Services\FileService`
@@ -223,7 +227,10 @@ push moment; the scripts cover ad-hoc runs.
 - **`vendor/bin/phpstan` IS wired** — exposed via `composer analyse`, included in
   `.github/workflows/ci.yml` as a DB-independent step (PR #39). Pre-existing findings are
   captured in `phpstan-baseline.neon`.
-- **`composer audit` is still NOT wired** (not in CI, not in composer scripts).
+- **`composer audit` IS wired in CI** — a blocking step in `.github/workflows/ci.yml`
+  (backend job, after PHPStan, `--no-interaction`). Still not part of `composer verify`
+  locally and not a composer script (a script named `audit` would recurse with the native
+  command).
 
 ### CI facts (accurate if/when the workflow is re-enabled)
 
@@ -295,6 +302,22 @@ One-shot PHP debug scripts drop into the repo root or `public/` (e.g. `inspect_s
 `public/debug_ids.php`). They are working scratchpads — do not treat them as part of the
 supported surface.
 
+### Local-only skill pack (ux-ui-agent-skills)
+
+- **What:** UX/UI design-system skill pack installed per-machine via
+  `npx ux-ui-agent-skills init` (npm `ux-ui-agent-skills@2.5.1`, MIT,
+  github.com/plugin87/ux-ui-agent-skills). Creates `tokens/`, `design-systems/`,
+  `components/`, `accessibility/`, `frameworks/`, `taste/`, `content/`, `workflows/`,
+  `.claude/skills/`, `.claude/rules/`, and 28 `scripts/*` QA tools (listed in `.gitignore`).
+- **Status:** local-only + git-ignored — the remote does NOT track it. A fresh clone must
+  re-run the install command.
+- **Caveat:** `scripts/axe_audit.mjs` carries a local patch (offline-only axe-core, no CDN);
+  `init --force` overwrites it — re-apply after re-init.
+- **New-machine checklist beyond `git pull`:** `composer install` (vendor/); copy
+  `.env.example` → `.env` (set `DB_*`, `JWT_SECRET`); `cd frontend && npm ci`;
+  `npx ux-ui-agent-skills init`. Optional per-machine: graphify (see `graphify-out/` notes),
+  graft (`graft build`), local `.ignore` copy.
+
 ## Conventions not obvious from filenames
 
 - **PR title format** (`.github/PULL_REQUEST_TEMPLATE.md`): `<type>: <short description>` —
@@ -307,6 +330,9 @@ supported surface.
   there deletes it from version control. Restore retired files with
   `git checkout <tag> -- <path>`. Tags: `pre-spa-cutover`, `pre-budgets-retire`,
   `pre-files-retire`, `pre-views-sweep`.
+- **Local-only `.ignore` re-admits `graft/` to ripgrep search results** (pattern: `!graft/`
+  plus excluding its caches). Intentionally untracked — copy the pattern to your machine for
+  the same search behavior.
 
 ## Migration gotchas
 

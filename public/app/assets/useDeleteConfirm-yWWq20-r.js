@@ -1,0 +1,1 @@
+import{ak as r}from"./index-D0UwyIn9.js";function i(){const e=r();return function(n){e.require({header:"ยืนยันการลบ",icon:"pi pi-exclamation-triangle",acceptLabel:"ลบ",rejectLabel:"ยกเลิก",acceptClass:"p-button-danger",...n})}}export{i as u};

@@ -121,7 +121,9 @@ class Auth
         unset($_SESSION[$sessionKey]);
         
         // Destroy session
-        session_destroy();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
     }
 
     /**

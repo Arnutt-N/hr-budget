@@ -145,3 +145,51 @@ project-log-md/
 research/
 # One-off analysis/dump error logs from python/ scratch work
 python/*_err*.txt
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/
+# Knowledge-graph local outputs (regenerable, ~23MB, never commit)
+graphify-out/
+# Local-only editor search config (do not commit; rationale in commit body)
+/.ignore
+
+# UX/UI design-system skill pack (local-only, per-machine — never commit).
+# Install: npx ux-ui-agent-skills init  (see AGENTS.md "Local-only skill pack").
+.claude/skills/
+.claude/rules/
+tokens/
+design-systems/
+components/
+accessibility/
+frameworks/
+taste/
+content/
+workflows/
+scripts/accuracy_report.mjs
+scripts/axe_audit.mjs
+scripts/build_tokens.mjs
+scripts/check_no_emoji.py
+scripts/contrast.py
+scripts/design_systems.py
+scripts/lint_hardcodes.py
+scripts/lint_intent.mjs
+scripts/lint_taste.py
+scripts/measure_render.mjs
+scripts/scaffold_component.py
+scripts/slop_tells.mjs
+scripts/taste_audit.mjs
+scripts/validate_component_spec.py
+scripts/validate_contrast.py
+scripts/validate_instruction_surface.py
+scripts/validate_template.py
+scripts/validate_theme_refs.py
+scripts/validate_tokens.py
+scripts/verify_focustrap.mjs
+scripts/verify_interactive.mjs
+scripts/verify_keyboard.mjs
+scripts/verify_overflow.mjs
+scripts/verify_reduced_motion.mjs
+scripts/verify_responsive.mjs
+scripts/verify_rtl.mjs
+scripts/verify_states.mjs
+scripts/verify_target_size.mjs

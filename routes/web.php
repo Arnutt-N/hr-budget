@@ -62,6 +62,7 @@ Router::get('/api/v1/auth/me', [ApiAuthController::class, 'me']);
 // ThaID (DOPA) OAuth2 — config-gated; status is XHR-JSON, login/callback are
 // browser redirects. Dormant unless THAID_* credentials are configured.
 Router::get('/api/v1/auth/thaid/status',   [ApiThaIdController::class, 'status']);
+Router::get('/api/v1/auth/thaid/flash',    [ApiThaIdController::class, 'flash']);
 Router::get('/api/v1/auth/thaid/login',    [ApiThaIdController::class, 'login']);
 Router::get('/api/v1/auth/thaid/callback', [ApiThaIdController::class, 'callback']);
 

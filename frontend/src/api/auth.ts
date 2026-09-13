@@ -15,6 +15,20 @@ export async function fetchThaidStatus(): Promise<ThaidStatus> {
 }
 
 /**
+ * One-time ThaID error flash (e.g. login failed / state expired). The backend
+ * consumes the message on read, so it shows once. Best-effort: any failure
+ * just shows nothing — never blocks the normal email login flow.
+ */
+export async function fetchThaidFlash(): Promise<string | null> {
+  try {
+    const res = await apiFetch<{ message: string | null }>('/auth/thaid/flash')
+    return res.success ? (res.data?.message ?? null) : null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Full-page navigation target that starts the OAuth flow. Must be a real
  * navigation (window.location), NOT fetch — the authorization-code flow
  * redirects the browser out to DOPA and back. Trailing slash on the base is

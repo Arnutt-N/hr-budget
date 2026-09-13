@@ -18,6 +18,7 @@ use App\Services\ThaIdConfig;
  * ThaID (DOPA) OAuth2 login endpoints.
  *
  *   GET /api/v1/auth/thaid/status   → JSON { enabled, mock }     (XHR; SPA gate)
+ *   GET /api/v1/auth/thaid/flash    → JSON { message }           (XHR; one-time flash)
  *   GET /api/v1/auth/thaid/login    → 302 to DOPA (or mock login) (top-level nav)
  *   GET /api/v1/auth/thaid/callback → 302 to SPA '/'              (top-level nav)
  *
@@ -50,6 +51,22 @@ final class ThaIdController
             'enabled' => $this->cfg->isEnabled(),
             'mock'    => $this->cfg->isMock() && !$this->cfg->isProd(),
         ], [], false);
+    }
+
+    /**
+     * GET /api/v1/auth/thaid/flash — one-time ThaID error flash for the SPA
+     * login page. Public: the flash is set on error paths that land the user
+     * back on /login while still unauthenticated.
+     */
+    public function flash(): void
+    {
+        CorsMiddleware::apply();
+        // Read + immediately unset: one-shot consume, so a refresh or a second
+        // tab never re-shows a stale error. exit=false keeps it unit-testable
+        // (assert via ApiResponse::$lastBody), mirroring status().
+        $msg = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_error']);
+        ApiResponse::ok(['message' => $msg], [], false);
     }
 
     /** GET /api/v1/auth/thaid/login — start the flow (or run the dev mock). */
