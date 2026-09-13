@@ -168,7 +168,7 @@ class BudgetRequestServiceTest extends TestCase
     /** @test */
     public function submit_changes_draft_to_pending(): void
     {
-        [$service, $reqRepo, , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'draft']);
+        [$service, $reqRepo, , $approvalRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'draft', 'request_title' => 'Test', 'org_id' => 1]);
 
         $this->assertTrue($service->submit(5, 1));
         $this->assertSame('pending', $reqRepo->lastUpdateData['data']['request_status']);
@@ -232,7 +232,7 @@ class BudgetRequestServiceTest extends TestCase
     /** @test */
     public function reject_changes_pending_to_rejected_with_reason(): void
     {
-        [$service, $reqRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending']);
+        [$service, $reqRepo] = $this->makeService(['id' => 1, 'created_by' => 5, 'request_status' => 'pending', 'request_title' => 'Test']);
         $dto = new ApprovalActionDto('Incomplete docs');
 
         $this->assertTrue($service->reject(3, 'admin', 1, $dto));
