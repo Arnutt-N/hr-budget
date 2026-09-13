@@ -302,6 +302,22 @@ One-shot PHP debug scripts drop into the repo root or `public/` (e.g. `inspect_s
 `public/debug_ids.php`). They are working scratchpads — do not treat them as part of the
 supported surface.
 
+### Local-only skill pack (ux-ui-agent-skills)
+
+- **What:** UX/UI design-system skill pack installed per-machine via
+  `npx ux-ui-agent-skills init` (npm `ux-ui-agent-skills@2.5.1`, MIT,
+  github.com/plugin87/ux-ui-agent-skills). Creates `tokens/`, `design-systems/`,
+  `components/`, `accessibility/`, `frameworks/`, `taste/`, `content/`, `workflows/`,
+  `.claude/skills/`, `.claude/rules/`, and 28 `scripts/*` QA tools (listed in `.gitignore`).
+- **Status:** local-only + git-ignored — the remote does NOT track it. A fresh clone must
+  re-run the install command.
+- **Caveat:** `scripts/axe_audit.mjs` carries a local patch (offline-only axe-core, no CDN);
+  `init --force` overwrites it — re-apply after re-init.
+- **New-machine checklist beyond `git pull`:** `composer install` (vendor/); copy
+  `.env.example` → `.env` (set `DB_*`, `JWT_SECRET`); `cd frontend && npm ci`;
+  `npx ux-ui-agent-skills init`. Optional per-machine: graphify (see `graphify-out/` notes),
+  graft (`graft build`), local `.ignore` copy.
+
 ## Conventions not obvious from filenames
 
 - **PR title format** (`.github/PULL_REQUEST_TEMPLATE.md`): `<type>: <short description>` —
