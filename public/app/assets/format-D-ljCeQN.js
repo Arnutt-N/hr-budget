@@ -1,0 +1,1 @@
+function i(r){return r?parseFloat(r).toLocaleString("th-TH",{minimumFractionDigits:2}):"-"}function t(r){return r>=1048576?`${(r/1048576).toFixed(1)} MB`:r>=1024?`${(r/1024).toFixed(1)} KB`:`${r} B`}export{t as a,i as f};
