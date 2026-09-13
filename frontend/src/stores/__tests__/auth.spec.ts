@@ -16,6 +16,31 @@ function mockFetchOnce(status: number, body: unknown): void {
   )
 }
 
+/** Routes fetch by URL: /auth/me → given status/body, /auth/thaid/flash → 200 envelope. */
+function mockFetchRouting(meStatus: number, meBody: unknown): void {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((url: RequestInfo | URL) => {
+      if (String(url).includes('/auth/thaid/flash')) {
+        return Promise.resolve({
+          status: 200,
+          json: () => Promise.resolve({ success: true, data: { message: 'เซสชันหมดอายุ' } }),
+        })
+      }
+      return Promise.resolve({
+        status: meStatus,
+        json: () => Promise.resolve(meBody),
+      })
+    }),
+  )
+}
+
+function flashCallCount(): number {
+  return vi
+    .mocked(fetch)
+    .mock.calls.filter(([url]) => String(url).includes('/auth/thaid/flash')).length
+}
+
 describe('auth store (cookie mode)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -49,13 +74,37 @@ describe('auth store (cookie mode)', () => {
   })
 
   test('bootstrap runs the network call only once', async () => {
-    mockFetchOnce(200, { success: true, data: fakeUser })
+    mockFetchRouting(200, { success: true, data: fakeUser })
     const auth = useAuthStore()
 
     await auth.bootstrap()
     await auth.bootstrap()
 
-    expect(vi.mocked(fetch).mock.calls).toHaveLength(1)
+    // me() stays single-shot; the authed path additionally consumes the flash once
+    const meCalls = vi
+      .mocked(fetch)
+      .mock.calls.filter(([url]) => String(url).includes('/auth/me')).length
+    expect(meCalls).toBe(1)
+  })
+
+  test('bootstrap with authed me() also consumes the ThaID flash once', async () => {
+    mockFetchRouting(200, { success: true, data: fakeUser })
+    const auth = useAuthStore()
+
+    await auth.bootstrap()
+
+    expect(auth.user).toEqual(fakeUser)
+    expect(flashCallCount()).toBe(1)
+  })
+
+  test('bootstrap with 401 me() does NOT consume the ThaID flash', async () => {
+    mockFetchRouting(401, { success: false, error: 'Unauthorized' })
+    const auth = useAuthStore()
+
+    await auth.bootstrap()
+
+    expect(auth.user).toBeNull()
+    expect(flashCallCount()).toBe(0)
   })
 
   test('login failure returns Thai error message and no user', async () => {

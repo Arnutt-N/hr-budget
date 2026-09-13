@@ -12,7 +12,7 @@ import Message from 'primevue/message'
 import Dialog from 'primevue/dialog'
 import FormField from '@/components/FormField.vue'
 import { useAuthStore } from '@/stores/auth'
-import { fetchThaidStatus, thaidLoginUrl } from '@/api/auth'
+import { fetchThaidStatus, fetchThaidFlash, thaidLoginUrl } from '@/api/auth'
 
 // "จดจำฉัน" remembers the email only — the session token stays in the
 // httpOnly cookie and is never readable from JS.
@@ -43,7 +43,11 @@ const [email] = defineField('email')
 const [password] = defineField('password')
 
 onMounted(async () => {
-  thaidEnabled.value = (await fetchThaidStatus()).enabled
+  const [status, flashMsg] = await Promise.all([fetchThaidStatus(), fetchThaidFlash()])
+  thaidEnabled.value = status.enabled
+  // Surface a one-time ThaID error (set by the OAuth callback redirect) if the
+  // form hasn't already shown its own error.
+  if (flashMsg && !errorMsg.value) errorMsg.value = flashMsg
   const saved = localStorage.getItem(REMEMBER_EMAIL_KEY)
   if (saved) {
     email.value = saved

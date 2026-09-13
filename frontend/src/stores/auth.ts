@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiUrl } from '@/api/base'
+import { fetchThaidFlash } from '@/api/auth'
 import { queryClient } from '@/lib/queryClient'
 import type { User, LoginRequest, AuthResponse, ApiResponse } from '@/types/api'
 
@@ -29,6 +30,14 @@ export const useAuthStore = defineStore('auth', () => {
       })
       const json = (await res.json()) as ApiResponse<User>
       user.value = json.success && json.data ? json.data : null
+      if (user.value !== null) {
+        // An authenticated user who just failed ThaID needs no error message;
+        // consuming the flash here prevents a stale message from surfacing on
+        // a future /login visit. Only on success — on 401 LoginPage fetches
+        // and displays it. The flash endpoint always 200s, so apiFetch's 401
+        // handler cannot loop here.
+        await fetchThaidFlash()
+      }
     } catch {
       user.value = null
     } finally {

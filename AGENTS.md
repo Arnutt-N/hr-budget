@@ -15,8 +15,9 @@ MySQL/MariaDB. Deployed under Laragon at the subdirectory `/hr_budget/public/`.
 
 > **Phase 6 cutover (2026-06-15):** the SPA replaced the server-rendered web/MVC pages. PHP
 > now serves only `/api/v1/*` plus the compiled SPA shell (`public/app/index.html`, via the
-> `Router::notFound()` catch-all). A single **legacy web remnant** with no SPA equivalent is
-> still wired up: ThaID login (`/thaid/login`, a 302 alias to the SPA-facing API flow).
+> `Router::notFound()` catch-all). A single **legacy web remnant** is still wired up as a
+> compatibility alias: ThaID login (`/thaid/login`, a 302 to the SPA-facing API flow — the
+> SPA itself has the full ThaID flow).
 > Budget-execution reporting (`/budgets`, `/budgets/export`) and the document vault
 > (`/files`, `/folders`) were both retired post-cutover once the SPA reached parity (recover
 > from the `pre-budgets-retire` / `pre-files-retire` tags). Other retired controllers/views
@@ -143,10 +144,11 @@ stay correct under the `/hr_budget/public/` subdirectory deployment.
 session-login routes/methods (`GET/POST /login`, `/logout`, forgot-password) were removed in
 the Phase 6 cutover. `src/Core/Auth.php` is unchanged and still in use: `Auth::init()` runs in
 bootstrap (and in the PHPUnit bootstrap) to start the session and hydrate
-`$_SESSION[session.key]`. The one remaining session-login path is **ThaID**
-(`/thaid/login` → `AuthController::thaidLogin`), a documented parity gap (the SPA has no ThaID
-flow yet) — it mints a session via `Auth::mockThaIDLogin()` and redirects to the SPA shell at
-`/`. The API `AuthController` (`App\Api\Controllers\AuthController`) is a separate JWT class,
+`$_SESSION[session.key]`. The SPA has the full **ThaID** flow (login button gated by
+`/api/v1/auth/thaid/status`, full-page OAuth navigation to `/api/v1/auth/thaid/login`, and the
+one-time flash error surfaced on the login page via `/api/v1/auth/thaid/flash`); the remaining
+server-side bits are the `/thaid/login` 302 alias and the `/logout` session clear. The API
+`AuthController` (`App\Api\Controllers\AuthController`) is a separate JWT class,
 independent of the web `Auth` session login.
 
 ### Domain modules
@@ -167,7 +169,9 @@ SPA over `/api/v1/vault/*` (folders/files CRUD + `POST /api/v1/vault/years` to s
 year's system folders):
 
 - **ThaID login** (`/thaid/login` → 302 alias to `/api/v1/auth/thaid/login`, handled by
-  `App\Api\Controllers\ThaIdController`).
+  `App\Api\Controllers\ThaIdController`). The SPA already has the full ThaID flow
+  (status-gated login button + one-time flash error), so the alias is only a 302
+  convenience for external links.
 
 > Not a remnant: **request-attachment** upload (`/api/v1/requests/{id}/files`) is a live SPA
 > feature served by `App\Api\Controllers\FileController` + `App\Services\FileService`

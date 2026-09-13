@@ -35,8 +35,10 @@ hr_budget/
   - build (deploy): `cd frontend && VITE_BASE=/hr_budget/public/app/ npm run build` → `public/app/` (tracked, เสิร์ฟโดย PHP)
 - **Backend** = PHP 8.3 custom MVC เปิดเฉพาะ **`/api/v1/*`** (JSON API) + เสิร์ฟ SPA shell
   (`public/app/index.html`) ผ่าน catch-all ใน `Router::notFound()` สำหรับทุก path ที่ไม่ใช่ API
-- **Legacy web remnants** ที่ยังคงไว้ (ยังไม่มีหน้า SPA แทน): ThaID login (`/thaid/login`),
-  รายงานการเบิกจ่าย (`/budgets`, `/budgets/export`), document vault (`/files`, `/folders`)
+- **Legacy web remnant** ที่เหลือ: alias ThaID login (`/thaid/login`) — SPA มีการเข้าสู่ระบบ
+  ด้วย ThaID ครบแล้ว (ปุ่มเข้าสู่ระบบ + แจ้งเตือน error) เหลือ alias ไว้เป็น 302 convenience
+  สำหรับลิงก์ภายนอก; รายงานการเบิกจ่าย (`/budgets`, `/budgets/export`), document vault
+  (`/files`, `/folders`)
 - หน้าเว็บ/คอนโทรลเลอร์เดิมที่ถูกปลดระวางกู้คืนได้จาก git tag `pre-spa-cutover`
 
 ## 🚀 เริ่มต้นใช้งาน
