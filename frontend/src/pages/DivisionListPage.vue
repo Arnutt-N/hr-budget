@@ -123,8 +123,8 @@ function onDelete(division: Division): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="divisions ?? []"
       :loading="isLoading"
       paginator
@@ -166,6 +166,7 @@ function onDelete(division: Division): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

@@ -222,6 +222,7 @@ function confirmDeleteFile(file: VaultFile): void {
           label="อัปโหลดไฟล์"
           icon="pi pi-upload"
           :disabled="currentFolderId === null"
+          :title="currentFolderId === null ? 'เลือกโฟลเดอร์ก่อนอัปโหลดไฟล์' : undefined"
           :loading="uploading"
           @click="triggerUpload"
         />
@@ -237,14 +238,25 @@ function confirmDeleteFile(file: VaultFile): void {
 
     <!-- Breadcrumb -->
     <nav class="mb-4 flex flex-wrap items-center gap-1 text-sm" aria-label="breadcrumb">
-      <button type="button" class="text-primary-400 hover:underline" @click="goToRoot">
+      <span v-if="breadcrumb.length === 0" aria-current="page" class="font-medium text-dark-text">
+        คลังเอกสาร (ปีงบ {{ year }})
+      </span>
+      <button v-else type="button" class="min-h-6 text-primary-400 hover:underline" @click="goToRoot">
         คลังเอกสาร (ปีงบ {{ year }})
       </button>
-      <template v-for="crumb in breadcrumb" :key="crumb.id">
+      <template v-for="(crumb, i) in breadcrumb" :key="crumb.id">
         <span class="text-dark-muted">/</span>
+        <span
+          v-if="i === breadcrumb.length - 1"
+          aria-current="page"
+          class="min-h-6 font-medium text-dark-text"
+        >
+          {{ crumb.name }}
+        </span>
         <button
+          v-else
           type="button"
-          class="text-primary-400 hover:underline"
+          class="min-h-6 text-primary-400 hover:underline"
           @click="goToCrumb(crumb.id)"
         >
           {{ crumb.name }}
@@ -309,6 +321,7 @@ function confirmDeleteFile(file: VaultFile): void {
       <!-- Files in current folder -->
       <div v-if="currentFolderId !== null">
         <h2 class="mb-2 text-sm font-semibold uppercase tracking-wider text-dark-muted">ไฟล์</h2>
+        <div class="table-scroll">
         <DataTable
           :value="files ?? []"
           :loading="filesLoading"
@@ -361,6 +374,7 @@ function confirmDeleteFile(file: VaultFile): void {
             </template>
           </Column>
         </DataTable>
+        </div>
       </div>
     </template>
 

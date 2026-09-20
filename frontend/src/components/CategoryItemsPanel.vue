@@ -130,7 +130,8 @@ async function restore(item: BudgetCategoryItem): Promise<void> {
       {{ error?.message ?? 'ไม่สามารถโหลดรายการได้' }}
     </Message>
 
-    <DataTable v-else :value="items ?? []" :loading="isLoading" data-key="id" size="small">
+    <div class="table-scroll" v-else>
+    <DataTable :value="items ?? []" :loading="isLoading" data-key="id" size="small">
       <template #empty>
         <p class="py-3 text-center text-sm text-dark-muted">ยังไม่มีรายการในหมวดนี้</p>
       </template>
@@ -175,6 +176,7 @@ async function restore(item: BudgetCategoryItem): Promise<void> {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

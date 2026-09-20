@@ -10,6 +10,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { formatThaiDate } from '@/lib/date'
@@ -95,15 +96,15 @@ async function onSave(): Promise<void> {
   <div>
     <PageHeader
       title="นโยบายการคำนวณงบบุคลากร"
-      subtitle="เกณฑ์รายปีงบ — หนึ่งแถวต่อปี (ตัวคำนวณใช้แถวนี้ตัดสินวิธีคิด)"
+      subtitle="เกณฑ์รายปีงบ – หนึ่งแถวต่อปี (ตัวคำนวณใช้แถวนี้ตัดสินวิธีคิด)"
     >
       <Button label="สร้างนโยบาย" icon="pi pi-plus" @click="openCreate" />
     </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="policies ?? []"
       :loading="isLoading"
       data-key="id"
@@ -135,12 +136,13 @@ async function onSave(): Promise<void> {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <div class="space-y-4">
-        <div v-if="!editingId" class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ปีงบ</span>
+        <FormField id="pbp-year" labelled-by label="ปีงบ">
           <Select
+            aria-labelledby="pbp-year-label"
             v-model="form.fiscal_year_id"
             :options="fiscalYears ?? []"
             option-label="year"
@@ -148,24 +150,34 @@ async function onSave(): Promise<void> {
             placeholder="เลือกปี"
             fluid
           />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">เกณฑ์อัตราว่างที่นับเข้างบ</span>
-          <Select v-model="form.vacancy_rule" :options="VACANCY_TYPE_OPTIONS" option-label="label" option-value="value" fluid />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">วิธีคิด</span>
-          <Select v-model="form.calc_mode" :options="CALC_MODE_OPTIONS" option-label="label" option-value="value" fluid />
-        </div>
+        </FormField>
+        <FormField id="pbp-rule" labelled-by label="เกณฑ์อัตราว่างที่นับเข้างบ">
+          <Select
+            aria-labelledby="pbp-rule-label"
+            v-model="form.vacancy_rule"
+            :options="VACANCY_TYPE_OPTIONS"
+            option-label="label"
+            option-value="value"
+            fluid
+          />
+        </FormField>
+        <FormField id="pbp-mode" labelled-by label="วิธีคิด">
+          <Select
+            aria-labelledby="pbp-mode-label"
+            v-model="form.calc_mode"
+            :options="CALC_MODE_OPTIONS"
+            option-label="label"
+            option-value="value"
+            fluid
+          />
+        </FormField>
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ช่องปรับ %</span>
-            <InputNumber v-model="form.buffer_percent" :min="0" :max="100" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">วันอ้างอิง</span>
-            <InputText v-model="form.reference_date" type="date" fluid />
-          </div>
+          <FormField id="pbp-buffer" label="ช่องปรับ %">
+            <InputNumber input-id="pbp-buffer" v-model="form.buffer_percent" :min="0" :max="100" fluid />
+          </FormField>
+          <FormField id="pbp-refdate" label="วันอ้างอิง">
+            <InputText id="pbp-refdate" v-model="form.reference_date" type="date" fluid />
+          </FormField>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />

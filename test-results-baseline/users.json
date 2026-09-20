@@ -1,0 +1,28 @@
+{
+ "route": "/users",
+ "mode": "mock",
+ "axe": [],
+ "contrast": [],
+ "focus": {
+  "checked": 38,
+  "total": 38,
+  "noIndicator": [
+   "a \"ภาพรวม (Dashboard)\"",
+   "a \"คำขอประมาณ\"",
+   "a \"บันทึกการเบิกจ่าย\"",
+   "a \"ผลการเบิกจ่าย\"",
+   "a \"รายงานวิเคราะห์\"",
+   "a \"การแจ้งเตือน\"",
+   "a \"คลังเอกสาร\"",
+   "a \"ปีงบประมาณ\"",
+   "a \"หน่วยงาน\"",
+   "a \"กอง/สำนัก\"",
+   "a \"แผนงาน/ผลผลิต\"",
+   "a \"ประเภทรายจ่าย\""
+  ]
+ },
+ "overflow360": 227,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

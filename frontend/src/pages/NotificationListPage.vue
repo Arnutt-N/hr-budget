@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { CheckCheck, Inbox } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import {
   useNotificationList,
   useUnreadCount,
@@ -62,7 +63,7 @@ function typeIcon(type: string): string {
         :disabled="markAllRead.isPending.value"
         class="inline-flex items-center gap-2 rounded-lg border border-dark-border bg-dark-card px-3 py-2 text-sm text-primary-400 transition hover:border-slate-600 hover:text-primary-500 disabled:opacity-50"
       >
-        <CheckCheck class="h-4 w-4" />
+        <CheckCheck aria-hidden="true" class="h-4 w-4" />
         อ่านทั้งหมด
       </button>
     </PageHeader>
@@ -77,19 +78,14 @@ function typeIcon(type: string): string {
     </div>
 
     <!-- Error -->
-    <div
-      v-else-if="listQuery.isError.value"
-      class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-    >
-      โหลดการแจ้งเตือนไม่สำเร็จ — {{ (listQuery.error.value as Error | null)?.message }}
-    </div>
+    <QueryErrorState v-else-if="listQuery.isError.value" :error="listQuery.error.value" :retry="() => listQuery.refetch()" />
 
     <!-- Empty -->
     <div
       v-else-if="notifications.length === 0"
       class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-dark-border bg-dark-card py-16 text-dark-muted"
     >
-      <Inbox class="h-10 w-10" />
+      <Inbox aria-hidden="true" class="h-10 w-10" />
       <p class="text-sm">ยังไม่มีการแจ้งเตือน</p>
     </div>
 
@@ -108,16 +104,16 @@ function typeIcon(type: string): string {
           </span>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <p class="truncate font-medium text-white">{{ n.title }}</p>
+              <span class="truncate font-medium text-white">{{ n.title }}</span>
               <span
                 v-if="!n.is_read"
-                class="shrink-0 rounded-full bg-primary-500/20 px-2 py-0.5 text-[10px] font-semibold text-primary-300"
+                class="shrink-0 rounded-full bg-primary-500/20 px-2 py-0.5 text-[10px] font-semibold text-primary-400"
               >
                 ใหม่
               </span>
             </div>
-            <p v-if="n.message" class="mt-1 text-sm text-dark-muted">{{ n.message }}</p>
-            <p class="mt-1 text-xs text-dark-muted">{{ formatDate(n.created_at) }}</p>
+            <span v-if="n.message" class="mt-1 break-words text-sm text-dark-muted">{{ n.message }}</span>
+            <span class="mt-1 text-xs text-dark-muted">{{ formatDate(n.created_at) }}</span>
           </div>
         </button>
       </li>

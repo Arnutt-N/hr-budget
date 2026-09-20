@@ -19,11 +19,15 @@ interface Props {
   values: number[]
   color?: string
   hoverColor?: string
+  title?: string
 }
 const props = withDefaults(defineProps<Props>(), {
   color: '#0ea5e9',
   hoverColor: '#38bdf8',
+  title: 'แผนภูมิแท่ง',
 })
+
+const hasData = computed(() => props.labels.length > 0 && props.values.some((v) => v > 0))
 
 const baht = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const compact = new Intl.NumberFormat('th-TH', { notation: 'compact', maximumFractionDigits: 1 })
@@ -81,6 +85,10 @@ const options = computed<ChartOptions<'bar'>>(() => ({
 
 <template>
   <div class="h-72">
-    <Bar :data="chartData" :options="options" />
+    <h2 class="sr-only">{{ title }}</h2>
+    <div v-if="hasData" class="h-full">
+      <Bar :data="chartData" :options="options" :aria-label="title" />
+    </div>
+    <p v-else class="flex h-full items-center justify-center text-sm text-dark-muted">ยังไม่มีข้อมูล</p>
   </div>
 </template>

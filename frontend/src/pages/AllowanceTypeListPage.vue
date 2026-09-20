@@ -11,6 +11,7 @@ import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -155,8 +156,10 @@ async function onAddRate(): Promise<void> {
 }
 
 function onDeleteRate(rateId: number): void {
+  const rate = rates.value?.find((r) => r.id === rateId)
+  const rateLabel = rate?.level_code ?? (rate?.amount != null ? `${rate.amount} บาท` : `#${rateId}`)
   confirmDelete({
-    message: 'ยืนยันลบอัตรานี้?',
+    message: `ยืนยันลบอัตรา "${rateLabel}"?`,
     accept: async () => {
       if (!activeTypeId.value) return
       try {
@@ -177,8 +180,8 @@ function onDeleteRate(rateId: number): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="types ?? []"
       :loading="isLoading"
       data-key="id"
@@ -218,13 +221,14 @@ function onDeleteRate(rateId: number): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <!-- Flags dialog -->
     <Dialog v-model:visible="showEdit" :header="`ตั้งค่า: ${editing?.name_th ?? ''}`" modal class="w-full max-w-md">
       <div class="space-y-4">
         <label class="flex items-center gap-2 text-sm">
           <Checkbox v-model="editForm.vacant_eligible" binary />
-          อัตราว่างนับเงินเพิ่มนี้ (นโยบาย — ไม่เกี่ยวกับขอบเขตสิทธิ์)
+          อัตราว่างนับเงินเพิ่มนี้ (นโยบาย – ไม่เกี่ยวกับขอบเขตสิทธิ์)
         </label>
 
         <div class="flex flex-col gap-1">
@@ -237,9 +241,9 @@ function onDeleteRate(rateId: number): void {
           </label>
         </div>
 
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ตั้งงบจาก</span>
+        <FormField id="at-basis" labelled-by label="ตั้งงบจาก">
           <Select
+            aria-labelledby="at-basis-label"
             v-model="editForm.budget_basis"
             :options="[
               { value: 'establishment', label: 'จากอัตรากำลัง' },
@@ -250,12 +254,11 @@ function onDeleteRate(rateId: number): void {
             option-value="value"
             fluid
           />
-        </div>
+        </FormField>
 
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ระเบียบ/ประกาศอ้างอิง</span>
-          <InputText v-model="editForm.legal_ref" fluid />
-        </div>
+        <FormField id="at-legal" label="ระเบียบ/ประกาศอ้างอิง">
+          <InputText id="at-legal" v-model="editForm.legal_ref" fluid />
+        </FormField>
 
         <label class="flex items-center gap-2 text-sm">
           <Checkbox v-model="editForm.is_active" binary /> ใช้งานอยู่
@@ -270,6 +273,7 @@ function onDeleteRate(rateId: number): void {
 
     <!-- Rates dialog -->
     <Dialog v-model:visible="showRates" :header="`อัตราของ: ${activeType?.name_th ?? ''}`" modal class="w-full max-w-4xl">
+      <div class="table-scroll">
       <DataTable :value="rates ?? []" :loading="ratesLoading" data-key="id">
         <template #empty>
           <p class="py-3 text-center text-dark-muted">ยังไม่มีอัตรา (ไม่มีแถว = ไม่มีสิทธิ์)</p>
@@ -290,7 +294,7 @@ function onDeleteRate(rateId: number): void {
         </Column>
         <Column header="ช่วงมีผล">
           <template #body="{ data }">
-            {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+            {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
           </template>
         </Column>
         <Column field="doc_no" header="เอกสาร">
@@ -302,14 +306,23 @@ function onDeleteRate(rateId: number): void {
           </template>
         </Column>
       </DataTable>
+      </div>
 
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มอัตราใหม่</h3>
         <div class="grid grid-cols-3 gap-3">
-          <InputText v-model="rateForm.level_code" placeholder="ระดับ (เว้นว่าง = ทุกระดับ)" />
-          <InputNumber v-model="rateForm.amount" :min="0" placeholder="จำนวนเงิน (บาท)" fluid />
-          <InputNumber v-model="rateForm.percent" :min="0" :max="100" placeholder="หรือ %" fluid />
+          <FormField id="at-level" label="ระดับ (เว้นว่าง = ทุกระดับ)">
+          <InputText id="at-level" v-model="rateForm.level_code" placeholder="ระดับ (เว้นว่าง = ทุกระดับ)" />
+          </FormField>
+          <FormField id="at-amount" label="จำนวนเงิน (บาท)">
+          <InputNumber input-id="at-amount" v-model="rateForm.amount" :min="0" placeholder="จำนวนเงิน (บาท)" fluid />
+          </FormField>
+          <FormField id="at-percent" label="หรือ %">
+          <InputNumber input-id="at-percent" v-model="rateForm.percent" :min="0" :max="100" placeholder="หรือ %" fluid />
+          </FormField>
+          <FormField id="at-derive" labelled-by label="หรือ อ้างอิงเงินเพิ่มตัวอื่น">
           <Select
+            aria-labelledby="at-derive-label"
             v-model="rateForm.derives_from_type_id"
             :options="deriveOptions"
             option-label="label"
@@ -318,9 +331,16 @@ function onDeleteRate(rateId: number): void {
             show-clear
             fluid
           />
-          <InputNumber v-model="rateForm.fallback_amount" :min="0" placeholder="ยอดพื้น (เฉพาะอ้างอิง)" fluid />
-          <InputText v-model="rateForm.effective_from" type="date" placeholder="วันเริ่มมีผล" />
-          <InputText v-model="rateForm.doc_no" placeholder="เลขที่เอกสาร" />
+          </FormField>
+          <FormField id="at-fallback" label="ยอดพื้น (เฉพาะอ้างอิง)">
+          <InputNumber input-id="at-fallback" v-model="rateForm.fallback_amount" :min="0" placeholder="ยอดพื้น (เฉพาะอ้างอิง)" fluid />
+          </FormField>
+          <FormField id="at-from" label="วันเริ่มมีผล">
+          <InputText id="at-from" v-model="rateForm.effective_from" type="date" placeholder="วันเริ่มมีผล" />
+          </FormField>
+          <FormField id="at-doc" label="เลขที่เอกสาร">
+          <InputText id="at-doc" v-model="rateForm.doc_no" placeholder="เลขที่เอกสาร" />
+          </FormField>
         </div>
         <p class="mt-2 text-xs text-dark-muted">
           กติกา: ใส่ได้ทีละอย่าง (จำนวนเงิน หรือ % หรือ อ้างอิง) · การอ้างอิงที่ก่อให้เกิดวงจรจะถูกปฏิเสธโดยระบบ
@@ -331,6 +351,7 @@ function onDeleteRate(rateId: number): void {
             icon="pi pi-plus"
             :loading="createRateMutation.isPending.value"
             :disabled="!rateForm.effective_from"
+            :title="!rateForm.effective_from ? 'เลือกวันเริ่มมีผลก่อน' : undefined"
             @click="onAddRate"
           />
         </div>

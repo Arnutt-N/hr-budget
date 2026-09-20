@@ -11,6 +11,7 @@ import Message from 'primevue/message'
 import PageHeader from '@/components/PageHeader.vue'
 import { useComputePersonnelBudget } from '@/queries/usePersonnel'
 import { useFiscalYearList } from '@/queries/useFiscalYears'
+import { useOrganizationList } from '@/queries/useOrganizations'
 import { useExpenseStructure } from '@/queries/useDisbursements'
 import type { ComputeBudgetResult } from '@/types/personnel'
 
@@ -18,6 +19,14 @@ const toast = useToast()
 const confirm = useConfirm()
 const { data: fiscalYears } = useFiscalYearList()
 const { data: expenseStructure } = useExpenseStructure()
+const { data: organizations } = useOrganizationList()
+
+// index โดย organization_id สำหรับแสดงชื่อหน่วยงาน
+const orgNames = computed(() => {
+  const map: Record<number, string> = {}
+  for (const o of organizations.value ?? []) map[o.id] = o.name_th
+  return map
+})
 const computeMutation = useComputePersonnelBudget()
 
 const selectedYearId = ref<number | null>(null)
@@ -97,7 +106,7 @@ function confirmCommit(): void {
   <div>
     <PageHeader
       title="คำนวณงบบุคลากร"
-      subtitle="อัตรากำลัง × อัตราเงินเพิ่ม → ยอดลง budget_line_items (source=computed) — แทนที่เฉพาะแถว computed เดิม ไม่แตะแถวพิมพ์มือ"
+      subtitle="อัตรากำลัง × อัตราเงินเพิ่ม → ยอดลง budget_line_items (source=computed) – แทนที่เฉพาะแถว computed เดิม ไม่แตะแถวพิมพ์มือ"
     />
 
     <div class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-dark-border p-4">
@@ -119,6 +128,7 @@ function confirmCommit(): void {
         icon="pi pi-eye"
         :loading="computeMutation.isPending.value"
         :disabled="!selectedYearId"
+        :title="!selectedYearId ? 'เลือกปีงบก่อน' : undefined"
         @click="runDryRun"
       />
       <Button
@@ -126,6 +136,7 @@ function confirmCommit(): void {
         icon="pi pi-save"
         :loading="computeMutation.isPending.value"
         :disabled="!selectedYearId"
+        :title="!selectedYearId ? 'เลือกปีงบก่อน' : undefined"
         @click="confirmCommit"
       />
     </div>
@@ -140,19 +151,23 @@ function confirmCommit(): void {
         <span class="text-xl font-bold text-white">{{ total.toLocaleString('th-TH') }} บาท</span>
       </div>
 
+      <div class="table-scroll">
       <DataTable :value="rows" data-key="key" class="overflow-hidden rounded-lg border border-dark-border shadow">
         <Column header="รายการงบ" field="name_th" />
         <Column header="รหัสรายการ" field="expense_item_id" />
-        <Column header="หน่วยงาน" field="organization_id" />
+        <Column header="หน่วยงาน">
+          <template #body="{ data }">{{ orgNames[data.organization_id] ?? data.organization_id }}</template>
+        </Column>
         <Column header="ยอด" field="amount">
           <template #body="{ data }">
             <Tag :value="Number(data.amount).toLocaleString('th-TH')" severity="info" />
           </template>
         </Column>
       </DataTable>
+      </div>
     </template>
     <p v-else-if="result" class="py-4 text-center text-dark-muted">
-      คำนวณแล้วแต่ไม่มีรายการ — ตรวจสอบนโยบาย/เกณฑ์อัตราว่าง/สถานะอนุมัติ
+      คำนวณแล้วแต่ไม่มีรายการ – ตรวจสอบนโยบาย/เกณฑ์อัตราว่าง/สถานะอนุมัติ
     </p>
     <p v-else class="py-4 text-center text-dark-muted">ยังไม่ได้คำนวณ — เลือกปีงบแล้วกด "คำนวณ (ทดลอง)" ก่อน</p>
   </div>

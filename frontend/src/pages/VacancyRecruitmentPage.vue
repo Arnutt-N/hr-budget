@@ -9,6 +9,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -88,8 +89,8 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="items ?? []"
       :loading="isLoading"
       data-key="id"
@@ -125,12 +126,13 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" header="เพิ่มหลักฐานสรรหา" modal class="w-full max-w-md">
       <div class="space-y-4">
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">อัตรากำลัง</span>
+        <FormField id="vr-position" labelled-by label="อัตรากำลัง">
           <Select
+            aria-labelledby="vr-position-label"
             v-model="form.position_id"
             :options="positions ?? []"
             option-label="pay_no"
@@ -139,11 +141,11 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
             filter
             fluid
           />
-        </div>
+        </FormField>
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ปีงบ</span>
+          <FormField id="vr-year" labelled-by label="ปีงบ">
             <Select
+              aria-labelledby="vr-year-label"
               v-model="form.fiscal_year_id"
               :options="fiscalYears ?? []"
               option-label="year"
@@ -151,26 +153,24 @@ function confirmDelete(item: { id: number; pay_no: string | null }): void {
               placeholder="เลือกปี"
               fluid
             />
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ประเภทหลักฐาน</span>
+          </FormField>
+          <FormField id="vr-type" labelled-by label="ประเภทหลักฐาน">
             <Select
+              aria-labelledby="vr-type-label"
               v-model="form.type"
               :options="VACANCY_TYPE_OPTIONS"
               option-label="label"
               option-value="value"
               fluid
             />
-          </div>
+          </FormField>
         </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">เลขที่เอกสาร</span>
-          <InputText v-model="form.doc_no" fluid />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">วันที่เอกสาร</span>
-          <InputText v-model="form.doc_date" type="date" fluid />
-        </div>
+        <FormField id="vr-doc" label="เลขที่เอกสาร">
+          <InputText id="vr-doc" v-model="form.doc_no" fluid />
+        </FormField>
+        <FormField id="vr-docdate" label="วันที่เอกสาร">
+          <InputText id="vr-docdate" v-model="form.doc_date" type="date" fluid />
+        </FormField>
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />
           <Button label="บันทึก" :loading="saving" :disabled="!form.position_id || !form.fiscal_year_id" @click="onSave" />

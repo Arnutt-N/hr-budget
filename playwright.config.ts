@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Design-audit sweep (tests/e2e/audit/*.audit.mjs) runs only via
+  // `npm run test:e2e:audit` / the CI `audit` job - never in the default suite.
+  testIgnore: '**/audit/**',
   
   // Maximum time one test can run
   timeout: 30 * 1000,

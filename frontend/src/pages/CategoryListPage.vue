@@ -114,8 +114,8 @@ function onDelete(cat: BudgetCategory): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       v-model:expanded-rows="expandedRows"
       :value="categories ?? []"
       :loading="isLoading"
@@ -153,6 +153,7 @@ function onDelete(cat: BudgetCategory): void {
         <CategoryItemsPanel :category-id="data.id" />
       </template>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

@@ -1,0 +1,47 @@
+{
+ "route": "/requests/create",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "label",
+   "impact": "critical",
+   "nodes": 2,
+   "targets": [
+    "td:nth-child(2) > input[type=\"number\"][min=\"0\"][step=\"any\"]",
+    "td:nth-child(3) > input[type=\"number\"][min=\"0\"][step=\"any\"]"
+   ]
+  }
+ ],
+ "contrast": [
+  {
+   "text": "ส่งอนุมัติ",
+   "sel": "button.rounded-lg.bg-primary-600.px-4",
+   "ratio": 4.1,
+   "need": 4.5,
+   "fg": "rgb(255, 255, 255)",
+   "fs": 14
+  }
+ ],
+ "focus": {
+  "checked": 37,
+  "total": 37,
+  "noIndicator": [
+   "a \"ภาพรวม (Dashboard)\"",
+   "a \"คำขอประมาณ\"",
+   "a \"บันทึกการเบิกจ่าย\"",
+   "a \"ผลการเบิกจ่าย\"",
+   "a \"รายงานวิเคราะห์\"",
+   "a \"การแจ้งเตือน\"",
+   "a \"คลังเอกสาร\"",
+   "a \"ปีงบประมาณ\"",
+   "a \"หน่วยงาน\"",
+   "a \"กอง/สำนัก\"",
+   "a \"แผนงาน/ผลผลิต\"",
+   "a \"ประเภทรายจ่าย\""
+  ]
+ },
+ "overflow360": 78,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

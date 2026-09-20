@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+import primeui from 'tailwindcss-primeui';
+
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts}'],
   theme: {
@@ -16,10 +18,11 @@ export default {
         primary: {
           400: '#38bdf8',
           500: '#0ea5e9',
-          600: '#0284c7',
+          600: '#0369a1',
+          700: '#075985',
         },
       },
     },
   },
-  plugins: [require('tailwindcss-primeui')],
+  plugins: [primeui],
 }

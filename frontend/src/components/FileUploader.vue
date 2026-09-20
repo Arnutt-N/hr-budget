@@ -118,7 +118,7 @@ const files = computed(() => filesQuery.data.value ?? [])
         />
         <button
           type="button"
-          class="mt-2 inline-block rounded bg-primary-600 px-3 py-1.5 text-xs text-white hover:bg-primary-500"
+          class="mt-2 inline-block rounded bg-primary-600 px-3 py-1.5 text-xs text-white hover:bg-primary-700"
           @click="fileInput?.click()"
         >
           เลือกไฟล์

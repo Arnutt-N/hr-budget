@@ -137,8 +137,8 @@ function roleSeverity(r: string): string {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="users ?? []"
       :loading="isLoading"
       paginator
@@ -186,6 +186,7 @@ function roleSeverity(r: string): string {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

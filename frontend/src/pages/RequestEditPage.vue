@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useToast } from 'primevue/usetoast'
+const toast = useToast()
+import { useConfirm } from 'primevue/useconfirm'
 import { useRoute, useRouter } from 'vue-router'
 import { useBudgetRequest, useUpdateBudgetRequest } from '@/queries/useBudgetRequests'
 import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import FormField from '@/components/FormField.vue'
 import ItemEditor from '@/components/ItemEditor.vue'
 import FileUploader from '@/components/FileUploader.vue'
@@ -23,8 +27,27 @@ const fiscalYear = ref(0)
 const orgId = ref<number | null>(null)
 const items = ref<ItemRow[]>([])
 const errorMsg = ref('')
+
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
 const loaded = ref(false)
+const confirm = useConfirm()
+const snapshot = ref('')
 const saving = computed(() => updateMut.isPending.value)
+
+const isDirty = computed(
+  () =>
+    loaded.value &&
+    snapshot.value !==
+      JSON.stringify({
+        t: requestTitle.value,
+        y: fiscalYear.value,
+        o: orgId.value,
+        items: items.value,
+      }),
+)
 
 // One-shot populate when the request arrives (don't clobber edits on refetch).
 watch(
@@ -33,6 +56,7 @@ watch(
     if (!req || loaded.value) return
 
     if (req.request_status !== 'draft' && req.request_status !== 'saved') {
+      toast.add({ severity: 'warn', summary: 'คำขอนี้ไม่อยู่ในสถานะที่แก้ไขได้', life: 5000 })
       router.replace(`/requests/${requestId.value}`)
       return
     }
@@ -48,10 +72,34 @@ watch(
       category_item_id: item.category_item_id,
     }))
 
+    snapshot.value = JSON.stringify({
+      t: requestTitle.value,
+      y: fiscalYear.value,
+      o: orgId.value,
+      items: items.value,
+    })
     loaded.value = true
   },
   { immediate: true },
 )
+
+function cancelEdit(): void {
+  const back = (): void => {
+    router.push(`/requests/${route.params.id}`)
+  }
+  if (!isDirty.value) {
+    back()
+    return
+  }
+  confirm.require({
+    header: 'ยกเลิกการแก้ไข?',
+    message: 'การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป ยืนยันการยกเลิกหรือไม่',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ยกเลิกการแก้ไข',
+    rejectLabel: 'ทำต่อ',
+    accept: back,
+  })
+}
 
 async function handleSave() {
   errorMsg.value = ''
@@ -89,9 +137,7 @@ async function handleSave() {
     <div v-if="!loaded" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 
     <template v-else>
-      <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-        {{ errorMsg }}
-      </div>
+      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
       <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -139,16 +185,17 @@ async function handleSave() {
           <button
             @click="handleSave"
             :disabled="saving"
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {{ saving ? 'กำลังบันทึก...' : 'บันทึก' }}
           </button>
-          <router-link
-            :to="`/requests/${route.params.id}`"
+          <button
+            type="button"
             class="rounded-lg border border-dark-border bg-dark-card px-4 py-2 text-sm font-medium text-dark-muted hover:bg-slate-800/50"
+            @click="cancelEdit"
           >
             ยกเลิก
-          </router-link>
+          </button>
         </div>
       </div>
     </template>

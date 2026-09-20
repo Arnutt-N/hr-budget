@@ -120,8 +120,8 @@ function confirmDeleteSession(id: number, orgName: string): void {
 
     <QueryErrorState v-if="query.isError.value" :error="query.error.value" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="sessions"
       :lazy="true"
       :loading="query.isLoading.value"
@@ -177,5 +177,6 @@ function confirmDeleteSession(id: number, orgName: string): void {
         </template>
       </Column>
     </DataTable>
+    </div>
   </div>
 </template>

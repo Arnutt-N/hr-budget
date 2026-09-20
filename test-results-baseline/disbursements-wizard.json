@@ -1,0 +1,37 @@
+{
+ "route": "/disbursements/wizard",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "targets": [
+    ".bg-primary-600 > span:nth-child(2)"
+   ]
+  }
+ ],
+ "contrast": [
+  {
+   "text": "เลือกหน่วยงาน/เดือน",
+   "sel": "span.",
+   "ratio": 4.1,
+   "need": 4.5,
+   "fg": "rgb(255, 255, 255)",
+   "fs": 14
+  },
+  {
+   "text": "ถัดไป",
+   "sel": "button.rounded-lg.bg-primary-600.px-4",
+   "ratio": 4.1,
+   "need": 4.5,
+   "fg": "rgb(255, 255, 255)",
+   "fs": 14
+  }
+ ],
+ "focus": null,
+ "overflow360": 0,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

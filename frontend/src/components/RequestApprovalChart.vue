@@ -19,8 +19,11 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 interface Props {
   report: RequestApprovalReport
+  title?: string
 }
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  title: 'คำขอ vs อนุมัติ ตามหน่วยงาน',
+})
 
 const baht = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' })
 const bahtPlain = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -121,16 +124,16 @@ const options = computed<ChartOptions<'bar'>>(() => ({
     </div>
 
     <section class="rounded-xl border border-dark-border bg-dark-card p-5 shadow-sm">
-      <h2 class="mb-4 text-base font-semibold text-white">คำขอ vs อนุมัติ ตามหน่วยงาน</h2>
+      <h2 class="mb-4 text-base font-semibold text-white">{{ title }}</h2>
       <div
         v-if="!hasOrgData"
         class="flex h-72 flex-col items-center justify-center gap-2 text-dark-muted"
       >
-        <Inbox class="h-10 w-10" />
+        <Inbox aria-hidden="true" class="h-10 w-10" />
         <p class="text-sm">ยังไม่มีคำขอแยกตามหน่วยงานในปีงบนี้</p>
       </div>
       <div v-else class="h-80">
-        <Bar :data="chartData" :options="options" />
+        <Bar :data="chartData" :options="options" :aria-label="title" />
       </div>
     </section>
   </div>

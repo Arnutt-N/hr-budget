@@ -1,0 +1,21 @@
+{
+ "route": "/salary-raise-rounds",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "label",
+   "impact": "critical",
+   "nodes": 2,
+   "targets": [
+    "div[pc26=\"\"] > input",
+    "div[pc34=\"\"] > input"
+   ]
+  }
+ ],
+ "contrast": [],
+ "focus": null,
+ "overflow360": 109,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

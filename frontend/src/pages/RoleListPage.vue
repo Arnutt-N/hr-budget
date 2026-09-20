@@ -203,8 +203,8 @@ function onDelete(role: Role): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="roles ?? []"
       :loading="isLoading"
       paginator
@@ -265,6 +265,7 @@ function onDelete(role: Role): void {
               text
               :severity="data.is_active ? 'danger' : 'success'"
               :disabled="!!data.is_system || updateMutation.isPending.value"
+              :title="data.is_system ? 'บทบาทระบบปิดไม่ได้' : undefined"
               @click="confirmToggle(data)"
             />
             <Button
@@ -280,12 +281,13 @@ function onDelete(role: Role): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-2xl">
       <form class="space-y-4" @submit.prevent="onSave">
         <Message v-if="formError" severity="error" :closable="false">{{ formError }}</Message>
         <Message v-if="isSystem" severity="warn" :closable="false">
-          บทบาทระบบ — ดูได้อย่างเดียว แก้ไข/ลบไม่ได้
+          บทบาทระบบ – ดูได้อย่างเดียว แก้ไข/ลบไม่ได้
         </Message>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

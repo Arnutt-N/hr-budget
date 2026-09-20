@@ -367,6 +367,22 @@ supported surface.
 `.kilo/kilo.jsonc` is minimal: `$schema` + `snapshot: false` (git snapshots off). No
 project-level agent/command/skill overrides — defaults apply.
 
+## Secrets & credentials (กฎ 3 ชั้น — agent ทุกตัวต้องทำตาม)
+
+**ชั้นที่ 1 — วินัยตอนทำงาน:** ห้ามเปิดอ่านไฟล์ `.env`, `*.key`, `credentials*`
+(ดูชื่อ key/โครงสร้างแทน); ห้ามส่งค่าจริงออกนอกเครื่อง (แชท/log/commit); ถ้าเจอ secret
+ฝังในโค้ด ให้รายงานแค่ `file:line` + redact ค่า — ห้าม paste ค่าจริง (ตาม guard:
+อย่าไว้ใจว่ากฎตัวอักษรจะกันได้ 100% — ชั้นที่ 2 คือเกราะจริง)
+
+**ชั้นที่ 2 — ล็อกที่ระบบ:** `.env`, `.env.*`, `credentials*`, keys ทั้งหมดอยู่ใน
+`.gitignore` แล้ว (ตรวจด้วย `git check-ignore`); `config/database.php` อ่าน `$_ENV`
+อย่างเดียวจึง track ได้; ห้ามฝัง secret ในโค้ด — รับผ่าน env เสมอ; creds ใน repo
+(`admin@moj.go.th`, `test@hr.local` ฯลฯ) เป็น fixture สำหรับ dev/test เท่านั้น
+ห้ามใช้ซ้ำ production
+
+**ชั้นที่ 3 — เลือกโมเดล:** งานทั่วไป/โค้ดไม่มีความลับ → โมเดลอะไรก็ได้; งานที่ต้องเปิด
+ไฟล์ config หรือข้อมูลอ่อนไหว → ใช้โมเดลที่ไม่นำข้อมูลไปเทรน หรือ redact ค่าจริงก่อน
+
 ## Agent skills
 
 Per-repo configuration that the engineering skills read. Full detail lives in `docs/agents/`;

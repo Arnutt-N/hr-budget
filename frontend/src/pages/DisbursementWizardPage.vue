@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import {
   useCreateSession,
   useCreateRecord,
@@ -26,10 +27,16 @@ import {
 
 const router = useRouter()
 const toast = useToast()
+const confirm = useConfirm()
 const auth = useAuthStore()
 const wizard = useDisbursementWizard()
 
 const isAdmin = computed(() => auth.user?.role === 'admin')
+
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
 
 // ---- Reference data ----
 const { data: fiscalYears } = useFiscalYearList()
@@ -263,8 +270,22 @@ function back(): void {
 }
 
 function cancel(): void {
-  wizard.reset()
-  router.push('/disbursements')
+  const discard = (): void => {
+    wizard.reset()
+    router.push('/disbursements')
+  }
+  if (!wizard.isDirty) {
+    discard()
+    return
+  }
+  confirm.require({
+    header: 'ยกเลิกการบันทึก?',
+    message: 'ข้อมูลที่กรอกไว้จะหายไป ยืนยันการยกเลิกหรือไม่',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ยกเลิกการบันทึก',
+    rejectLabel: 'ทำต่อ',
+    accept: discard,
+  })
 }
 
 const STEPS = [
@@ -301,7 +322,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
           wizard.step === s.n
             ? 'bg-primary-600 text-white'
             : wizard.step > s.n
-              ? 'bg-primary-900/40 text-primary-300'
+              ? 'bg-primary-500/20 text-primary-400'
               : 'bg-dark-card border border-dark-border text-dark-muted'
         "
       >
@@ -310,14 +331,12 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
       </li>
     </ol>
 
-    <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-      {{ errorMsg }}
-    </div>
+    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
     <div class="rounded-lg bg-dark-card border border-dark-border p-6 shadow">
       <!-- STEP 1 -->
       <section v-if="wizard.step === 1" class="space-y-4">
-        <h2 class="text-lg font-semibold text-white">ขั้นที่ 1 — เลือกหน่วยงาน ปีงบ และเดือน</h2>
+        <h2 class="text-lg font-semibold text-white">ขั้นที่ 1 – เลือกหน่วยงาน ปีงบ และเดือน</h2>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField id="wiz-org" label="หน่วยงาน">
             <select
@@ -362,7 +381,8 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             type="button"
             @click="submitStep1"
             :disabled="!canSubmitStep1 || createSessionMut.isPending.value"
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+            :title="!canSubmitStep1 && !createSessionMut.isPending.value ? 'ทำขั้นที่ 1 ให้ครบก่อน' : undefined"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {{ createSessionMut.isPending.value ? 'กำลังดำเนินการ...' : 'ถัดไป' }}
           </button>
@@ -371,7 +391,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
 
       <!-- STEP 2 -->
       <section v-else-if="wizard.step === 2" class="space-y-4">
-        <h2 class="text-lg font-semibold text-white">ขั้นที่ 2 — เลือกกิจกรรม</h2>
+        <h2 class="text-lg font-semibold text-white">ขั้นที่ 2 – เลือกกิจกรรม</h2>
         <div v-if="activitiesLoading" class="py-6 text-center text-dark-muted">กำลังโหลดกิจกรรม...</div>
         <div v-else-if="(activities ?? []).length === 0" class="py-6 text-center text-dark-muted">
           ไม่พบกิจกรรมสำหรับรอบนี้
@@ -381,7 +401,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             v-for="act in activities ?? []"
             :key="act.activity_id"
             class="flex cursor-pointer items-start gap-3 rounded border border-dark-border p-3 hover:bg-slate-800/50"
-            :class="selectedActivityId === act.activity_id ? 'border-primary-500 bg-primary-900/20' : ''"
+            :class="selectedActivityId === act.activity_id ? 'border-primary-500 bg-primary-500/20' : ''"
           >
             <input
               type="radio"
@@ -395,7 +415,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
               <span v-if="act.code" class="block text-xs text-dark-muted">{{ act.code }}</span>
               <span
                 v-if="act.record_status"
-                class="mt-1 inline-block rounded bg-primary-900/40 px-2 py-0.5 text-xs text-primary-300"
+                class="mt-1 inline-block rounded bg-primary-500/20 px-2 py-0.5 text-xs text-primary-400"
               >
                 มีข้อมูลแล้ว
               </span>
@@ -414,7 +434,8 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             type="button"
             @click="submitStep2"
             :disabled="!selectedActivityId || createRecordMut.isPending.value"
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+            :title="!selectedActivityId && !createRecordMut.isPending.value ? 'เลือกกิจกรรมก่อน' : undefined"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {{ createRecordMut.isPending.value ? 'กำลังดำเนินการ...' : 'ถัดไป' }}
           </button>
@@ -423,7 +444,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
 
       <!-- STEP 3 -->
       <section v-else-if="wizard.step === 3" class="space-y-4">
-        <h2 class="text-lg font-semibold text-white">ขั้นที่ 3 — กรอกยอดเบิกจ่าย</h2>
+        <h2 class="text-lg font-semibold text-white">ขั้นที่ 3 – กรอกยอดเบิกจ่าย</h2>
         <p class="text-sm text-dark-muted">กิจกรรม: {{ selectedActivityName }}</p>
         <div v-if="recordLoading" class="py-6 text-center text-dark-muted">กำลังโหลดข้อมูล...</div>
         <!-- A failed detail fetch must NOT render an editable zero-table over an
@@ -431,7 +452,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
         <QueryErrorState v-else-if="recordFailed" :error="recordError" />
         <div v-else class="space-y-6">
           <div v-for="type in expenseTree ?? []" :key="type.id" class="space-y-3">
-            <h3 class="text-base font-semibold text-primary-300">{{ type.name_th }}</h3>
+            <h3 class="text-base font-semibold text-primary-400">{{ type.name_th }}</h3>
             <div v-for="group in type.groups" :key="group.id" class="space-y-2">
               <h4 class="text-sm font-medium text-dark-text">{{ group.name_th }}</h4>
               <div class="overflow-x-auto rounded border border-dark-border">
@@ -488,7 +509,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
           <button
             type="button"
             @click="goToStep3Summary"
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
           >
             ถัดไป
           </button>
@@ -497,7 +518,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
 
       <!-- STEP 4 -->
       <section v-else class="space-y-4">
-        <h2 class="text-lg font-semibold text-white">ขั้นที่ 4 — สรุปและบันทึก</h2>
+        <h2 class="text-lg font-semibold text-white">ขั้นที่ 4 – สรุปและบันทึก</h2>
         <dl class="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
           <div>
             <dt class="text-dark-muted">หน่วยงาน</dt>
@@ -560,7 +581,8 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
             type="button"
             @click="submitFinal"
             :disabled="saveRecordMut.isPending.value || recordFailed"
-            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+            :title="!saveRecordMut.isPending.value && recordFailed ? 'บันทึกไม่สำเร็จ – ดูข้อผิดพลาดด้านบน' : undefined"
+            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
           >
             {{ saveRecordMut.isPending.value ? 'กำลังบันทึก...' : 'บันทึก' }}
           </button>

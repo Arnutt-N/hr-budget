@@ -4,6 +4,10 @@
 
 /* Legacy dark theme base — mirrors resources/views/layouts/main.php */
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     font-family: 'Noto Sans Thai', sans-serif;
     background-color: #0f172a;
@@ -46,6 +50,12 @@
     color: #0ea5e9;
   }
 
+  /* Horizontal scroll wrapper for wide tables (Phase C) */
+  .table-scroll {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Translucent pill badges — same look as legacy .badge-* */
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
@@ -70,4 +80,11 @@
     background-color: rgba(148, 163, 184, 0.1);
     color: #94a3b8;
   }
+}
+
+/* WCAG 2.2 AA target-size floor (unlayered so it wins over the PrimeVue
+   theme layer): small icon-only buttons render 22px wide, below the 24px
+   minimum. One rule covers every row edit/delete button app-wide. */
+.p-button.p-button-icon-only.p-button-sm {
+  min-width: 1.5rem;
 }

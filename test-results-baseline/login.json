@@ -1,0 +1,17 @@
+{
+ "route": "/login",
+ "mode": "mock",
+ "axe": [],
+ "contrast": [],
+ "focus": {
+  "checked": 6,
+  "total": 6,
+  "noIndicator": [
+   "input#remember \"checkbox\""
+  ]
+ },
+ "overflow360": 0,
+ "errors": [
+  "CONSOLE: Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+ ]
+}

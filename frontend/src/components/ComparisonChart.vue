@@ -19,8 +19,11 @@ interface Props {
   labels: string[]
   budget: number[]
   disbursed: number[]
+  title?: string
 }
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  title: 'เปรียบเทียบงบจัดสรรกับเบิกจ่าย',
+})
 
 const baht = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const compact = new Intl.NumberFormat('th-TH', { notation: 'compact', maximumFractionDigits: 1 })
@@ -89,6 +92,6 @@ const options = computed<ChartOptions<'bar'>>(() => ({
 
 <template>
   <div class="h-72">
-    <Bar :data="chartData" :options="options" />
+    <Bar :data="chartData" :options="options" :aria-label="title" />
   </div>
 </template>

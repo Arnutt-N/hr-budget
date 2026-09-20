@@ -153,8 +153,8 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="fiscalYears ?? []"
       :loading="isLoading"
       paginator
@@ -201,6 +201,7 @@ function statusOf(fy: FiscalYear): { label: string; severity: string } {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

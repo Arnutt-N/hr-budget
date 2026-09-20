@@ -4,6 +4,7 @@ import { Inbox, Info } from '@lucide/vue'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import Tabs from 'primevue/tabs'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import TabList from 'primevue/tablist'
 import Tab from 'primevue/tab'
 import TabPanels from 'primevue/tabpanels'
@@ -122,7 +123,7 @@ const isScoped = computed<boolean>(() => {
       v-if="isScoped"
       class="flex items-center gap-2 rounded-lg border border-sky-800 bg-sky-950/40 px-4 py-2.5 text-sm text-sky-300"
     >
-      <Info class="h-4 w-4 shrink-0" />
+      <Info aria-hidden="true" class="h-4 w-4 shrink-0" />
       <span>แสดงเฉพาะข้อมูลตามสิทธิ์หน่วยงานของคุณ</span>
     </div>
 
@@ -146,13 +147,7 @@ const isScoped = computed<boolean>(() => {
               aria-label="เลือกมุมมองการเปรียบเทียบ"
             />
 
-            <div
-              v-if="comparisonQuery.isError.value"
-              class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-            >
-              โหลดข้อมูลเปรียบเทียบไม่สำเร็จ —
-              {{ (comparisonQuery.error.value as Error | null)?.message }}
-            </div>
+            <QueryErrorState v-if="comparisonQuery.isError.value" :error="comparisonQuery.error.value" :retry="() => comparisonQuery.refetch()" />
 
             <div
               v-else-if="comparisonQuery.isLoading.value"
@@ -163,7 +158,7 @@ const isScoped = computed<boolean>(() => {
               v-else-if="!hasComparison"
               class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dark-border bg-dark-card py-16 text-dark-muted"
             >
-              <Inbox class="h-10 w-10" />
+              <Inbox aria-hidden="true" class="h-10 w-10" />
               <p class="text-sm">ยังไม่มีข้อมูลสำหรับการเปรียบเทียบ</p>
             </div>
 
@@ -176,19 +171,24 @@ const isScoped = computed<boolean>(() => {
                 :budget="comparisonBudget"
                 :disbursed="comparisonDisbursed"
               />
+              <table class="sr-only">
+                <caption>เปรียบเทียบงบจัดสรรกับเบิกจ่าย (บาท)</caption>
+                <thead><tr><th scope="col">รายการ</th><th scope="col">จัดสรร (บาท)</th><th scope="col">เบิกจ่าย (บาท)</th></tr></thead>
+                <tbody>
+                  <tr v-for="(l, i) in comparisonLabels" :key="l">
+                    <th scope="row">{{ l }}</th>
+                    <td>{{ comparisonBudget[i] }}</td>
+                    <td>{{ comparisonDisbursed[i] }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </section>
           </div>
         </TabPanel>
 
         <!-- ===== Forecast vs จริง ===== -->
         <TabPanel value="forecast">
-          <div
-            v-if="forecastQuery.isError.value"
-            class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-          >
-            โหลดข้อมูล Forecast ไม่สำเร็จ —
-            {{ (forecastQuery.error.value as Error | null)?.message }}
-          </div>
+          <QueryErrorState v-if="forecastQuery.isError.value" :error="forecastQuery.error.value" :retry="() => forecastQuery.refetch()" />
 
           <div
             v-else-if="forecastQuery.isLoading.value"
@@ -199,7 +199,7 @@ const isScoped = computed<boolean>(() => {
             v-else-if="!hasForecast"
             class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dark-border bg-dark-card py-16 text-dark-muted"
           >
-            <Inbox class="h-10 w-10" />
+            <Inbox aria-hidden="true" class="h-10 w-10" />
             <p class="text-sm">ยังไม่มีข้อมูลพยากรณ์ในปีงบนี้</p>
           </div>
 
@@ -214,18 +214,25 @@ const isScoped = computed<boolean>(() => {
               :forecast-cumulative="forecast.forecast_cumulative"
               :actual-cumulative="forecast.actual_cumulative"
             />
+              <table class="sr-only">
+                <caption>พยากรณ์เทียบเบิกจ่ายจริง (บาท)</caption>
+                <thead><tr><th scope="col">เดือน</th><th scope="col">จริงรายเดือน (บาท)</th><th scope="col">พยากรณ์รายเดือน (บาท)</th><th scope="col">จริงสะสม (บาท)</th><th scope="col">พยากรณ์สะสม (บาท)</th></tr></thead>
+                <tbody>
+                  <tr v-for="(l, i) in forecast.labels" :key="l">
+                    <th scope="row">{{ l }}</th>
+                    <td>{{ forecast.actual_monthly[i] }}</td>
+                    <td>{{ forecast.forecast_monthly[i] }}</td>
+                    <td>{{ forecast.actual_cumulative[i] }}</td>
+                    <td>{{ forecast.forecast_cumulative[i] }}</td>
+                  </tr>
+                </tbody>
+              </table>
           </section>
         </TabPanel>
 
         <!-- ===== คำขอ vs อนุมัติ ===== -->
         <TabPanel value="request">
-          <div
-            v-if="requestQuery.isError.value"
-            class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-          >
-            โหลดข้อมูลคำขอ vs อนุมัติไม่สำเร็จ —
-            {{ (requestQuery.error.value as Error | null)?.message }}
-          </div>
+          <QueryErrorState v-if="requestQuery.isError.value" :error="requestQuery.error.value" :retry="() => requestQuery.refetch()" />
 
           <div
             v-else-if="requestQuery.isLoading.value"
