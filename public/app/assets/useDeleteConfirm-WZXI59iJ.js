@@ -1,0 +1,1 @@
+import{U as r}from"./index-C4-zvi6f.js";function o(){const e=r();return function(n){e.require({header:"ยืนยันการลบ",icon:"pi pi-exclamation-triangle",acceptLabel:"ลบ",rejectLabel:"ยกเลิก",acceptClass:"p-button-danger",...n})}}export{o as u};
