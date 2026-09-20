@@ -27,6 +27,11 @@ const fiscalYear = ref(0)
 const orgId = ref<number | null>(null)
 const items = ref<ItemRow[]>([])
 const errorMsg = ref('')
+
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
 const loaded = ref(false)
 const confirm = useConfirm()
 const snapshot = ref('')
@@ -132,7 +137,7 @@ async function handleSave() {
     <div v-if="!loaded" class="py-16 text-center text-dark-muted">กำลังโหลด...</div>
 
     <template v-else>
-      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
+      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
       <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

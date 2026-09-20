@@ -27,6 +27,11 @@ const rejectMode = ref(false)
 const rejectNote = ref('')
 const errorMsg = ref('')
 
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
+
 const req = computed(() => requestQuery.data.value ?? null)
 const isOwner = computed(() => !!req.value && !!auth.user && req.value.created_by === auth.user.id)
 const isAdmin = computed(() => auth.user?.role === 'admin')
@@ -99,7 +104,7 @@ async function handleReject() {
     </div>
 
     <template v-else>
-      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
+      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
       <!-- Request info -->
       <div class="mb-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">

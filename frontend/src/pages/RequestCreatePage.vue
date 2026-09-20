@@ -25,6 +25,11 @@ const items = ref<ItemRow[]>([
   { item_name: '', quantity: '0', unit_price: '0', remark: null, category_item_id: null },
 ])
 const errorMsg = ref('')
+
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
 const loading = computed(() => createMut.isPending.value || submitMut.isPending.value)
 
 // Default the fiscal year once the list arrives (TanStack data is async/reactive)
@@ -98,7 +103,7 @@ async function doCreate(): Promise<number | null> {
       </router-link>
     </PageHeader>
 
-    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
+    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
     <form class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow" @submit.prevent="saveAndSubmit">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

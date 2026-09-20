@@ -33,6 +33,11 @@ const wizard = useDisbursementWizard()
 
 const isAdmin = computed(() => auth.user?.role === 'admin')
 
+// Template scope can't reference the `window` global — expose reload as a binding.
+function reloadPage(): void {
+  window.location.reload()
+}
+
 // ---- Reference data ----
 const { data: fiscalYears } = useFiscalYearList()
 const { data: organizations } = useOrganizationList()
@@ -326,7 +331,7 @@ const AMOUNT_FIELDS: { key: keyof Omit<SaveTrackingItem, 'expense_item_id'>; lab
       </li>
     </ol>
 
-    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
+    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="reloadPage" />
 
     <div class="rounded-lg bg-dark-card border border-dark-border p-6 shadow">
       <!-- STEP 1 -->
