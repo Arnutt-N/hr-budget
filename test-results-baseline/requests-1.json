@@ -1,0 +1,38 @@
+{
+ "route": "/requests/1",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "targets": [
+    ".mt-2"
+   ]
+  },
+  {
+   "id": "link-name",
+   "impact": "serious",
+   "nodes": 2,
+   "targets": [
+    "li:nth-child(1) > .min-w-0.gap-2.items-center > .truncate.text-primary-400.hover\\:text-primary-500",
+    "li:nth-child(2) > .min-w-0.gap-2.items-center > .truncate.text-primary-400.hover\\:text-primary-500"
+   ]
+  }
+ ],
+ "contrast": [
+  {
+   "text": "เลือกไฟล์",
+   "sel": "button.mt-2.inline-block.rounded",
+   "ratio": 4.1,
+   "need": 4.5,
+   "fg": "rgb(255, 255, 255)",
+   "fs": 12
+  }
+ ],
+ "focus": null,
+ "overflow360": 44,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

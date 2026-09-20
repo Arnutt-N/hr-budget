@@ -1,0 +1,20 @@
+{
+ "route": "/salary-scales",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "color-contrast",
+   "impact": "serious",
+   "nodes": 1,
+   "targets": [
+    ".p-message-text"
+   ]
+  }
+ ],
+ "contrast": [],
+ "focus": null,
+ "overflow360": 259,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}

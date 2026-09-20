@@ -1,0 +1,40 @@
+{
+ "routes": 31,
+ "mode": "mock",
+ "axeTotals": {
+  "color-contrast": 4,
+  "link-name": 6,
+  "label": 4,
+  "target-size": 1
+ },
+ "contrastFails": 5,
+ "errorLines": 33,
+ "overflow360": [
+  "/allowance-types (+316px)",
+  "/analytics (+101px)",
+  "/categories (+147px)",
+  "/disbursements (+84px)",
+  "/divisions (+174px)",
+  "/fiscal-years (+256px)",
+  "/notifications (+466px)",
+  "/organizations (+175px)",
+  "/personnel-allowances (+189px)",
+  "/personnel-assignments (+103px)",
+  "/personnel-budget-policies (+117px)",
+  "/plans (+224px)",
+  "/positions (+573px)",
+  "/requests/1/edit (+44px)",
+  "/requests/1 (+44px)",
+  "/requests/create (+78px)",
+  "/requests (+107px)",
+  "/roles (+114px)",
+  "/salary-raise-rounds (+109px)",
+  "/salary-scales (+259px)",
+  "/target-types (+160px)",
+  "/targets (+195px)",
+  "/users/1/access-grants (+125px)",
+  "/users (+227px)",
+  "/vacancy-recruitment (+213px)",
+  "/vault (+33px)"
+ ]
+}

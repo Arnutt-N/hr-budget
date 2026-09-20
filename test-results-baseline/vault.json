@@ -1,0 +1,21 @@
+{
+ "route": "/vault",
+ "mode": "mock",
+ "axe": [
+  {
+   "id": "target-size",
+   "impact": "serious",
+   "nodes": 1,
+   "targets": [
+    "button[pc9=\"\"]"
+   ]
+  }
+ ],
+ "contrast": [],
+ "focus": null,
+ "overflow360": 33,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]",
+  "PAGEERROR: TypeError: (years.value ?? []).map is not a function"
+ ]
+}

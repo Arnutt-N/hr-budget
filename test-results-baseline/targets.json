@@ -1,0 +1,11 @@
+{
+ "route": "/targets",
+ "mode": "mock",
+ "axe": [],
+ "contrast": [],
+ "focus": null,
+ "overflow360": 195,
+ "errors": [
+  "CONSOLE: Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: [\"notifications\",\"unread\"]"
+ ]
+}
