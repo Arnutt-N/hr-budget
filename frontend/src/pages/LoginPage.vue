@@ -88,10 +88,10 @@ const onSubmit = handleSubmit(async (values) => {
       @submit.prevent="onSubmit"
     >
       <div class="text-center">
-        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-500">
-          <Landmark class="h-6 w-6 text-white" />
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-600">
+          <Landmark aria-hidden="true" class="h-6 w-6 text-white" />
         </div>
-        <h1 class="text-2xl font-bold text-white">ระบบบริหารงบประมาณบุคลากร</h1>
+        <h1 class="text-2xl font-bold text-white">ระบบจัดการงบประมาณทรัพยากรบุคคล</h1>
         <p class="text-sm text-dark-muted mt-1">เข้าสู่ระบบจัดการข้อมูล</p>
       </div>
 
@@ -152,7 +152,7 @@ const onSubmit = handleSubmit(async (values) => {
         </div>
         <button
           type="button"
-          class="rounded text-sm text-primary-400 hover:text-primary-300 focus:outline-none focus-visible:text-primary-300 focus-visible:ring-1 focus-visible:ring-primary-500"
+          class="rounded text-sm text-primary-400 hover:text-primary-400 hover:underline focus:outline-none focus-visible:text-primary-400 focus-visible:ring-1 focus-visible:ring-primary-500"
           @click="showForgotDialog = true"
         >
           ลืมรหัสผ่าน?
@@ -183,7 +183,7 @@ const onSubmit = handleSubmit(async (values) => {
           @click="onThaidLogin"
         >
           <template #icon>
-            <ShieldCheck class="h-4 w-4 mr-2" />
+            <ShieldCheck aria-hidden="true" class="h-4 w-4 mr-2" />
           </template>
         </Button>
       </template>

@@ -34,8 +34,11 @@ interface Props {
   actualMonthly: number[]
   forecastCumulative: number[]
   actualCumulative: number[]
+  title?: string
 }
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  title: 'พยากรณ์เทียบเบิกจ่ายจริง',
+})
 
 // Backend sends both series; the toggle just swaps which arrays feed the chart.
 const mode = ref<'monthly' | 'cumulative'>('monthly')
@@ -141,7 +144,7 @@ const options = computed<ChartOptions<'line'>>(() => ({
       </div>
     </div>
     <div class="h-72">
-      <Line :data="chartData" :options="options" />
+      <Line :data="chartData" :options="options" :aria-label="title" />
     </div>
   </div>
 </template>

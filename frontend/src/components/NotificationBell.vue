@@ -88,7 +88,7 @@ function typeIcon(type: string): string {
       aria-haspopup="true"
       aria-controls="notification-panel"
     >
-      <Bell class="h-5 w-5" />
+      <Bell aria-hidden="true" class="h-5 w-5" />
       <span
         v-if="unreadCount > 0"
         class="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white"
@@ -138,9 +138,9 @@ function typeIcon(type: string): string {
             <div class="flex items-start gap-2">
               <span class="mt-0.5 text-sm">{{ typeIcon(n.type) }}</span>
               <div class="min-w-0 flex-1">
-                <p class="text-sm text-white">{{ n.title }}</p>
-                <p v-if="n.message" class="truncate text-xs text-dark-muted">{{ n.message }}</p>
-                <p class="mt-1 text-[11px] text-dark-muted">{{ timeAgo(n.created_at) }}</p>
+                <span class="text-sm text-white">{{ n.title }}</span>
+                <span v-if="n.message" class="truncate text-xs text-dark-muted">{{ n.message }}</span>
+                <span class="mt-1 text-[11px] text-dark-muted">{{ timeAgo(n.created_at) }}</span>
               </div>
             </div>
           </button>

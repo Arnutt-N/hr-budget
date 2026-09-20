@@ -67,6 +67,7 @@ function formatAmount(qty: string, price: string): string {
                 @input="updateField(index, 'item_name', ($event.target as HTMLInputElement).value)"
                 class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
                 placeholder="ชื่อรายการ"
+                :aria-label="`แถว ${index + 1} ชื่อรายการ`"
               />
             </td>
             <td class="px-3 py-2">
@@ -77,6 +78,7 @@ function formatAmount(qty: string, price: string): string {
                 class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm text-right focus:border-primary-500 focus:outline-none"
                 min="0"
                 step="any"
+                :aria-label="`แถว ${index + 1} จำนวน`"
               />
             </td>
             <td class="px-3 py-2">
@@ -87,6 +89,7 @@ function formatAmount(qty: string, price: string): string {
                 class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm text-right focus:border-primary-500 focus:outline-none"
                 min="0"
                 step="any"
+                :aria-label="`แถว ${index + 1} ราคาหน่วย`"
               />
             </td>
             <td class="px-3 py-2 text-right text-sm text-dark-muted whitespace-nowrap">
@@ -99,6 +102,7 @@ function formatAmount(qty: string, price: string): string {
                 @input="updateField(index, 'remark', ($event.target as HTMLInputElement).value || null)"
                 class="w-full rounded bg-dark-card border border-dark-border text-dark-text px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
                 placeholder="หมายเหตุ"
+                :aria-label="`แถว ${index + 1} หมายเหตุ`"
               />
             </td>
             <td class="px-3 py-2 text-center">
@@ -106,8 +110,8 @@ function formatAmount(qty: string, price: string): string {
                 type="button"
                 @click="removeItem(index)"
                 class="text-red-400 hover:text-red-300 text-sm"
-                aria-label="ลบรายการ"
-                title="ลบรายการ"
+                :aria-label="`ลบ ${item.item_name || `แถว ${index + 1}`}`"
+                :title="`ลบ ${item.item_name || `แถว ${index + 1}`}`"
               >
                 ✕
               </button>

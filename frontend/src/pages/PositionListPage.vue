@@ -68,7 +68,7 @@ const schema = toTypedSchema(
       z.number({ required_error: 'กรุณากรอกเงินเดือน', invalid_type_error: 'กรุณากรอกเงินเดือน' }).min(0, 'เงินเดือนต้องไม่ติดลบ'),
     ),
     occupancy: z.string().min(1, 'กรุณาเลือกสถานะการครอง'),
-    months_counted: z.coerce.number().int().min(1, '1-12').max(12, '1-12'),
+    months_counted: z.coerce.number().int().min(1, 'ต้องเป็นตัวเลข 1–12').max(12, 'ต้องเป็นตัวเลข 1–12'),
     effective_from: z.string({ required_error: 'กรุณาเลือกวันเริ่มมีผล' }).min(1, 'กรุณาเลือกวันเริ่มมีผล'),
   }),
 )
@@ -205,7 +205,7 @@ const versionSchema = toTypedSchema(
     level_code: z.string().optional(),
     organization_id: z.coerce.number({ invalid_type_error: 'กรุณาเลือกหน่วยงาน' }).int().min(1, 'กรุณาเลือกหน่วยงาน'),
     occupancy: z.string().min(1, 'กรุณาเลือกสถานะการครอง'),
-    months_counted: z.coerce.number().int().min(1, '1-12').max(12, '1-12'),
+    months_counted: z.coerce.number().int().min(1, 'ต้องเป็นตัวเลข 1–12').max(12, 'ต้องเป็นตัวเลข 1–12'),
     salary_basis: z.string().min(1, 'กรุณาเลือกสถานะเงินเดือน'),
     approval_status: z.string().min(1, 'กรุณาเลือกสถานะการอนุมัติ'),
     order_doc_no: z.string().optional(),
@@ -330,8 +330,10 @@ const onAddAllowance = handleAllowanceSubmit(async (values) => {
 })
 
 function confirmDeleteAllowance(allowanceId: number): void {
+  const target = allowances.value?.find((a) => a.id === allowanceId)
+  const name = target?.allowance_name ?? `#${allowanceId}`
   confirmDeletePrompt({
-    message: 'ลบสิทธิ์เงินเพิ่มนี้?',
+    message: `ลบสิทธิ์เงินเพิ่ม "${name}"?`,
     accept: async () => {
       if (!allowancePositionId.value) return
       try {
@@ -354,6 +356,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
     <div class="mb-4 flex flex-wrap gap-2">
       <Select
+        aria-label="ประเภทบุคลากร (ทั้งหมด)"
         v-model="filters.employee_category"
         :options="CATEGORY_OPTIONS"
         option-label="label"
@@ -363,6 +366,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
         class="w-52"
       />
       <Select
+        aria-label="สถานะการครอง (ทั้งหมด)"
         v-model="filters.occupancy"
         :options="OCCUPANCY_OPTIONS"
         option-label="label"
@@ -371,13 +375,13 @@ function confirmDeleteAllowance(allowanceId: number): void {
         show-clear
         class="w-52"
       />
-      <InputText v-model="filters.q" placeholder="ค้นหาเลขถือจ่าย / เลขที่ตำแหน่ง" class="w-72" />
+      <InputText v-model="filters.q" aria-label="ค้นหาเลขถือจ่าย / เลขที่ตำแหน่ง" placeholder="ค้นหาเลขถือจ่าย / เลขที่ตำแหน่ง" class="w-72" />
     </div>
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="positions ?? []"
       :loading="isLoading"
       paginator
@@ -436,6 +440,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <!-- Create/Edit dialog -->
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-lg">
@@ -535,7 +540,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
           </FormField>
         </div>
         <p v-else class="text-xs text-dark-muted">
-          แก้เฉพาะเลขถือจ่าย/ประเภท/คำสั่งตั้งอัตรา — การเปลี่ยนเงินเดือน/ระดับ/หน่วยงาน ให้เพิ่ม "เวอร์ชัน" ใหม่แทน
+          แก้เฉพาะเลขถือจ่าย/ประเภท/คำสั่งตั้งอัตรา – การเปลี่ยนเงินเดือน/ระดับ/หน่วยงาน ให้เพิ่ม "เวอร์ชัน" ใหม่แทน
         </p>
 
         <FormField id="pos-doc-no" label="เลขที่คำสั่งตั้งอัตรา">
@@ -551,13 +556,14 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
     <!-- Versions dialog -->
     <Dialog v-model:visible="showVersions" header="เวอร์ชันของอัตรา (เรียงใหม่สุดก่อน)" modal class="w-full max-w-3xl">
+      <div class="table-scroll">
       <DataTable :value="versions ?? []" :loading="versionsLoading" data-key="id">
         <template #empty>
           <ListEmptyState message="ยังไม่มีเวอร์ชัน" />
         </template>
         <Column header="ช่วงมีผล">
           <template #body="{ data }">
-            {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+            {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
           </template>
         </Column>
         <Column field="level_code" header="ระดับ">
@@ -581,6 +587,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
           <template #body="{ data }">{{ data.order_doc_no ?? '—' }}</template>
         </Column>
       </DataTable>
+      </div>
 
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มเวอร์ชันใหม่ (ปิดเวอร์ชันเดิมอัตโนมัติ)</h3>
@@ -679,6 +686,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
 
     <!-- Allowances dialog -->
     <Dialog v-model:visible="showAllowances" header="สิทธิ์เงินเพิ่มของอัตรา" modal class="w-full max-w-2xl">
+      <div class="table-scroll">
       <DataTable :value="allowances ?? []" :loading="allowancesLoading" data-key="id">
         <template #empty>
           <ListEmptyState message="ยังไม่มีสิทธิ์ (ไม่มีแถว = ไม่มีสิทธิ์)" />
@@ -688,7 +696,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
         </Column>
         <Column header="ช่วงมีสิทธิ์">
           <template #body="{ data }">
-            {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+            {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
           </template>
         </Column>
         <Column field="doc_no" header="เอกสาร">
@@ -700,6 +708,7 @@ function confirmDeleteAllowance(allowanceId: number): void {
           </template>
         </Column>
       </DataTable>
+      </div>
 
       <div class="mt-4 rounded-lg border border-dark-border p-4">
         <h3 class="mb-3 font-semibold text-white">เพิ่มสิทธิ์</h3>

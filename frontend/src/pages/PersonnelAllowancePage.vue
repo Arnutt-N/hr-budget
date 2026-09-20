@@ -10,6 +10,7 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -48,7 +49,15 @@ function openCreate(): void {
 }
 
 async function onSave(): Promise<void> {
-  if (!form.value.person_id || !form.value.position_id || !form.value.allowance_type_id || !form.value.effective_from) return
+  const missing: string[] = []
+  if (!form.value.person_id) missing.push('รหัสบุคคล')
+  if (!form.value.position_id) missing.push('อัตรากำลัง')
+  if (!form.value.allowance_type_id) missing.push('ชนิดเงินเพิ่ม')
+  if (!form.value.effective_from) missing.push('วันเริ่มรับ')
+  if (missing.length > 0) {
+    toast.add({ severity: 'error', summary: 'กรุณากรอกข้อมูลให้ครบ', detail: `ยังขาด: ${missing.join('、 ')}`, life: 5000 })
+    return
+  }
   try {
     await createMutation.mutateAsync({
       person_id: form.value.person_id,
@@ -67,8 +76,10 @@ async function onSave(): Promise<void> {
 }
 
 function confirmDelete(id: number): void {
+  const target = items.value?.find((i) => i.id === id)
+  const who = target ? `${target.person_id} จำนวน ${target.amount}` : `#${id}`
   confirmDeletePrompt({
-    message: 'ลบรายการรับจริงนี้?',
+    message: `ลบรายการรับจริงของ "${who}"?`,
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(id)
@@ -86,15 +97,15 @@ function confirmDelete(id: number): void {
   <div>
     <PageHeader
       title="การรับจริงเงินเพิ่ม (รายคน)"
-      subtitle="ใช้ตอนเบิกจ่ายจริง — ไม่ใช่อัตรากำลัง (สิทธิ์อยู่ที่หน้าอัตรา)"
+      subtitle="ใช้ตอนเบิกจ่ายจริง – ไม่ใช่อัตรากำลัง (สิทธิ์อยู่ที่หน้าอัตรา)"
     >
       <Button label="เพิ่มการรับจริง" icon="pi pi-plus" @click="openCreate" />
     </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="items ?? []"
       :loading="isLoading"
       data-key="id"
@@ -113,7 +124,7 @@ function confirmDelete(id: number): void {
       </Column>
       <Column header="ช่วงรับ">
         <template #body="{ data }">
-          {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+          {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
         </template>
       </Column>
       <Column field="doc_no" header="เอกสาร">
@@ -125,22 +136,21 @@ function confirmDelete(id: number): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" header="เพิ่มการรับจริง" modal class="w-full max-w-md">
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">รหัสบุคคล</span>
-            <InputText v-model="form.person_id" placeholder="เช่น P-1001" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">ยอด/เดือน</span>
-            <InputNumber v-model="form.amount" :min="0" fluid />
-          </div>
+          <FormField id="pa-person" label="รหัสบุคคล">
+            <InputText id="pa-person" v-model="form.person_id" placeholder="เช่น P-1001" fluid />
+          </FormField>
+          <FormField id="pa-amount" label="ยอด/เดือน">
+            <InputNumber input-id="pa-amount" v-model="form.amount" :min="0" fluid />
+          </FormField>
         </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">อัตรากำลัง</span>
+        <FormField id="pa-position" labelled-by label="อัตรากำลัง">
           <Select
+            aria-labelledby="pa-position-label"
             v-model="form.position_id"
             :options="positions ?? []"
             option-label="pay_no"
@@ -149,10 +159,10 @@ function confirmDelete(id: number): void {
             filter
             fluid
           />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">ชนิดเงินเพิ่ม</span>
+        </FormField>
+        <FormField id="pa-type" labelled-by label="ชนิดเงินเพิ่ม">
           <Select
+            aria-labelledby="pa-type-label"
             v-model="form.allowance_type_id"
             :options="types ?? []"
             option-label="name_th"
@@ -161,16 +171,14 @@ function confirmDelete(id: number): void {
             filter
             fluid
           />
-        </div>
+        </FormField>
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">วันเริ่มรับ</span>
-            <InputText v-model="form.effective_from" type="date" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</span>
-            <InputText v-model="form.doc_no" fluid />
-          </div>
+          <FormField id="pa-from" label="วันเริ่มรับ">
+            <InputText id="pa-from" v-model="form.effective_from" type="date" fluid />
+          </FormField>
+          <FormField id="pa-doc" label="เลขที่คำสั่ง">
+            <InputText id="pa-doc" v-model="form.doc_no" fluid />
+          </FormField>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />

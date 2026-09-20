@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Landmark, Banknote, Wallet, Percent, Inbox, Download } from '@lucide/vue'
-import Select from 'primevue/select'
 import Button from 'primevue/button'
+import QueryErrorState from '@/components/QueryErrorState.vue'
+import Select from 'primevue/select'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import StatCard from '@/components/StatCard.vue'
@@ -106,20 +107,22 @@ watch([selectedYear, selectedOrg], () => {
           class="w-56"
           :loading="orgQuery.isLoading.value"
         />
-        <a :href="hasData ? exportUrl : undefined" :class="{ 'pointer-events-none opacity-50': !hasData }">
-          <Button label="ส่งออก Excel" severity="success" :disabled="!hasData">
-            <template #icon><Download class="mr-2 h-4 w-4" /></template>
-          </Button>
-        </a>
+        <Button
+          as="a"
+          :href="hasData ? exportUrl : undefined"
+          label="ส่งออก Excel"
+          severity="success"
+          :disabled="!hasData"
+          :class="{ 'pointer-events-none': !hasData }"
+          :aria-disabled="!hasData ? 'true' : undefined"
+          :title="!hasData ? 'ยังไม่มีข้อมูลให้ส่งออก' : undefined"
+        >
+          <template #icon><Download aria-hidden="true" class="h-4 w-4" /></template>
+        </Button>
       </div>
     </header>
 
-    <div
-      v-if="reportQuery.isError.value"
-      class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-    >
-      โหลดรายงานไม่สำเร็จ — {{ (reportQuery.error.value as Error | null)?.message }}
-    </div>
+    <QueryErrorState v-if="reportQuery.isError.value" :error="reportQuery.error.value" :retry="() => reportQuery.refetch()" />
 
     <!-- KPI cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -138,7 +141,7 @@ watch([selectedYear, selectedOrg], () => {
       v-if="!reportQuery.isLoading.value && !hasData"
       class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dark-border bg-dark-card py-16 text-dark-muted"
     >
-      <Inbox class="h-10 w-10" />
+      <Inbox aria-hidden="true" class="h-10 w-10" />
       <p class="text-sm">ยังไม่มีข้อมูลการเบิกจ่ายในปีงบนี้</p>
     </div>
 
@@ -147,11 +150,12 @@ watch([selectedYear, selectedOrg], () => {
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <section class="rounded-xl border border-dark-border bg-dark-card p-5 shadow-sm">
           <h2 class="mb-4 text-base font-semibold text-white">งบจัดสรรตามโครงการ (สูงสุด 5)</h2>
-          <HorizontalBarChart :labels="categoryChart.labels" :values="categoryChart.values" />
+          <HorizontalBarChart title="งบจัดสรรตามโครงการ (สูงสุด 5)" :labels="categoryChart.labels" :values="categoryChart.values" />
         </section>
         <section class="rounded-xl border border-dark-border bg-dark-card p-5 shadow-sm">
           <h2 class="mb-4 text-base font-semibold text-white">งบจัดสรรตามหน่วยงาน</h2>
           <HorizontalBarChart
+            title="งบจัดสรรตามหน่วยงาน"
             :labels="orgChart.labels"
             :values="orgChart.values"
             color="#8b5cf6"
@@ -162,12 +166,12 @@ watch([selectedYear, selectedOrg], () => {
 
       <!-- Breakdown table (expand a project to see its activities) -->
       <section class="rounded-xl border border-dark-border bg-dark-card p-2 shadow-sm">
+        <div class="table-scroll">
         <DataTable
           v-model:expanded-rows="expandedRows"
           :value="projects"
           data-key="project_id"
           class="text-sm"
-          responsive-layout="scroll"
         >
           <Column expander style="width: 3rem" />
           <Column field="project_name" header="ผลผลิต/โครงการ">
@@ -202,6 +206,7 @@ watch([selectedYear, selectedOrg], () => {
 
           <template #expansion="{ data }">
             <div class="bg-dark-bg/60 p-3">
+              <div class="table-scroll">
               <DataTable :value="data.activities" class="text-xs" data-key="activity_id">
                 <Column field="activity_name" header="กิจกรรม" />
                 <Column header="งบสุทธิ" class="text-right">
@@ -223,9 +228,11 @@ watch([selectedYear, selectedOrg], () => {
                   <template #body="{ data: a }">{{ a.used_percent }}%</template>
                 </Column>
               </DataTable>
+              </div>
             </div>
           </template>
         </DataTable>
+        </div>
       </section>
     </template>
   </div>

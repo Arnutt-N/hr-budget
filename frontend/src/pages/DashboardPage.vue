@@ -4,6 +4,7 @@ import { Landmark, Banknote, Wallet, Percent, Inbox } from '@lucide/vue'
 import StatCard from '@/components/StatCard.vue'
 import MonthlyExpenditureChart from '@/components/MonthlyExpenditureChart.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import { useDashboardSummary, useMonthlyChart } from '@/queries/useDashboard'
 
 const summaryQuery = useDashboardSummary()
@@ -43,12 +44,7 @@ const hasChartData = computed(() => (chartQuery.data.value?.data ?? []).some((n)
     <PageHeader title="ภาพรวมงบประมาณ (Dashboard)" :subtitle="pageSubtitle" />
 
     <!-- Summary error -->
-    <div
-      v-if="summaryQuery.isError.value"
-      class="rounded-xl border border-rose-800 bg-rose-950/40 p-4 text-sm text-rose-300"
-    >
-      โหลดข้อมูลแดชบอร์ดไม่สำเร็จ — {{ (summaryQuery.error.value as Error | null)?.message }}
-    </div>
+    <QueryErrorState v-if="summaryQuery.isError.value" :error="summaryQuery.error.value" :retry="() => summaryQuery.refetch()" />
 
     <!-- Stat cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -70,24 +66,30 @@ const hasChartData = computed(() => (chartQuery.data.value?.data ?? []).some((n)
       </div>
 
       <div v-if="chartQuery.isLoading.value" class="h-72 animate-pulse rounded-lg bg-dark-bg" />
-      <div
-        v-else-if="chartQuery.isError.value"
-        class="flex h-72 items-center justify-center text-sm text-rose-300"
-      >
-        โหลดข้อมูลกราฟไม่สำเร็จ
-      </div>
+      <QueryErrorState v-else-if="chartQuery.isError.value" :error="chartQuery.error.value" :retry="() => chartQuery.refetch()" />
       <div
         v-else-if="!hasChartData"
         class="flex h-72 flex-col items-center justify-center gap-2 text-dark-muted"
       >
-        <Inbox class="h-10 w-10" />
+        <Inbox aria-hidden="true" class="h-10 w-10" />
         <p class="text-sm">ยังไม่มีข้อมูลการเบิกจ่ายในปีงบนี้</p>
       </div>
+      <template v-else>
       <MonthlyExpenditureChart
-        v-else
         :labels="chartQuery.data.value!.labels"
         :data="chartQuery.data.value!.data"
       />
+      <table class="sr-only">
+        <caption>เบิกจ่ายรายเดือน (บาท)</caption>
+        <thead><tr><th scope="col">เดือน</th><th scope="col">เบิกจ่าย (บาท)</th></tr></thead>
+        <tbody>
+          <tr v-for="(m, i) in chartQuery.data.value!.labels" :key="m">
+            <th scope="row">{{ m }}</th>
+            <td>{{ chartQuery.data.value!.data[i] }}</td>
+          </tr>
+        </tbody>
+      </table>
+      </template>
     </section>
   </div>
 </template>

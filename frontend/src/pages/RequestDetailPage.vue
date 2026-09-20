@@ -10,6 +10,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import FileUploader from '@/components/FileUploader.vue'
 import ApprovalChainPanel from '@/components/ApprovalChainPanel.vue'
 import { formatBaht } from '@/lib/format'
@@ -98,9 +99,7 @@ async function handleReject() {
     </div>
 
     <template v-else>
-      <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-        {{ errorMsg }}
-      </div>
+      <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
 
       <!-- Request info -->
       <div class="mb-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
@@ -112,7 +111,7 @@ async function handleReject() {
               <span v-if="req.org_name"> · {{ req.org_name }}</span>
             </p>
           </div>
-          <StatusBadge :status="req.request_status" />
+          <span aria-live="polite"><StatusBadge :status="req.request_status" /></span>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
@@ -134,7 +133,7 @@ async function handleReject() {
           </div>
         </div>
 
-        <div v-if="req.rejected_reason" class="mt-4 rounded bg-red-500/10 p-3 text-sm text-red-400">
+        <div v-if="req.rejected_reason" aria-live="polite" class="mt-4 rounded bg-red-500/10 p-3 text-sm text-red-400">
           <strong>เหตุผลการปฏิเสธ:</strong> {{ req.rejected_reason }}
         </div>
 
@@ -150,7 +149,7 @@ async function handleReject() {
           <button
             v-if="canSubmit"
             @click="handleSubmit"
-            class="rounded-lg bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-500"
+            class="rounded-lg bg-primary-600 px-3 py-1.5 text-sm text-white hover:bg-primary-700"
           >
             ส่งอนุมัติ
           </button>
@@ -197,6 +196,7 @@ async function handleReject() {
       <!-- Items -->
       <div v-if="req.items && req.items.length > 0" class="mb-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
         <h3 class="mb-3 text-sm font-semibold text-dark-muted">รายการงบประมาณ</h3>
+        <div class="table-scroll">
         <table class="min-w-full divide-y divide-dark-border">
           <thead class="bg-dark-bg">
             <tr>
@@ -217,6 +217,7 @@ async function handleReject() {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
       <!-- Approval history -->

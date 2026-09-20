@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type {
   DisbursementRecord,
   DisbursementSession,
@@ -21,6 +21,15 @@ export const useDisbursementWizard = defineStore('disbursementWizard', () => {
   const session = ref<DisbursementSession | null>(null)
   const record = ref<DisbursementRecord | null>(null)
   const amounts = ref<Record<number, SaveTrackingItem>>({})
+
+  /** True once the user has entered anything worth confirming before discard. */
+  const isDirty = computed(
+    () =>
+      step.value > 1 ||
+      !!session.value ||
+      !!record.value ||
+      Object.keys(amounts.value).length > 0,
+  )
 
   /** Step 1 result: store the chosen session and advance the wizard. */
   function setSession(s: DisbursementSession, nextStep = 2): void {
@@ -63,6 +72,7 @@ export const useDisbursementWizard = defineStore('disbursementWizard', () => {
 
   return {
     step,
+    isDirty,
     session,
     record,
     amounts,

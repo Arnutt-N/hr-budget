@@ -172,8 +172,9 @@ const onSave = handleSubmit(async (values) => {
 })
 
 function onDelete(target: Target): void {
+  const when = `ปี ${target.fiscal_year ?? '—'}${target.quarter ? ` ไตรมาส ${target.quarter}` : ''}`
   confirmDelete({
-    message: `ยืนยันลบเป้าหมายนี้?`,
+    message: `ยืนยันลบเป้าหมาย (${when})?`,
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(target.id)
@@ -195,8 +196,8 @@ function onDelete(target: Target): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="targets ?? []"
       :loading="isLoading"
       paginator
@@ -233,6 +234,7 @@ function onDelete(target: Target): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" :header="dialogTitle" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

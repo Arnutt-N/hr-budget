@@ -136,8 +136,8 @@ function confirmRevoke(g: AccessGrant): void {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="grants ?? []"
       :loading="isLoading"
       data-key="id"
@@ -183,6 +183,7 @@ function confirmRevoke(g: AccessGrant): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" header="มอบบทบาท/สิทธิ์" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">

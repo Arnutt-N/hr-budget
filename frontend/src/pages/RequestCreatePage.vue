@@ -6,6 +6,7 @@ import { useCreateBudgetRequest, useSubmitBudgetRequest } from '@/queries/useBud
 import { fiscalYearLabel, useFiscalYearList } from '@/queries/useFiscalYears'
 import { useOrganizationList } from '@/queries/useOrganizations'
 import PageHeader from '@/components/PageHeader.vue'
+import QueryErrorState from '@/components/QueryErrorState.vue'
 import FormField from '@/components/FormField.vue'
 import ItemEditor from '@/components/ItemEditor.vue'
 import type { ItemRow } from '@/components/ItemEditor.vue'
@@ -58,7 +59,7 @@ async function saveAndSubmit() {
     toast.add({
       severity: 'warn',
       summary: 'ส่งอนุมัติไม่สำเร็จ',
-      detail: e instanceof Error ? e.message : 'บันทึกร่างแล้ว — ลองส่งอนุมัติอีกครั้งในหน้ารายละเอียด',
+      detail: e instanceof Error ? e.message : 'บันทึกร่างแล้ว – ลองส่งอนุมัติอีกครั้งในหน้ารายละเอียด',
       life: 6000,
     })
   }
@@ -97,11 +98,9 @@ async function doCreate(): Promise<number | null> {
       </router-link>
     </PageHeader>
 
-    <div v-if="errorMsg" class="mb-4 rounded bg-red-500/10 p-3 text-sm text-red-400" role="alert">
-      {{ errorMsg }}
-    </div>
+    <QueryErrorState v-if="errorMsg" :error="errorMsg" :retry="() => window.location.reload()" />
 
-    <div class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow">
+    <form class="space-y-6 rounded-lg bg-dark-card border border-dark-border p-6 shadow" @submit.prevent="saveAndSubmit">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField id="req-title" label="ชื่อคำขอ *">
           <input
@@ -144,6 +143,7 @@ async function doCreate(): Promise<number | null> {
 
       <div class="flex gap-3 border-t border-dark-border pt-4">
         <button
+          type="button"
           @click="saveDraft"
           :disabled="loading || !canSave"
           class="rounded-lg border border-dark-border bg-dark-card px-4 py-2 text-sm font-medium text-dark-muted hover:bg-slate-800/50 disabled:opacity-50"
@@ -151,13 +151,14 @@ async function doCreate(): Promise<number | null> {
           {{ loading ? 'กำลังบันทึก...' : 'บันทึกร่าง' }}
         </button>
         <button
+          type="submit"
           @click="saveAndSubmit"
           :disabled="loading || !canSave"
-          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+          class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
         >
           {{ loading ? 'กำลังส่ง...' : 'ส่งอนุมัติ' }}
         </button>
       </div>
-    </div>
+    </form>
   </div>
 </template>

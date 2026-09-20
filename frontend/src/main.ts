@@ -21,11 +21,19 @@ const HrBudgetPreset = definePreset(Aura, {
       300: '{sky.300}',
       400: '{sky.400}',
       500: '{sky.500}',
-      600: '{sky.600}',
-      700: '{sky.700}',
+      600: '{sky.700}', // #0369a1 — 5.93:1 white/AA (was sky.600 #0284c7 4.10)
+      700: '{sky.800}', // #075985 — solid-hover target (D6)
       800: '{sky.800}',
       900: '{sky.900}',
       950: '{sky.950}',
+    },
+  },
+  components: {
+    message: {
+      colorScheme: {
+        light: { info: { color: '{sky.400}' } },
+        dark: { info: { color: '{sky.400}' } },
+      },
     },
   },
 })

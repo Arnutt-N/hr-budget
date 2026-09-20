@@ -96,8 +96,8 @@ async function onSeedAll(): Promise<void> {
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="rounds ?? []"
       :loading="isLoading"
       data-key="id"
@@ -119,6 +119,7 @@ async function onSeedAll(): Promise<void> {
       <Column header="นับในงบ">
         <template #body="{ data }">
           <ToggleSwitch
+            :aria-label="`นับรอบ ${formatThaiDate(data.effective_date)} ในงบ`"
             :model-value="!!data.include_in_budget"
             @update:model-value="(v: boolean) => onToggleInclude(data, v)"
           />
@@ -130,10 +131,11 @@ async function onSeedAll(): Promise<void> {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog
       v-model:visible="showProgress"
-      :header="`สถานะการเลื่อน — รอบ ${activeRound ? roundLabel(activeRound) : ''}`"
+      :header="`สถานะการเลื่อน – รอบ ${activeRound ? roundLabel(activeRound) : ''}`"
       modal
       class="w-full max-w-2xl"
     >
@@ -150,12 +152,13 @@ async function onSeedAll(): Promise<void> {
         />
       </div>
 
+      <div class="table-scroll">
       <DataTable :value="progress ?? []" :loading="progressLoading" data-key="id" paginator :rows="15">
         <template #empty>
           <!-- Progress-table empty state keeps its own py-3/multi-line copy (differs from
                ListEmptyState's py-4 single-line default — c4 pixel-identical rule). -->
           <p class="py-3 text-center text-dark-muted">
-            ยังไม่มีแถวติดตาม — กด "สร้างแถวทุกหน่วยงาน" เพื่อเริ่ม
+            ยังไม่มีแถวติดตาม – กด "สร้างแถวทุกหน่วยงาน" เพื่อเริ่ม
           </p>
         </template>
         <Column field="organization_name" header="หน่วยงาน" />
@@ -182,6 +185,7 @@ async function onSeedAll(): Promise<void> {
           </template>
         </Column>
       </DataTable>
+      </div>
     </Dialog>
   </div>
 </template>

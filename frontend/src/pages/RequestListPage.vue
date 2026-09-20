@@ -109,8 +109,8 @@ function onPage(event: { page: number }) {
 
     <QueryErrorState v-if="query.isError.value" :error="query.error.value" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="requests"
       :lazy="true"
       :loading="query.isLoading.value"
@@ -174,5 +174,6 @@ function onPage(event: { page: number }) {
         </template>
       </Column>
     </DataTable>
+    </div>
   </div>
 </template>

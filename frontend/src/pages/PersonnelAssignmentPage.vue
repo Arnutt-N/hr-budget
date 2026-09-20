@@ -9,6 +9,7 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import PageHeader from '@/components/PageHeader.vue'
+import FormField from '@/components/FormField.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import { useDeleteConfirm } from '@/composables/useDeleteConfirm'
@@ -46,7 +47,15 @@ function openCreate(): void {
 }
 
 async function onSave(): Promise<void> {
-  if (!form.value.person_id || !form.value.position_id || !form.value.serving_organization_id || !form.value.effective_from) return
+  const missing: string[] = []
+  if (!form.value.person_id) missing.push('รหัสบุคคล')
+  if (!form.value.position_id) missing.push('อัตรากำลัง')
+  if (!form.value.serving_organization_id) missing.push('หน่วยที่ไปช่วย')
+  if (!form.value.effective_from) missing.push('วันเริ่ม')
+  if (missing.length > 0) {
+    toast.add({ severity: 'error', summary: 'กรุณากรอกข้อมูลให้ครบ', detail: `ยังขาด: ${missing.join('、 ')}`, life: 5000 })
+    return
+  }
   try {
     await createMutation.mutateAsync({
       person_id: form.value.person_id,
@@ -64,8 +73,10 @@ async function onSave(): Promise<void> {
 }
 
 function confirmDelete(id: number): void {
+  const target = items.value?.find((i) => i.id === id)
+  const who = target ? `${target.person_id} (${target.serving_organization_name ?? target.serving_organization_id})` : `#${id}`
   confirmDeletePrompt({
-    message: 'ลบรายการไปช่วยราชการนี้?',
+    message: `ลบรายการไปช่วยราชการของ "${who}"?`,
     accept: async () => {
       try {
         await deleteMutation.mutateAsync(id)
@@ -83,15 +94,15 @@ function confirmDelete(id: number): void {
   <div>
     <PageHeader
       title="ไปช่วยราชการ"
-      subtitle="งบยังอยู่ต้นสังกัดเสมอ — ตารางนี้ใช้รายงานเท่านั้น"
+      subtitle="งบยังอยู่ต้นสังกัดเสมอ – ตารางนี้ใช้รายงานเท่านั้น"
     >
       <Button label="เพิ่มการไปช่วย" icon="pi pi-plus" @click="openCreate" />
     </PageHeader>
 
     <QueryErrorState v-if="isError" :error="error" />
 
+    <div class="table-scroll" v-else>
     <DataTable
-      v-else
       :value="items ?? []"
       :loading="isLoading"
       data-key="id"
@@ -109,7 +120,7 @@ function confirmDelete(id: number): void {
       </Column>
       <Column header="ช่วงเวลา">
         <template #body="{ data }">
-          {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+          {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
         </template>
       </Column>
       <Column field="doc_no" header="คำสั่ง">
@@ -121,22 +132,21 @@ function confirmDelete(id: number): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" header="เพิ่มการไปช่วยราชการ" modal class="w-full max-w-md">
       <div class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">รหัสบุคคล</span>
-            <InputText v-model="form.person_id" placeholder="เช่น P-1001" fluid />
-          </div>
-          <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-dark-muted">วันเริ่ม</span>
-            <InputText v-model="form.effective_from" type="date" fluid />
-          </div>
+          <FormField id="asgn-person" label="รหัสบุคคล">
+            <InputText id="asgn-person" v-model="form.person_id" placeholder="เช่น P-1001" fluid />
+          </FormField>
+          <FormField id="asgn-from" label="วันเริ่ม">
+            <InputText id="asgn-from" v-model="form.effective_from" type="date" fluid />
+          </FormField>
         </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">อัตรากำลัง (ต้นสังกัด)</span>
+        <FormField id="asgn-position" labelled-by label="อัตรากำลัง (ต้นสังกัด)">
           <Select
+            aria-labelledby="asgn-position-label"
             v-model="form.position_id"
             :options="positions ?? []"
             option-label="pay_no"
@@ -145,10 +155,10 @@ function confirmDelete(id: number): void {
             filter
             fluid
           />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">หน่วยที่ไปช่วย</span>
+        </FormField>
+        <FormField id="asgn-org" labelled-by label="หน่วยที่ไปช่วย">
           <Select
+            aria-labelledby="asgn-org-label"
             v-model="form.serving_organization_id"
             :options="organizations ?? []"
             option-label="name_th"
@@ -157,11 +167,10 @@ function confirmDelete(id: number): void {
             filter
             fluid
           />
-        </div>
-        <div class="flex flex-col gap-1">
-          <span class="text-sm font-medium text-dark-muted">เลขที่คำสั่ง</span>
-          <InputText v-model="form.doc_no" fluid />
-        </div>
+        </FormField>
+        <FormField id="asgn-doc" label="เลขที่คำสั่ง">
+          <InputText id="asgn-doc" v-model="form.doc_no" fluid />
+        </FormField>
         <div class="flex justify-end gap-2 pt-2">
           <Button label="ยกเลิก" severity="secondary" text :disabled="saving" @click="showDialog = false" />
           <Button label="บันทึก" :loading="saving" @click="onSave" />

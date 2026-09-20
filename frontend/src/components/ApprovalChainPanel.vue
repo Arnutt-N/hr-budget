@@ -55,7 +55,7 @@ function levelClasses(levelNo: number): string {
     case 'done':
       return 'border-green-500/40 bg-green-500/10 text-green-300'
     case 'current':
-      return 'border-primary-500 bg-primary-500/15 text-primary-200'
+      return 'border-primary-500 bg-primary-500/15 text-primary-400'
     default:
       return 'border-dark-border bg-dark-bg text-dark-muted'
   }
@@ -132,7 +132,7 @@ async function onReject(): Promise<void> {
 
     <p v-if="status?.request_status === 'pending' && status.current_level !== null" class="mb-3 text-sm">
       <span class="text-dark-muted">รออนุมัติที่:</span>
-      <span class="ml-1 font-medium text-primary-300">{{ levelName(status.current_level) }}</span>
+      <span class="ml-1 font-medium text-primary-400">{{ levelName(status.current_level) }}</span>
     </p>
     <p v-else-if="status?.request_status === 'approved'" class="mb-3 text-sm text-green-400">
       อนุมัติครบทุกขั้นแล้ว

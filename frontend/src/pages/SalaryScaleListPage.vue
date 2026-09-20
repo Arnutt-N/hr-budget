@@ -43,7 +43,7 @@ const schema = toTypedSchema(
     doc_no: z.string().optional(),
   }),
 )
-const { defineField, handleSubmit, errors, resetForm } = useForm({ validationSchema: schema })
+const { defineField, handleSubmit, errors, resetForm, setFieldError } = useForm({ validationSchema: schema })
 const [employeeCategory] = defineField('employee_category')
 const [levelCode] = defineField('level_code')
 const [minAmount] = defineField('min_amount')
@@ -67,6 +67,7 @@ function openCreate(): void {
 
 const onSave = handleSubmit(async (values) => {
   if (values.max_amount < values.min_amount) {
+    setFieldError('max_amount', 'อัตราขั้นสูงต้องไม่ต่ำกว่าขั้นต่ำ')
     toast.add({ severity: 'error', summary: 'อัตราขั้นสูงต้องไม่ต่ำกว่าขั้นต่ำ', life: 5000 })
     return
   }
@@ -112,9 +113,10 @@ function onDelete(s: SalaryScale): void {
     <QueryErrorState v-if="isError" :error="error" />
 
     <Message severity="info" :closable="false" class="mb-4">
-      อัตราขั้นสูงคือเพดานตอนประมาณการเลื่อนเงินเดือน — ขาดข้อมูลตรงนี้ งบประมาณการจะสูงเกินจริงในกลุ่มอาวุโส
+      อัตราขั้นสูงคือเพดานตอนประมาณการเลื่อนเงินเดือน – ขาดข้อมูลตรงนี้ งบประมาณการจะสูงเกินจริงในกลุ่มอาวุโส
     </Message>
 
+    <div class="table-scroll">
     <DataTable
       :value="scales ?? []"
       :loading="isLoading"
@@ -137,7 +139,7 @@ function onDelete(s: SalaryScale): void {
       </Column>
       <Column header="ช่วงมีผล">
         <template #body="{ data }">
-          {{ formatThaiDate(data.effective_from) }} — {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
+          {{ formatThaiDate(data.effective_from) }} – {{ data.effective_to ? formatThaiDate(data.effective_to) : 'ปัจจุบัน' }}
         </template>
       </Column>
       <Column field="doc_no" header="เอกสาร">
@@ -149,6 +151,7 @@ function onDelete(s: SalaryScale): void {
         </template>
       </Column>
     </DataTable>
+    </div>
 
     <Dialog v-model:visible="showDialog" header="เพิ่มอัตราเงินเดือน" modal class="w-full max-w-md">
       <form class="space-y-4" @submit.prevent="onSave">
