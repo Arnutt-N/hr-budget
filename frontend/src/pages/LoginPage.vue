@@ -93,7 +93,7 @@ const onSubmit = handleSubmit(async (values) => {
           >
             <Landmark aria-hidden="true" class="h-8 w-8 text-white" />
           </div>
-          <h1 class="mb-2 text-2xl font-bold text-white">ระบบจัดการงบประมาณทรัพยากรบุคคล</h1>
+          <h1 class="mb-2 text-balance text-xl font-bold text-white sm:text-2xl">ระบบจัดการงบประมาณทรัพยากรบุคคล</h1>
           <p class="text-sm text-dark-muted">เข้าสู่ระบบจัดการข้อมูล</p>
         </div>
 
