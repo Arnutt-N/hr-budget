@@ -1,0 +1,1 @@
+import{d as s,n as a,c as n,F as o,b as r,t as c,J as m}from"./index-vgtbL3y8.js";const p={class:"py-4 text-center text-dark-muted"},_=s({__name:"ListEmptyState",props:{message:{}},setup(e){return(t,l)=>(a(),n(o,null,[r("p",p,c(e.message),1),m(t.$slots,"default")],64))}});export{_};
