@@ -48,10 +48,17 @@ jobs:
       - name: Setup PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          # Pin to the PHP2Shell-patched minimum (CVE-2026-109618/-109619);
+          # "8.3" floats to whatever the runner has, including unpatched builds.
+          php-version: "8.3.36"
           extensions: pdo, pdo_mysql, mbstring, openssl, json, fileinfo, intl, zip, gd, curl
           coverage: none
           tools: composer:v2
+
+      - name: Enforce patched PHP runtime
+        # Belt-and-braces: fail fast if the resolved runtime is older than the
+        # patched minimum, so a stale runner image can never slip through.
+        run: php -r 'exit(PHP_VERSION_ID >= 80336 ? 0 : 1);'
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
@@ -219,7 +226,8 @@ jobs:
       - name: Setup PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          # Same PHP2Shell patch floor as the backend job.
+          php-version: "8.3.36"
           extensions: pdo, pdo_mysql, mbstring, openssl, json, fileinfo, intl, zip, gd, curl
 
       - name: Setup Node 22
