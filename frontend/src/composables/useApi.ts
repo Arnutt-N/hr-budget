@@ -28,9 +28,12 @@ export async function apiFetch<T = unknown>(
   })
 
   if (res.status === 401) {
-    // logout() skips the network call when user is already null,
-    // so a 401 from /auth/me during bootstrap cannot loop.
-    void auth.logout()
+    await auth.logout()
+    const { default: router } = await import('@/router')
+    const current = router.currentRoute.value
+    if (current.matched.some((r) => r.meta.requiresAuth)) {
+      void router.replace({ name: 'login', query: { redirect: current.fullPath } })
+    }
   }
 
   // 204 No Content (e.g. DELETE) has no body — res.json() would throw

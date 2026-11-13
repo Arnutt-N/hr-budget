@@ -9,7 +9,7 @@
  * Kept dependency-free so both useApi (which imports the auth store) and the
  * auth store can import it without a circular reference.
  */
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || ''
+export const API_BASE_URL = ((import.meta.env.VITE_API_BASE_URL as string) || '').replace(/\/+$/, '')
 
 /** Build an absolute-from-origin API URL: API_BASE_URL + /api/v1 + path. */
 export function apiUrl(path: string): string {

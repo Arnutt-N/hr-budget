@@ -35,7 +35,10 @@ export function useUpdateRole() {
       if (!res.success) throw new Error(res.error ?? 'แก้ไขบทบาทไม่สำเร็จ')
       return res.data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: QUERY_KEY })
+      void qc.invalidateQueries({ queryKey: ['me', 'permissions'] })
+    },
   })
 }
 
@@ -46,6 +49,9 @@ export function useDeleteRole() {
       const res = await deleteRole(id)
       if (!res.success) throw new Error(res.error ?? 'ลบบทบาทไม่สำเร็จ')
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: QUERY_KEY })
+      void qc.invalidateQueries({ queryKey: ['me', 'permissions'] })
+    },
   })
 }

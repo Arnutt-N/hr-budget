@@ -85,7 +85,14 @@ final class ApiResponse
             http_response_code($status);
             header('Content-Type: application/json; charset=UTF-8');
         }
-        echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // Guard: a non-UTF-8 byte from the DB makes json_encode return false,
+        // which used to send a 200 with an empty body and break res.json() in
+        // the SPA. SUBSTITUTE keeps the payload valid instead.
+        $json = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            $json = json_encode(['success' => false, 'error' => 'Encoding failure'], JSON_UNESCAPED_UNICODE);
+        }
+        echo $json;
 
         if ($exit) {
             exit;

@@ -27,7 +27,10 @@ export function useCreateGrant(userId: MaybeRef<number>) {
       if (!res.success) throw new Error(res.error ?? 'มอบสิทธิ์ไม่สำเร็จ')
       return res.data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: userGrantsKey(id.value) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: userGrantsKey(id.value) })
+      void qc.invalidateQueries({ queryKey: ['me', 'permissions'] })
+    },
   })
 }
 
@@ -39,6 +42,9 @@ export function useDeleteGrant(userId: MaybeRef<number>) {
       const res = await deleteGrant(grantId)
       if (!res.success) throw new Error(res.error ?? 'ถอนสิทธิ์ไม่สำเร็จ')
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: userGrantsKey(id.value) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: userGrantsKey(id.value) })
+      void qc.invalidateQueries({ queryKey: ['me', 'permissions'] })
+    },
   })
 }

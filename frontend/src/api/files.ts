@@ -1,4 +1,5 @@
 import { apiFetch } from '@/composables/useApi'
+import { apiUrl } from '@/api/base'
 import type { FileAttachment } from '@/types/file'
 import type { ApiResponse } from '@/types/api'
 
@@ -20,6 +21,5 @@ export async function deleteFile(fileId: number): Promise<ApiResponse<null>> {
 }
 
 export function fileDownloadUrl(fileId: number): string {
-  const base = (import.meta.env.VITE_API_BASE_URL as string) || ''
-  return `${base}/api/v1/files/${fileId}/download`
+  return apiUrl(`/files/${fileId}/download`)
 }

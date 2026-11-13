@@ -23,8 +23,12 @@ class Auth
             self::$config = require __DIR__ . '/../../config/auth.php';
         }
 
-        // Start session if not started
+        // Strict mode rejects session IDs that have no stored record, which
+        // closes the pre-login fixation window on top of regenerate_id().
         if (session_status() === PHP_SESSION_NONE) {
+            if (!ini_get('session.use_strict_mode')) {
+                @ini_set('session.use_strict_mode', '1');
+            }
             $appConfig = require __DIR__ . '/../../config/app.php';
             
             session_set_cookie_params([

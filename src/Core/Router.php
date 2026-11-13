@@ -171,7 +171,9 @@ class Router
         // Substring (not str_starts_with) is intentional: under the
         // /hr_budget/public/ subdirectory deployment the miss URI is
         // /hr_budget/public/api/v1/... so a prefix check would wrongly serve HTML.
-        if (str_contains($uri, '/api/')) {
+        // Also catch the bare /api path (no trailing slash) so API clients
+        // never receive the HTML SPA shell.
+        if (str_contains($uri, '/api/') || str_ends_with(rtrim($uri, '/'), '/api')) {
             http_response_code(404);
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'error' => 'Not found']);
