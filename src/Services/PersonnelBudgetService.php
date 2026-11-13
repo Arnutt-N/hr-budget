@@ -57,10 +57,11 @@ final class PersonnelBudgetService
 
         $versions = $this->fetchEffectiveVersions($referenceDate);
         $entitlementsByPosition = $this->fetchEntitlements($referenceDate);
+        $vacancyEligible = $this->fetchVacancyEligiblePositions($fiscalYearId, $vacancyRule);
         foreach ($versions as $v) {
             // อัตราว่าง: นับเฉพาะ vacant_funded ที่ผ่านเกณฑ์สรรหาของปีนั้น
             if ($v['occupancy'] !== 'occupied') {
-                if ($v['occupancy'] !== 'vacant_funded' || !$this->passesVacancyRule((int) $v['position_id'], $fiscalYearId, $vacancyRule)) {
+                if ($v['occupancy'] !== 'vacant_funded' || !isset($vacancyEligible[(int) $v['position_id']])) {
                     continue;
                 }
             }
@@ -320,19 +321,23 @@ final class PersonnelBudgetService
         return $generic;
     }
 
-    /** อัตรานี้ผ่านเกณฑ์ vacancy_rule ของปีงบหรือไม่ (ไม่มีเกณฑ์ = ไม่นับเลย — ปลอดภัยกว่า) */
-    private function passesVacancyRule(int $positionId, int $fiscalYearId, ?string $vacancyRule): bool
+    /** @return array<int,bool> key = position_id ที่ผ่านเกณฑ์ vacancy_rule ของปีงบ (ไม่มีเกณฑ์ = ไม่นับเลย) */
+    private function fetchVacancyEligiblePositions(int $fiscalYearId, ?string $vacancyRule): array
     {
         if ($vacancyRule === null) {
-            return false;
+            return [];
         }
-        $row = Database::queryOne(
-            "SELECT id FROM vacancy_recruitment
-             WHERE position_id = ? AND fiscal_year_id = ? AND type = ?
-               AND deleted_at IS NULL",
-            [$positionId, $fiscalYearId, $vacancyRule]
-        );
-        return $row !== null;
+        $eligible = [];
+        foreach (
+            Database::query(
+                "SELECT DISTINCT position_id FROM vacancy_recruitment
+                 WHERE fiscal_year_id = ? AND type = ? AND deleted_at IS NULL",
+                [$fiscalYearId, $vacancyRule]
+            ) as $row
+        ) {
+            $eligible[(int) $row['position_id']] = true;
+        }
+        return $eligible;
     }
 
     /** @param array<string,float> $lines */
@@ -342,7 +347,9 @@ final class PersonnelBudgetService
             return $lines;
         }
         $key = $expenseItemId . ':' . $organizationId;
-        $lines[$key] = round(($lines[$key] ?? 0.0) + $amount, 2);
+        $current = number_format($lines[$key] ?? 0.0, 2, '.', '');
+        $delta = number_format($amount, 2, '.', '');
+        $lines[$key] = (float) bcadd($current, $delta, 2);
         return $lines;
     }
 
@@ -351,6 +358,13 @@ final class PersonnelBudgetService
     {
         Database::beginTransaction();
         try {
+            if (Database::getInstance()->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'mysql') {
+                Database::queryOne(
+                    "SELECT id FROM fiscal_years WHERE year = ? FOR UPDATE",
+                    [$fiscalYear]
+                );
+            }
+
             Database::delete(
                 'budget_line_items',
                 "fiscal_year = ? AND source = 'computed' AND deleted_at IS NULL",

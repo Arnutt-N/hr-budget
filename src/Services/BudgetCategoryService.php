@@ -112,7 +112,28 @@ final class BudgetCategoryService
             return true;
         }
 
-        return $this->catRepo->update($id, $updateData);
+        $ok = $this->catRepo->update($id, $updateData);
+        if ($ok && isset($updateData['level'])) {
+            $visited = [$id => true];
+            $this->syncChildrenLevels($id, (int) $updateData['level'], $visited);
+        }
+        return $ok;
+    }
+
+    /** @param array<int,bool> $visited */
+    private function syncChildrenLevels(int $parentId, int $parentLevel, array &$visited): void
+    {
+        $children = $this->catRepo->findByParentId($parentId);
+        foreach ($children as $child) {
+            $childId = (int) $child['id'];
+            if (isset($visited[$childId])) {
+                continue;
+            }
+            $visited[$childId] = true;
+            $childLevel = $parentLevel + 1;
+            $this->catRepo->update($childId, ['level' => $childLevel]);
+            $this->syncChildrenLevels($childId, $childLevel, $visited);
+        }
     }
 
     private function wouldCreateCycle(int $categoryId, int $newParentId): bool

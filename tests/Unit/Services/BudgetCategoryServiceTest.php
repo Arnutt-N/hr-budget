@@ -74,4 +74,25 @@ final class BudgetCategoryServiceTest extends TestCase
         $this->assertCount(1, $tree[0]['children']);
         $this->assertSame(2, $tree[0]['children'][0]['id']);
     }
+
+    public function testUpdateSyncsDescendantLevelsWhenParentChanges(): void
+    {
+        $catRepo = $this->createMock(BudgetCategoryRepository::class);
+        $catRepo->method('findById')->willReturnMap([
+            [10, ['id' => 10, 'parent_id' => null, 'level' => 0]],
+            [5, ['id' => 5, 'parent_id' => null, 'level' => 1]],
+        ]);
+        $catRepo->method('findByParentId')->willReturnMap([
+            [10, [['id' => 20, 'parent_id' => 10, 'level' => 1]]],
+            [20, []],
+        ]);
+        $catRepo->expects($this->exactly(2))
+            ->method('update')
+            ->willReturn(true);
+
+        $itemRepo = $this->createMock(BudgetCategoryItemRepository::class);
+        $service = new BudgetCategoryService($catRepo, $itemRepo);
+
+        $this->assertTrue($service->update('admin', 10, new UpdateCategoryDto(parentId: 5)));
+    }
 }
