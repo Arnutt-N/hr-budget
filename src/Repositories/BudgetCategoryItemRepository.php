@@ -67,6 +67,16 @@ class BudgetCategoryItemRepository
         return Database::delete('budget_category_items', 'id = ?', [$id]) > 0;
     }
 
+    public function softDeleteByCategoryId(int $categoryId): int
+    {
+        return Database::update(
+            'budget_category_items',
+            ['deleted_at' => date('Y-m-d H:i:s')],
+            'category_id = ? AND deleted_at IS NULL',
+            [$categoryId]
+        );
+    }
+
     public function deleteByCategoryId(int $categoryId): int
     {
         return Database::delete('budget_category_items', 'category_id = ?', [$categoryId]);

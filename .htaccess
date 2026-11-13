@@ -1,6 +1,11 @@
 # เปิดการใช้งาน mod_rewrite
 RewriteEngine On
 
+# Defense-in-depth when docroot is repo root: block dotfiles & internal dirs
+RewriteRule ^\. - [F,L]
+RewriteRule ^(src|config|database|scripts|tests|vendor|frontend|docs|PRPs|project-log-md|archives)(/|$) - [F,L]
+RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|phpstan.*)$ - [F,L]
+
 # =============================================
 # บังคับใช้ HTTPS (แก้ Not Secure)
 # ปิดการใช้งานบน localhost สำหรับ development

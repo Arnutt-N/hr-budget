@@ -99,6 +99,9 @@ final class BudgetCategoryService
         if ($dto->isActive !== null) $updateData['is_active'] = $dto->isActive ? 1 : 0;
 
         if ($dto->parentId !== null) {
+            if ($dto->parentId === $id || $this->wouldCreateCycle($id, $dto->parentId)) {
+                return false;
+            }
             $updateData['parent_id'] = $dto->parentId;
             $parent = $this->catRepo->findById($dto->parentId);
             $updateData['level'] = $parent !== null ? (int) $parent['level'] + 1 : 0;
@@ -111,16 +114,40 @@ final class BudgetCategoryService
         return $this->catRepo->update($id, $updateData);
     }
 
+    private function wouldCreateCycle(int $categoryId, int $newParentId): bool
+    {
+        $visited = [$categoryId => true];
+        $cursor = $newParentId;
+        while ($cursor > 0) {
+            if (isset($visited[$cursor])) {
+                return true;
+            }
+            $visited[$cursor] = true;
+            $row = $this->catRepo->findById($cursor);
+            if ($row === null || $row['parent_id'] === null) {
+                break;
+            }
+            $cursor = (int) $row['parent_id'];
+        }
+        return false;
+    }
+
     public function delete(string $role, int $id): bool
     {
         if ($role !== 'admin') {
             return false;
         }
 
+        if ($this->catRepo->findById($id) === null) {
+            return false;
+        }
+
         Database::beginTransaction();
         try {
-            $this->itemRepo->deleteByCategoryId($id);
-            $this->catRepo->delete($id);
+            // Soft-delete items and deactivate category instead of hard-deleting,
+            // so historical budget_trackings rows are not wiped by ON DELETE CASCADE.
+            $this->itemRepo->softDeleteByCategoryId($id);
+            $this->catRepo->update($id, ['is_active' => 0]);
             Database::commit();
             return true;
         } catch (\Throwable $e) {

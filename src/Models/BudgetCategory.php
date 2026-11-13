@@ -38,22 +38,31 @@ class BudgetCategory
     }
 
     /**
-     * Build tree from flat array
+     * Build tree from flat array (cycle-safe)
      */
-    private static function buildTree(array $categories, ?int $parentId = null): array
+    private static function buildTree(array $categories, ?int $parentId = null, array $visited = []): array
     {
         $tree = [];
-        
+
         foreach ($categories as $category) {
-            if ($category['parent_id'] == $parentId) {
-                $children = self::buildTree($categories, $category['id']);
+            $id = (int) ($category['id'] ?? 0);
+            if ($id > 0 && isset($visited[$id])) {
+                continue;
+            }
+            $catParent = $category['parent_id'] !== null ? (int) $category['parent_id'] : null;
+            if ($catParent === $parentId) {
+                $nextVisited = $visited;
+                if ($id > 0) {
+                    $nextVisited[$id] = true;
+                }
+                $children = self::buildTree($categories, $id, $nextVisited);
                 if ($children) {
                     $category['children'] = $children;
                 }
                 $tree[] = $category;
             }
         }
-        
+
         return $tree;
     }
 
@@ -183,10 +192,15 @@ class BudgetCategory
 
     /**
      * Get children hierarchy of a category
-     * Returns all descendants as nested array
+     * Returns all descendants as nested array (cycle-safe)
      */
-    public static function getChildrenHierarchy(int $parentId, bool $activeOnly = true): array
+    public static function getChildrenHierarchy(int $parentId, bool $activeOnly = true, array $visited = []): array
     {
+        if (isset($visited[$parentId])) {
+            return [];
+        }
+        $visited[$parentId] = true;
+
         $sql = "SELECT * FROM budget_categories WHERE parent_id = ?";
         if ($activeOnly) {
             $sql .= " AND is_active = 1";
@@ -196,7 +210,10 @@ class BudgetCategory
         $children = Database::query($sql, [$parentId]);
         
         foreach ($children as &$child) {
-            $child['children'] = self::getChildrenHierarchy($child['id'], $activeOnly);
+            $childId = (int) $child['id'];
+            $child['children'] = isset($visited[$childId])
+                ? []
+                : self::getChildrenHierarchy($childId, $activeOnly, $visited);
         }
         
         return $children;
