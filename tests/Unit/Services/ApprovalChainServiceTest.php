@@ -124,4 +124,35 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
         $this->assertFalse($res['ok']);
         $this->assertContains($res['error'], ['not_in_chain', 'not_pending']);
     }
+
+    /** @test */
+    public function statusForUser_denies_out_of_scope_non_owner(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $otherOrg = $this->makeOrg(null, 0);
+        $this->makeUser('viewer'); // id=1 (matches makeRequest created_by=1)
+        $req = $this->makeRequest($org, 'pending', 1);
+        $outsider = $this->makeUser('viewer'); // id=2
+        $this->grant($outsider['id'], 'viewer', 'organization', $otherOrg);
+
+        $res = $this->service->statusForUser($outsider, $req);
+
+        $this->assertFalse($res['ok']);
+        $this->assertSame('forbidden_out_of_scope', $res['error']);
+    }
+
+    /** @test */
+    public function statusForUser_allows_org_scoped_viewer(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $req = $this->makeRequest($org, 'pending', 1);
+        $viewer = $this->makeUser('viewer');
+        $this->grant($viewer['id'], 'viewer', 'organization', $org);
+
+        $res = $this->service->statusForUser($viewer, $req);
+
+        $this->assertTrue($res['ok']);
+        $this->assertSame('pending', $res['data']['request_status']);
+        $this->assertSame(1, $res['data']['current_level']);
+    }
 }

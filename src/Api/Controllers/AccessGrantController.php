@@ -90,6 +90,7 @@ final class AccessGrantController
             case 'duplicate_grant':
                 ApiResponse::error('มีการมอบสิทธิ์นี้อยู่แล้ว', 422);
                 return;
+            case 'forbidden_self_grant':
             case 'forbidden_privileged_role':
             case 'forbidden_all_scope':
             case 'forbidden_out_of_scope':

@@ -261,8 +261,8 @@ final class BudgetRequestService
         // Best-effort blob cleanup after a successful delete — the rows are
         // gone (cascade), so nothing else will ever unlink these files.
         foreach ($blobPaths as $webPath) {
-            $full = BASE_PATH . '/public/' . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
-            if (is_file($full)) {
+            $full = FileService::containedPath($webPath);
+            if ($full !== null && is_file($full)) {
                 @unlink($full);
             }
         }
@@ -292,6 +292,7 @@ final class BudgetRequestService
         try {
             $updated = $this->requestRepo->updateWhereStatus($id, $request['request_status'], [
                 'request_status' => 'pending',
+                'current_level' => 1,
                 'submitted_at' => date('Y-m-d H:i:s'),
             ]);
 

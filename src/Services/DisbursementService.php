@@ -92,17 +92,30 @@ final class DisbursementService
             return $requestedOrgId;
         }
 
-        // Non-admin: force their own org regardless of the request body.
-        return (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
+        $ownOrg = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
+        $scope = $this->scopeResolver->resolve($user);
+
+        if ($requestedOrgId > 0 && (
+            $scope['hasAll']
+            || in_array($requestedOrgId, $scope['orgIds'], true)
+            || ($ownOrg > 0 && $requestedOrgId === $ownOrg)
+        )) {
+            return $requestedOrgId;
+        }
+
+        if ($ownOrg > 0) {
+            return $ownOrg;
+        }
+
+        return $scope['orgIds'][0] ?? 0;
     }
 
     /**
      * Object-level ownership guard (BOLA/IDOR defense).
      *
-     * Admins may act on any organization. A non-admin may only act on rows
-     * belonging to their own organization; a non-admin with no resolvable org
-     * (own org 0) is always denied. This is the WRITE guard (own-org only) used
-     * by create/save paths; READ paths use canReadOrg (subtree-aware, Phase 10).
+     * Admins may act on any organization. A non-admin may act on rows belonging
+     * to their own organization or an organization within their RBAC scope.
+     * READ paths use canReadOrg (subtree-aware, Phase 10).
      */
     private function canAccessOrg(string $role, array $user, int $targetOrgId): bool
     {
@@ -110,12 +123,17 @@ final class DisbursementService
             return true;
         }
 
-        $ownOrg = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
-        if ($ownOrg <= 0) {
+        if ($targetOrgId <= 0) {
             return false;
         }
 
-        return $targetOrgId === $ownOrg;
+        $ownOrg = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
+        if ($ownOrg > 0 && $targetOrgId === $ownOrg) {
+            return true;
+        }
+
+        $scope = $this->scopeResolver->resolve($user);
+        return $scope['hasAll'] || in_array($targetOrgId, $scope['orgIds'], true);
     }
 
     /**
@@ -213,11 +231,8 @@ final class DisbursementService
             return false;
         }
 
-        if ($role !== 'admin') {
-            $ownOrg = (int) ($user['org_id'] ?? $user['organization_id'] ?? 0);
-            if ((int) $session['organization_id'] !== $ownOrg) {
-                return false;
-            }
+        if (!$this->canAccessOrg($role, $user, (int) $session['organization_id'])) {
+            return false;
         }
 
         Database::beginTransaction();

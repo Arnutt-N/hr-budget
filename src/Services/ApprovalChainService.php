@@ -119,4 +119,36 @@ final class ApprovalChainService
             'history' => $this->repo->historyFor($requestId),
         ];
     }
+
+    /**
+     * Scoped status lookup for HTTP endpoints — verifies the caller is admin,
+     * request owner, or holds an RBAC grant covering the request's organization.
+     *
+     * @param array<string,mixed> $user
+     * @return array{ok:bool,data?:array{request_status:?string,current_level:?int,history:array},error?:string}
+     */
+    public function statusForUser(array $user, int $requestId): array
+    {
+        $req = $this->repo->findRequest($requestId);
+        if ($req === null) {
+            return ['ok' => false, 'error' => 'not_found'];
+        }
+        $isSuper = ($user['role'] ?? '') === 'admin';
+        $isOwner = (int) ($req['created_by'] ?? 0) === (int) ($user['id'] ?? 0);
+        if (!$isSuper && !$isOwner) {
+            $scope = $this->resolver->resolve($user);
+            $orgId = $req['org_id'] !== null ? (int) $req['org_id'] : null;
+            if (!$scope['hasAll'] && ($orgId === null || !in_array($orgId, $scope['orgIds'], true))) {
+                return ['ok' => false, 'error' => 'forbidden_out_of_scope'];
+            }
+        }
+        return [
+            'ok' => true,
+            'data' => [
+                'request_status' => $req['request_status'] ?? null,
+                'current_level' => $req['current_level'] !== null ? (int) $req['current_level'] : null,
+                'history' => $this->repo->historyFor($requestId),
+            ],
+        ];
+    }
 }
