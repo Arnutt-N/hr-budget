@@ -38,16 +38,36 @@ UPDATE disbursement_details SET plan_id = NULL WHERE plan_id IS NOT NULL;
 
 -- =====================================================
 -- 3. DROP FOREIGN KEY CONSTRAINTS (if they exist)
+-- MySQL 8.x does not support DROP FOREIGN KEY IF EXISTS.
 -- =====================================================
+DROP PROCEDURE IF EXISTS _drop_fk_if_exists;
+DELIMITER //
+CREATE PROCEDURE _drop_fk_if_exists(IN tbl VARCHAR(64), IN fk VARCHAR(64))
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
+        WHERE CONSTRAINT_SCHEMA = DATABASE()
+          AND TABLE_NAME = tbl
+          AND CONSTRAINT_NAME = fk
+          AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+    ) THEN
+        SET @sql = CONCAT('ALTER TABLE `', tbl, '` DROP FOREIGN KEY `', fk, '`');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+DELIMITER ;
 
 -- Drop self-referencing FK
-ALTER TABLE budget_plans DROP FOREIGN KEY IF EXISTS fk_budget_plans_parent;
-ALTER TABLE budget_plans DROP FOREIGN KEY IF EXISTS fk_budget_plans_division;
+CALL _drop_fk_if_exists('budget_plans', 'fk_budget_plans_parent');
+CALL _drop_fk_if_exists('budget_plans', 'fk_budget_plans_division');
 
 -- Drop FKs from other tables (if they reference budget_plans)
--- These may or may not exist depending on migration order
-ALTER TABLE disbursement_details DROP FOREIGN KEY IF EXISTS disbursement_details_ibfk_1;
-ALTER TABLE disbursement_details DROP FOREIGN KEY IF EXISTS fk_dd_plan;
+CALL _drop_fk_if_exists('disbursement_details', 'disbursement_details_ibfk_1');
+CALL _drop_fk_if_exists('disbursement_details', 'fk_dd_plan');
+
+DROP PROCEDURE IF EXISTS _drop_fk_if_exists;
 
 -- =====================================================
 -- 4. DROP THE TABLE
