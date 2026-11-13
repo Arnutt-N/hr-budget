@@ -51,6 +51,7 @@ class NotificationRepository
 
     public function markAllRead(int $userId): bool
     {
-        return Database::update('notifications', ['is_read' => 1], 'user_id = ? AND is_read = 0', [$userId]) > 0;
+        Database::update('notifications', ['is_read' => 1], 'user_id = ? AND is_read = 0', [$userId]);
+        return true;
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
+use App\Models\BudgetCategory;
 use App\Dtos\CreateCategoryDto;
 use App\Dtos\CreateCategoryItemDto;
 use App\Dtos\UpdateCategoryDto;
@@ -39,7 +40,7 @@ final class BudgetCategoryService
 
     public function getTree(): array
     {
-        return $this->catRepo->getTree();
+        return BudgetCategory::buildTree($this->catRepo->getTree());
     }
 
     public function findById(int $id): ?array

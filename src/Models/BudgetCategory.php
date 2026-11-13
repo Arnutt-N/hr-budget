@@ -40,7 +40,7 @@ class BudgetCategory
     /**
      * Build tree from flat array (cycle-safe)
      */
-    private static function buildTree(array $categories, ?int $parentId = null, array $visited = []): array
+    public static function buildTree(array $categories, ?int $parentId = null, array $visited = []): array
     {
         $tree = [];
 

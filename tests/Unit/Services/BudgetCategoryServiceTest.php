@@ -56,4 +56,22 @@ final class BudgetCategoryServiceTest extends TestCase
 
         $this->assertTrue($service->delete('admin', 10));
     }
+
+    public function testGetTreeReturnsNestedHierarchy(): void
+    {
+        $catRepo = $this->createMock(BudgetCategoryRepository::class);
+        $catRepo->method('getTree')->willReturn([
+            ['id' => 1, 'parent_id' => null, 'name_th' => 'Root'],
+            ['id' => 2, 'parent_id' => 1, 'name_th' => 'Child'],
+        ]);
+
+        $itemRepo = $this->createMock(BudgetCategoryItemRepository::class);
+        $service = new BudgetCategoryService($catRepo, $itemRepo);
+
+        $tree = $service->getTree();
+        $this->assertCount(1, $tree);
+        $this->assertSame(1, $tree[0]['id']);
+        $this->assertCount(1, $tree[0]['children']);
+        $this->assertSame(2, $tree[0]['children'][0]['id']);
+    }
 }
