@@ -31,8 +31,8 @@ final class LoginRequestDto
 
         if ($this->password === '') {
             $errors['password'] = 'กรุณากรอกรหัสผ่าน';
-        } elseif (strlen($this->password) < 4) {
-            $errors['password'] = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร';
+        } elseif (strlen($this->password) < 6) {
+            $errors['password'] = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
         }
 
         return $errors;

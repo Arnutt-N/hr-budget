@@ -55,6 +55,13 @@ if (str_contains($__requestPath, '/api/')) {
 // Initialize authentication
 \App\Core\Auth::init();
 
+// Release the PHP session file lock for API requests that don't mutate
+// $_SESSION (everything except ThaID OAuth endpoints) so concurrent SPA
+// requests don't serialize behind each other.
+if (str_contains($__requestPath, '/api/') && !str_contains($__requestPath, '/auth/thaid/') && session_status() === PHP_SESSION_ACTIVE) {
+    session_write_close();
+}
+
 // Apply baseline security headers to non-API (HTML / SPA) responses.
 // API responses are owned by CorsMiddleware (applied above) and stay
 // header-clean here so CORS/preflight behavior is unchanged.
