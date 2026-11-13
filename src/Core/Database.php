@@ -171,23 +171,33 @@ class Database
         return $stmt->rowCount();
     }
 
+    private static int $txDepth = 0;
+
     /**
-     * Begin transaction (no-op if already in a transaction).
+     * Begin transaction (supports nesting via depth counter).
      */
     public static function beginTransaction(): void
     {
         $pdo = self::getInstance();
         if (!$pdo->inTransaction()) {
+            self::$txDepth = 0;
             $pdo->beginTransaction();
         }
+        self::$txDepth++;
     }
 
     /**
-     * Commit transaction
+     * Commit transaction (only commits when outermost transaction closes).
      */
     public static function commit(): void
     {
-        self::getInstance()->commit();
+        $pdo = self::getInstance();
+        if (self::$txDepth > 0) {
+            self::$txDepth--;
+        }
+        if (self::$txDepth === 0 && $pdo->inTransaction()) {
+            $pdo->commit();
+        }
     }
 
     /**
@@ -203,7 +213,13 @@ class Database
      */
     public static function rollback(): void
     {
-        self::getInstance()->rollBack();
+        $pdo = self::getInstance();
+        if (self::$txDepth > 0) {
+            self::$txDepth--;
+        }
+        if (self::$txDepth === 0 && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
     }
 
     private static function validateIdentifier(string $name): void

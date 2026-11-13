@@ -110,6 +110,9 @@ final class ApprovalChainController
             case 'no_level_config':
                 ApiResponse::error('ไม่พบการตั้งค่าระดับอนุมัติ', 422);
                 return;
+            case 'forbidden_self_approve':
+                ApiResponse::forbidden('ไม่อนุญาตให้อนุมัติคำขอของตนเอง');
+                return;
             case 'forbidden_wrong_level_role':
             case 'forbidden_out_of_scope':
                 ApiResponse::forbidden('ไม่มีสิทธิ์อนุมัติในระดับ/ขอบเขตนี้');

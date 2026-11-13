@@ -155,4 +155,17 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
         $this->assertSame('pending', $res['data']['request_status']);
         $this->assertSame(1, $res['data']['current_level']);
     }
+
+    /** @test */
+    public function cannot_self_approve_own_request(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $actor = $this->approver('approver_division', $org);
+        $req = $this->makeRequest($org, 'pending', 1, createdBy: $actor['id']);
+
+        $res = $this->service->act($actor, $req, 'approve', null);
+
+        $this->assertFalse($res['ok']);
+        $this->assertSame('forbidden_self_approve', $res['error']);
+    }
 }

@@ -37,7 +37,7 @@ final class TrackingItemDto
             'pending' => $this->pending,
             'po' => $this->po,
         ] as $field => $value) {
-            if (!is_numeric($value) || bccomp($value, '0', 2) < 0) {
+            if (preg_match('/^\d+(\.\d{1,2})?$/', $value) !== 1 || bccomp($value, '0', 2) < 0) {
                 $errors[$field] = 'ยอดต้องเป็นตัวเลขที่ไม่ติดลบ';
             }
         }
@@ -86,6 +86,6 @@ final class TrackingItemDto
 
     private function normalized(string $value): string
     {
-        return is_numeric($value) ? bcadd($value, '0', 2) : '0.00';
+        return preg_match('/^\d+(\.\d{1,2})?$/', $value) === 1 ? bcadd($value, '0', 2) : '0.00';
     }
 }
