@@ -21,9 +21,11 @@ abstract class BudgetRequestScopeTestCase extends RbacSqliteTestCase
                 fiscal_year INTEGER,
                 request_title TEXT,
                 request_status TEXT DEFAULT 'draft',
+                current_level INTEGER,
                 total_amount REAL DEFAULT 0,
                 created_by INTEGER,
                 org_id INTEGER,
+                submitted_at TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
              );
              CREATE TABLE budget_request_items (

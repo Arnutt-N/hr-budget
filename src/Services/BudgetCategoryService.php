@@ -112,12 +112,19 @@ final class BudgetCategoryService
             return true;
         }
 
-        $ok = $this->catRepo->update($id, $updateData);
-        if ($ok && isset($updateData['level'])) {
-            $visited = [$id => true];
-            $this->syncChildrenLevels($id, (int) $updateData['level'], $visited);
+        Database::beginTransaction();
+        try {
+            $ok = $this->catRepo->update($id, $updateData);
+            if ($ok && isset($updateData['level'])) {
+                $visited = [$id => true];
+                $this->syncChildrenLevels($id, (int) $updateData['level'], $visited);
+            }
+            Database::commit();
+            return $ok;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            throw $e;
         }
-        return $ok;
     }
 
     /** @param array<int,bool> $visited */

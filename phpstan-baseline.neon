@@ -21,12 +21,6 @@ parameters:
 		-
 			message: '#^Constant BASE_PATH not found\.$#'
 			identifier: constant.notFound
-			count: 1
-			path: src/Services/BudgetRequestService.php
-
-		-
-			message: '#^Constant BASE_PATH not found\.$#'
-			identifier: constant.notFound
 			count: 3
 			path: src/Services/FileService.php
 
