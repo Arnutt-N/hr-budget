@@ -89,9 +89,6 @@ final class AuthController
         if ($token !== '') {
             $payload = Jwt::verify($token);
             if ($payload !== null && isset($payload['jti'])) {
-                // Revocation is fail-closed: if the marker cannot be written the
-                // stolen token stays valid, so logout must surface the error
-                // instead of reporting success and clearing the cookie anyway.
                 try {
                     Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
                 } catch (\RuntimeException $e) {

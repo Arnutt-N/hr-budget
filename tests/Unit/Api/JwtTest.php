@@ -102,8 +102,6 @@ class JwtTest extends TestCase
         $payload = Jwt::verify($token);
         $this->assertIsArray($payload);
 
-        // Point the revocation store at a path that cannot be created as a dir
-        // (a regular file where a directory is required).
         $filePath = tempnam(sys_get_temp_dir(), 'jwt_not_dir_');
         $this->assertNotFalse($filePath);
 

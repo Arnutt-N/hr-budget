@@ -40,14 +40,10 @@ final class Request
     }
 
     /**
-     * Client IP for rate-limiting and audit logs.
-     *
      * Direct connections: REMOTE_ADDR is authoritative.
      * Behind a trusted reverse proxy (TRUST_PROXY=true): the left-most
      * X-Forwarded-For entry is the original client (right-most is added by the
      * nearest trusted proxy; entries in between are client-spoofable).
-     * Without TRUST_PROXY the header is ignored entirely — a spoofed header
-     * cannot mint unlimited rate-limit buckets.
      */
     public static function clientIp(): string
     {

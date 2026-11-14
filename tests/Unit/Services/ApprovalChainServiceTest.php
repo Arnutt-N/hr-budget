@@ -161,17 +161,11 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
     /** @test */
     public function conditional_update_loses_when_row_already_advanced(): void
     {
-        // Simulates the race: actor A read level 1, actor B advanced the chain
-        // to level 2 first, then A's conditional write lands with expected=1.
-        // A conditional update must affect 0 rows, so A's action is never
-        // applied and never recorded as history.
         $org = $this->makeOrg(null, 0);
         $req = $this->makeRequest($org, 'pending', 1);
 
-        // Actor B wins: 1 → 2.
         $this->service->act($this->approver('approver_division', $org), $req, 'approve', null);
 
-        // Actor A's stale write (expected level 1).
         $repo = new \App\Repositories\ApprovalChainRepository();
         $applied = $repo->updateRequestAtLevel($req, 1, ['current_level' => 2]);
 

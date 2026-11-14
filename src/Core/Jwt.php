@@ -98,11 +98,6 @@ final class Jwt
 
     /**
      * Revoke a token by its jti until its expiry timestamp.
-     *
-     * Fail-closed: if the revocation marker cannot be written the token would
-     * stay valid until expiry — a stolen token outliving logout. Callers get a
-     * RuntimeException so logout can surface the error instead of silently
-     * reporting success.
      */
     public static function revoke(string $jti, int $exp, ?string $dir = null): void
     {

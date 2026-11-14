@@ -103,9 +103,6 @@ final class ApprovalChainService
                     'current_level' => null,
                 ]);
                 if (!$rejected) {
-                    // Another actor won the race (or the row moved on). The
-                    // action record stays out — only a transition that actually
-                    // applied is logged as history.
                     Database::rollback();
                     return ['ok' => false, 'error' => 'stale_level'];
                 }
