@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { buildDocumentTitle } from '@/lib/routeTitle'
 import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -238,6 +239,22 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAdmin && auth.user?.role !== 'admin') {
     return { name: 'dashboard' }
   }
+})
+
+const FALLBACK_TITLE = document.title
+
+function scrollFocusMain(): void {
+  const main = document.getElementById('main')
+  if (!main) return
+  main.scrollTop = 0
+  window.scrollTo(0, 0)
+  main.focus({ preventScroll: true })
+}
+
+router.afterEach((to) => {
+  const meta = to.meta.title
+  document.title = buildDocumentTitle(typeof meta === 'string' ? meta : undefined, FALLBACK_TITLE)
+  scrollFocusMain()
 })
 
 export default router

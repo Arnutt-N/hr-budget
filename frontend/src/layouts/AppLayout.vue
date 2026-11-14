@@ -42,6 +42,8 @@ const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
 
+const isCurrent = (path: string): boolean => route.path.replace(/\/$/, '') === path
+
 // User hydration happens in the router guard (auth.bootstrap) — by the time
 // this layout renders, auth.user is already resolved.
 
@@ -119,37 +121,37 @@ async function onLogout(): Promise<void> {
 
       <!-- Navigation -->
       <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        <RouterLink to="/dashboard" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/dashboard" class="nav-link" :aria-current="isCurrent('/dashboard') ? 'page' : undefined" @click="sidebarOpen = false">
           <LayoutDashboard aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">ภาพรวม (Dashboard)</span>
         </RouterLink>
 
-        <RouterLink to="/requests" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/requests" class="nav-link" :aria-current="isCurrent('/requests') ? 'page' : undefined" @click="sidebarOpen = false">
           <FileText aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">คำขอประมาณ</span>
         </RouterLink>
 
-        <RouterLink to="/disbursements" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/disbursements" class="nav-link" :aria-current="isCurrent('/disbursements') ? 'page' : undefined" @click="sidebarOpen = false">
           <Wallet aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">บันทึกการเบิกจ่าย</span>
         </RouterLink>
 
-        <RouterLink to="/budget-execution" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/budget-execution" class="nav-link" :aria-current="isCurrent('/budget-execution') ? 'page' : undefined" @click="sidebarOpen = false">
           <BarChart3 aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">ผลการเบิกจ่าย</span>
         </RouterLink>
 
-        <RouterLink to="/analytics" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/analytics" class="nav-link" :aria-current="isCurrent('/analytics') ? 'page' : undefined" @click="sidebarOpen = false">
           <LineChart aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">รายงานวิเคราะห์</span>
         </RouterLink>
 
-        <RouterLink to="/notifications" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/notifications" class="nav-link" :aria-current="isCurrent('/notifications') ? 'page' : undefined" @click="sidebarOpen = false">
           <Bell aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">การแจ้งเตือน</span>
         </RouterLink>
 
-        <RouterLink to="/vault" class="nav-link" @click="sidebarOpen = false">
+        <RouterLink to="/vault" class="nav-link" :aria-current="isCurrent('/vault') ? 'page' : undefined" @click="sidebarOpen = false">
           <FolderArchive aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">คลังเอกสาร</span>
         </RouterLink>
@@ -160,93 +162,93 @@ async function onLogout(): Promise<void> {
             จัดการ
           </div>
 
-          <RouterLink to="/fiscal-years" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/fiscal-years" class="nav-link" :aria-current="isCurrent('/fiscal-years') ? 'page' : undefined" @click="sidebarOpen = false">
             <Calendar aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">ปีงบประมาณ</span>
           </RouterLink>
 
-          <RouterLink to="/organizations" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/organizations" class="nav-link" :aria-current="isCurrent('/organizations') ? 'page' : undefined" @click="sidebarOpen = false">
             <Building2 aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">หน่วยงาน</span>
           </RouterLink>
 
-          <RouterLink to="/divisions" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/divisions" class="nav-link" :aria-current="isCurrent('/divisions') ? 'page' : undefined" @click="sidebarOpen = false">
             <Building aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">กอง/สำนัก</span>
           </RouterLink>
 
-          <RouterLink to="/plans" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/plans" class="nav-link" :aria-current="isCurrent('/plans') ? 'page' : undefined" @click="sidebarOpen = false">
             <Network aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">แผนงาน/ผลผลิต</span>
           </RouterLink>
 
-          <RouterLink to="/categories" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/categories" class="nav-link" :aria-current="isCurrent('/categories') ? 'page' : undefined" @click="sidebarOpen = false">
             <List aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">ประเภทรายจ่าย</span>
           </RouterLink>
 
           <!-- Phase 9 — อัตรากำลังและงบบุคลากร -->
-          <RouterLink to="/positions" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/positions" class="nav-link" :aria-current="isCurrent('/positions') ? 'page' : undefined" @click="sidebarOpen = false">
             <UserRound aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">อัตรากำลัง</span>
           </RouterLink>
 
-          <RouterLink to="/allowance-types" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/allowance-types" class="nav-link" :aria-current="isCurrent('/allowance-types') ? 'page' : undefined" @click="sidebarOpen = false">
             <Coins aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">เงินเพิ่ม</span>
           </RouterLink>
 
-          <RouterLink to="/salary-scales" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/salary-scales" class="nav-link" :aria-current="isCurrent('/salary-scales') ? 'page' : undefined" @click="sidebarOpen = false">
             <Ruler aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">อัตราเงินเดือน</span>
           </RouterLink>
 
-          <RouterLink to="/salary-raise-rounds" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/salary-raise-rounds" class="nav-link" :aria-current="isCurrent('/salary-raise-rounds') ? 'page' : undefined" @click="sidebarOpen = false">
             <ArrowUpCircle aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">รอบเลื่อนเงินเดือน</span>
           </RouterLink>
 
-          <RouterLink to="/personnel-budget-policies" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/personnel-budget-policies" class="nav-link" :aria-current="isCurrent('/personnel-budget-policies') ? 'page' : undefined" @click="sidebarOpen = false">
             <ScrollText aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">นโยบายงบบุคลากร</span>
           </RouterLink>
 
-          <RouterLink to="/vacancy-recruitment" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/vacancy-recruitment" class="nav-link" :aria-current="isCurrent('/vacancy-recruitment') ? 'page' : undefined" @click="sidebarOpen = false">
             <ClipboardList aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">อัตราว่างพร้อมบรรจุ</span>
           </RouterLink>
 
-          <RouterLink to="/personnel-allowances" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/personnel-allowances" class="nav-link" :aria-current="isCurrent('/personnel-allowances') ? 'page' : undefined" @click="sidebarOpen = false">
             <HeartHandshake aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">การรับจริงเงินเพิ่ม</span>
           </RouterLink>
 
-          <RouterLink to="/personnel-assignments" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/personnel-assignments" class="nav-link" :aria-current="isCurrent('/personnel-assignments') ? 'page' : undefined" @click="sidebarOpen = false">
             <Plane aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">ไปช่วยราชการ</span>
           </RouterLink>
 
-          <RouterLink to="/compute-budget" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/compute-budget" class="nav-link" :aria-current="isCurrent('/compute-budget') ? 'page' : undefined" @click="sidebarOpen = false">
             <Calculator aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">คำนวณงบบุคลากร</span>
           </RouterLink>
 
-          <RouterLink to="/target-types" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/target-types" class="nav-link" :aria-current="isCurrent('/target-types') ? 'page' : undefined" @click="sidebarOpen = false">
             <Target aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">ประเภทเป้าหมาย</span>
           </RouterLink>
 
-          <RouterLink to="/targets" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/targets" class="nav-link" :aria-current="isCurrent('/targets') ? 'page' : undefined" @click="sidebarOpen = false">
             <Goal aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">เป้าหมายงบประมาณ</span>
           </RouterLink>
 
-          <RouterLink to="/users" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/users" class="nav-link" :aria-current="isCurrent('/users') ? 'page' : undefined" @click="sidebarOpen = false">
             <Users aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">จัดการผู้ใช้</span>
           </RouterLink>
 
-          <RouterLink to="/roles" class="nav-link" @click="sidebarOpen = false">
+          <RouterLink to="/roles" class="nav-link" :aria-current="isCurrent('/roles') ? 'page' : undefined" @click="sidebarOpen = false">
             <ShieldCheck aria-hidden="true" class="h-5 w-5" />
             <span class="ml-3">บทบาท/สิทธิ์</span>
           </RouterLink>
