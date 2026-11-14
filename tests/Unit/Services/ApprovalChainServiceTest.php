@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Core\Database;
+use App\Repositories\ApprovalChainRepository;
 use App\Services\ApprovalChainService;
 
 /**
@@ -154,6 +156,37 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
         $this->assertTrue($res['ok']);
         $this->assertSame('pending', $res['data']['request_status']);
         $this->assertSame(1, $res['data']['current_level']);
+    }
+
+    /** @test */
+    public function conditional_update_loses_when_row_already_advanced(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $req = $this->makeRequest($org, 'pending', 1);
+
+        $this->service->act($this->approver('approver_division', $org), $req, 'approve', null);
+
+        $repo = new \App\Repositories\ApprovalChainRepository();
+        $applied = $repo->updateRequestAtLevel($req, 1, ['current_level' => 2]);
+
+        $this->assertFalse($applied, 'stale conditional update must not apply');
+        $row = Database::queryOne('SELECT * FROM budget_requests WHERE id = ?', [$req]);
+        $this->assertSame(2, (int) $row['current_level']);
+        $this->assertCount(1, $this->service->status($req)['history']);
+    }
+
+    /** @test */
+    public function conditional_update_applies_at_matching_level(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $req = $this->makeRequest($org, 'pending', 1);
+
+        $repo = new \App\Repositories\ApprovalChainRepository();
+        $applied = $repo->updateRequestAtLevel($req, 1, ['current_level' => 2]);
+
+        $this->assertTrue($applied);
+        $row = Database::queryOne('SELECT * FROM budget_requests WHERE id = ?', [$req]);
+        $this->assertSame(2, (int) $row['current_level']);
     }
 
     /** @test */

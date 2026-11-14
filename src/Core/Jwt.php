@@ -105,7 +105,10 @@ final class Jwt
             return;
         }
         $path = self::revokePath($jti, $dir);
-        @file_put_contents($path, (string) $exp, LOCK_EX);
+        $ok = @file_put_contents($path, (string) $exp, LOCK_EX);
+        if ($ok === false) {
+            throw new \RuntimeException('JWT revocation store is not writable: ' . dirname($path));
+        }
     }
 
     public static function isRevoked(string $jti, ?string $dir = null): bool

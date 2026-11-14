@@ -85,4 +85,32 @@ final class RequestTest extends TestCase
         $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
         $this->assertTrue(Request::isHttps());
     }
+
+    public function test_client_ip_uses_remote_addr_by_default(): void
+    {
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4';
+        $this->assertSame('203.0.113.9', Request::clientIp());
+    }
+
+    public function test_client_ip_uses_forwarded_for_when_trusted(): void
+    {
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.7, 10.0.0.1';
+        $this->assertSame('198.51.100.7', Request::clientIp());
+    }
+
+    public function test_client_ip_falls_back_to_remote_when_forwarded_for_invalid(): void
+    {
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = 'not-an-ip, 10.0.0.1';
+        $this->assertSame('203.0.113.9', Request::clientIp());
+    }
+
+    public function test_client_ip_falls_back_to_unknown_when_no_remote_addr(): void
+    {
+        $this->assertSame('unknown', Request::clientIp());
+    }
 }

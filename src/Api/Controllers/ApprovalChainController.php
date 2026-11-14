@@ -117,6 +117,9 @@ final class ApprovalChainController
             case 'forbidden_out_of_scope':
                 ApiResponse::forbidden('ไม่มีสิทธิ์อนุมัติในระดับ/ขอบเขตนี้');
                 return;
+            case 'stale_level':
+                ApiResponse::error('คำขอได้รับการดำเนินการแล้ว กรุณาตรวจสอบสถานะใหม่', 422);
+                return;
             default:
                 ApiResponse::error('ดำเนินการไม่สำเร็จ', 422);
         }

@@ -38,6 +38,30 @@ class ApprovalChainRepository
         return Database::queryOne("SELECT * FROM budget_requests WHERE id = ?", [$id]);
     }
 
+    public function updateRequestAtLevel(int $id, int $expectedLevel, array $data): bool
+    {
+        $allowed = ['request_status', 'current_level'];
+        $clean = [];
+        foreach ($allowed as $f) {
+            if (array_key_exists($f, $data)) {
+                $clean[$f] = $data[$f];
+            }
+        }
+        if ($clean === []) {
+            return false;
+        }
+        $pdo = Database::getInstance();
+        $sets = [];
+        foreach (array_keys($clean) as $column) {
+            $sets[] = "{$column} = ?";
+        }
+        $sql = 'UPDATE budget_requests SET ' . implode(', ', $sets)
+            . ' WHERE id = ? AND current_level = ?';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([...array_values($clean), $id, $expectedLevel]);
+        return $stmt->rowCount() === 1;
+    }
+
     public function updateRequest(int $id, array $data): bool
     {
         $allowed = ['request_status', 'current_level'];

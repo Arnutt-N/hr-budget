@@ -95,6 +95,20 @@ class JwtTest extends TestCase
         $this->assertNull(Jwt::verify($token));
     }
 
+    /** @test */
+    public function revoke_fails_closed_when_store_is_not_writable(): void
+    {
+        $token = Jwt::issue(7);
+        $payload = Jwt::verify($token);
+        $this->assertIsArray($payload);
+
+        $filePath = tempnam(sys_get_temp_dir(), 'jwt_not_dir_');
+        $this->assertNotFalse($filePath);
+
+        $this->expectException(\RuntimeException::class);
+        Jwt::revoke((string) $payload['jti'], (int) $payload['exp'], $filePath);
+    }
+
     /**
      * Force the next Jwt::config() rebuild to pick up $_ENV['JWT_SECRET'],
      * expect the safety assertion to throw, then restore everything.
