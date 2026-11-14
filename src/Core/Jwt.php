@@ -31,6 +31,7 @@ final class Jwt
             'iat' => $now,
             'exp' => $now + $cfg['jwt_ttl'],
             'sub' => (string) $userId,
+            'jti' => bin2hex(random_bytes(16)),
         ], $claims);
 
         return FirebaseJwt::encode($payload, $cfg['jwt_secret'], $cfg['jwt_algo']);
@@ -52,7 +53,12 @@ final class Jwt
 
         try {
             $decoded = FirebaseJwt::decode($token, new Key($cfg['jwt_secret'], $cfg['jwt_algo']));
-            return (array) $decoded;
+            $payload = (array) $decoded;
+            if (isset($payload['jti']) && self::isRevoked((string) $payload['jti'])) {
+                error_log('[jwt] token revoked');
+                return null;
+            }
+            return $payload;
         } catch (ExpiredException $e) {
             // Expired tokens are expected at end of TTL — log at notice, not error.
             error_log('[jwt] token expired: ' . $e->getMessage());
@@ -88,6 +94,44 @@ final class Jwt
             self::assertSecretSafe((string) (self::$config['jwt_secret'] ?? ''));
         }
         return self::$config;
+    }
+
+    /**
+     * Revoke a token by its jti until its expiry timestamp.
+     */
+    public static function revoke(string $jti, int $exp, ?string $dir = null): void
+    {
+        if ($jti === '') {
+            return;
+        }
+        $path = self::revokePath($jti, $dir);
+        @file_put_contents($path, (string) $exp, LOCK_EX);
+    }
+
+    public static function isRevoked(string $jti, ?string $dir = null): bool
+    {
+        if ($jti === '') {
+            return false;
+        }
+        $path = self::revokePath($jti, $dir);
+        if (!is_file($path)) {
+            return false;
+        }
+        $exp = (int) @file_get_contents($path);
+        if ($exp > 0 && time() >= $exp) {
+            @unlink($path);
+            return false;
+        }
+        return true;
+    }
+
+    private static function revokePath(string $jti, ?string $dir = null): string
+    {
+        $base = $dir ?? (sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'hr_budget_jwt_revoked');
+        if (!is_dir($base)) {
+            @mkdir($base, 0700, true);
+        }
+        return $base . DIRECTORY_SEPARATOR . hash('sha256', $jti) . '.exp';
     }
 
     /**

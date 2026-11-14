@@ -43,12 +43,16 @@ final class ApprovalChainController
             ApiResponse::forbidden('ไม่มีสิทธิ์ดูคำขอ');
             return;
         }
-        $status = $this->service->status((int) $id);
-        if ($status === null) {
+        $result = $this->service->statusForUser($user, (int) $id);
+        if (!$result['ok']) {
+            if (($result['error'] ?? '') === 'forbidden_out_of_scope') {
+                ApiResponse::forbidden('ไม่มีสิทธิ์ดูคำขอในขอบเขตนี้');
+                return;
+            }
             ApiResponse::notFound('ไม่พบคำขอ');
             return;
         }
-        ApiResponse::ok($status);
+        ApiResponse::ok($result['data'] ?? null);
     }
 
     public function approve(string $id): void
@@ -105,6 +109,9 @@ final class ApprovalChainController
                 return;
             case 'no_level_config':
                 ApiResponse::error('ไม่พบการตั้งค่าระดับอนุมัติ', 422);
+                return;
+            case 'forbidden_self_approve':
+                ApiResponse::forbidden('ไม่อนุญาตให้อนุมัติคำขอของตนเอง');
                 return;
             case 'forbidden_wrong_level_role':
             case 'forbidden_out_of_scope':

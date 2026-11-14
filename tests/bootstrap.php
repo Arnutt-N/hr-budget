@@ -24,7 +24,7 @@ $dotenv->safeLoad();
 // local .env with DB_DATABASE=hr_budget silently pointed the whole suite at the
 // real development database — tests that create/delete rows then mutated live
 // data while still reporting green.
-foreach (['JWT_SECRET', 'JWT_TTL', 'CORS_ORIGINS', 'APP_ENV', 'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS'] as $key) {
+foreach (['JWT_SECRET', 'JWT_TTL', 'CORS_ORIGINS', 'APP_ENV', 'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'DB_PORT'] as $key) {
     if (($val = getenv($key)) !== false) {
         $_ENV[$key] = $val;
     }
@@ -37,6 +37,10 @@ foreach (['JWT_SECRET', 'JWT_TTL', 'CORS_ORIGINS', 'APP_ENV', 'DB_HOST', 'DB_NAM
 $_ENV['DB_DATABASE'] = $_ENV['DB_NAME'] ?? 'hr_budget_test';
 $_ENV['DB_USERNAME'] = $_ENV['DB_USER'] ?? 'root';
 $_ENV['DB_PASSWORD'] = $_ENV['DB_PASS'] ?? '';
+// DB_PORT must be bridged too: a local .env pointing at a non-default port
+// (e.g. 3307) otherwise leaks into the suite and every test dies with
+// "connection refused" against the real port 3306.
+$_ENV['DB_PORT'] = $_ENV['DB_PORT'] ?? '3306';
 
 // Fail fast if the suite is somehow aimed at a non-test database. Tests
 // truncate and insert freely, so running them against the dev/production

@@ -74,7 +74,7 @@ final class ThaIdController
     {
         if (!$this->cfg->isEnabled()) {
             // Dormant: a top-level navigation gets a redirect, not a 403 body.
-            Router::redirect('/');
+            Router::redirect('/app/');
             return;
         }
 
@@ -91,7 +91,7 @@ final class ThaIdController
                 error_log('[thaid] mock_login_failed: ' . $e->getMessage());
                 $_SESSION['flash_error'] = 'เข้าสู่ระบบด้วย ThaID (Mock) ไม่สำเร็จ';
             }
-            Router::redirect('/');
+            Router::redirect('/app/');
             return;
         }
 
@@ -121,7 +121,7 @@ final class ThaIdController
             $errCode = preg_replace('/[^a-z_]/', '', substr((string) $_GET['error'], 0, 64));
             error_log("[thaid] auth_error code={$errCode}");
             $_SESSION['flash_error'] = 'เข้าสู่ระบบด้วย ThaID ไม่สำเร็จ';
-            Router::redirect('/');
+            Router::redirect('/app/');
             return;
         }
 
@@ -133,7 +133,7 @@ final class ThaIdController
         if (!is_array($sess) || (time() - (int) ($sess['ts'] ?? 0)) > self::STATE_TTL_SECONDS) {
             error_log('[thaid] login_failed: missing_or_expired_state');
             $_SESSION['flash_error'] = 'เซสชันการเข้าสู่ระบบ ThaID หมดอายุ กรุณาลองใหม่';
-            Router::redirect('/');
+            Router::redirect('/app/');
             return;
         }
 
@@ -148,11 +148,11 @@ final class ThaIdController
             $this->mintSession($user);
             User::updateLastLogin((int) $user['id']);
             error_log("[thaid] login_success user_id={$user['id']}");
-            Router::redirect('/');
+            Router::redirect('/app/');
         } catch (\Throwable $e) {
             error_log('[thaid] login_failed: ' . $e->getMessage());
             $_SESSION['flash_error'] = 'เข้าสู่ระบบด้วย ThaID ไม่สำเร็จ';
-            Router::redirect('/');
+            Router::redirect('/app/');
         }
     }
 

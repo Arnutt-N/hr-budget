@@ -14,6 +14,8 @@ namespace App\Api\Controllers;
 use App\Api\Responses\ApiResponse;
 use App\Api\Middleware\AuthMiddleware;
 use App\Core\AuthCookie;
+use App\Core\Jwt;
+use App\Core\RateLimiter;
 use App\Dtos\LoginRequestDto;
 use App\Services\AuthService;
 
@@ -40,11 +42,23 @@ final class AuthController
             return;
         }
 
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $emailKey = 'login:' . $ip . ':' . strtolower($dto->email);
+        if (!RateLimiter::allow('login_ip:' . $ip, 30, 60) || !RateLimiter::allow($emailKey, 10, 60)) {
+            if (!headers_sent()) {
+                header('Retry-After: 60');
+            }
+            ApiResponse::error('พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่', 429);
+            return;
+        }
+
         $result = $this->service->authenticate($dto->email, $dto->password);
         if ($result === null) {
             ApiResponse::unauthorized('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
             return;
         }
+
+        RateLimiter::clear($emailKey);
 
         // SPA session: token also travels as an httpOnly cookie so browser JS
         // never touches it (XSS-proof). Token stays in the JSON body for
@@ -67,6 +81,16 @@ final class AuthController
      */
     public function logout(): void
     {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        $token = str_starts_with($header, 'Bearer ')
+            ? substr($header, 7)
+            : (string) ($_COOKIE[AuthMiddleware::COOKIE_NAME] ?? '');
+        if ($token !== '') {
+            $payload = Jwt::verify($token);
+            if ($payload !== null && isset($payload['jti'])) {
+                Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
+            }
+        }
         AuthCookie::clear();
         ApiResponse::noContent();
     }

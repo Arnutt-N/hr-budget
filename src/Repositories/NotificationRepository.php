@@ -40,11 +40,18 @@ class NotificationRepository
 
     public function markRead(int $id): bool
     {
-        return Database::update('notifications', ['is_read' => 1], 'id = ?', [$id]) > 0;
+        // Idempotent: an already-read row updates 0 rows but still exists, so
+        // callers must not report 404 for a legitimate re-click.
+        if ($this->findById($id) === null) {
+            return false;
+        }
+        Database::update('notifications', ['is_read' => 1], 'id = ?', [$id]);
+        return true;
     }
 
     public function markAllRead(int $userId): bool
     {
-        return Database::update('notifications', ['is_read' => 1], 'user_id = ? AND is_read = 0', [$userId]) > 0;
+        Database::update('notifications', ['is_read' => 1], 'user_id = ? AND is_read = 0', [$userId]);
+        return true;
     }
 }

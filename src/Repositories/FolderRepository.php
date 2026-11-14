@@ -61,14 +61,22 @@ final class FolderRepository
         return $this->buildTree($all, null);
     }
 
-    /** Recursive nest of a flat folder list (mirrors legacy Folder::buildTree). */
-    private function buildTree(array $folders, ?int $parentId): array
+    /** Recursive nest of a flat folder list (cycle-safe, mirrors legacy Folder::buildTree). */
+    private function buildTree(array $folders, ?int $parentId, array $visited = []): array
     {
         $tree = [];
         foreach ($folders as $folder) {
+            $id = (int) ($folder['id'] ?? 0);
+            if ($id > 0 && isset($visited[$id])) {
+                continue;
+            }
             $fParent = $folder['parent_id'] !== null ? (int) $folder['parent_id'] : null;
             if ($fParent === $parentId) {
-                $folder['children'] = $this->buildTree($folders, (int) $folder['id']);
+                $nextVisited = $visited;
+                if ($id > 0) {
+                    $nextVisited[$id] = true;
+                }
+                $folder['children'] = $this->buildTree($folders, $id, $nextVisited);
                 $tree[] = $folder;
             }
         }
@@ -99,8 +107,16 @@ final class FolderRepository
             return Database::query($sql, [$id]);
         } catch (\Throwable $e) {
             $path = [];
+            $visited = [];
             $current = $this->findById($id);
             while ($current) {
+                $currId = (int) ($current['id'] ?? 0);
+                if ($currId > 0 && isset($visited[$currId])) {
+                    break;
+                }
+                if ($currId > 0) {
+                    $visited[$currId] = true;
+                }
                 array_unshift($path, $current);
                 $current = !empty($current['parent_id'])
                     ? $this->findById((int) $current['parent_id'])

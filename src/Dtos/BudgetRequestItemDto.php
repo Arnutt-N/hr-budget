@@ -32,11 +32,11 @@ final class BudgetRequestItemDto
             $errors['item_name'] = 'ชื่อรายการต้องไม่เกิน 255 ตัวอักษร';
         }
 
-        if (!is_numeric($this->quantity) || bccomp($this->quantity, '0', 2) < 0) {
+        if (preg_match('/^\d+(\.\d{1,2})?$/', $this->quantity) !== 1 || bccomp($this->quantity, '0', 2) < 0) {
             $errors['quantity'] = 'จำนวนต้องเป็นตัวเลขที่ไม่ติดลบ';
         }
 
-        if (!is_numeric($this->unitPrice) || bccomp($this->unitPrice, '0', 2) < 0) {
+        if (preg_match('/^\d+(\.\d{1,2})?$/', $this->unitPrice) !== 1 || bccomp($this->unitPrice, '0', 2) < 0) {
             $errors['unit_price'] = 'ราคาหน่วยต้องเป็นตัวเลขที่ไม่ติดลบ';
         }
 

@@ -150,13 +150,16 @@ describe('auth store (cookie mode)', () => {
     expect(vi.mocked(fetch).mock.calls).toHaveLength(2)
   })
 
-  test('logout when already logged out skips the network call (no 401 loop)', async () => {
-    mockFetchOnce(200, { success: true, data: fakeUser })
+  test('logout calls /auth/logout even when user is null so stale cookie is cleared', async () => {
+    mockFetchOnce(200, { success: true })
     const auth = useAuthStore()
 
     await auth.logout()
 
-    expect(vi.mocked(fetch).mock.calls).toHaveLength(0)
+    expect(vi.mocked(fetch).mock.calls).toHaveLength(1)
+    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe('/api/v1/auth/logout')
+    expect(auth.user).toBeNull()
+    expect(auth.initialized).toBe(false)
   })
 
   test('logout clears the TanStack query cache (no cross-user data leak)', async () => {

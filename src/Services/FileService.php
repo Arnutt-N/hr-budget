@@ -126,7 +126,7 @@ final class FileService
         // request_id NULL/0 = vault file → readable by any authenticated user
         // (VaultService read policy), so no extra check falls through here.
 
-        $full = $this->containedPath((string) $file['file_path']);
+        $full = self::containedPath((string) $file['file_path']);
         if ($full === null || !is_file($full)) {
             return null;
         }
@@ -164,7 +164,7 @@ final class FileService
             return false;
         }
 
-        $full = $this->containedPath((string) $file['file_path']);
+        $full = self::containedPath((string) $file['file_path']);
         if ($full !== null && is_file($full)) {
             unlink($full);
         }
@@ -177,7 +177,7 @@ final class FileService
      * VaultService::containedPath() so files.file_path can never turn this
      * service's delete/download into an arbitrary-path primitive.
      */
-    private function containedPath(string $webPath): ?string
+    public static function containedPath(string $webPath): ?string
     {
         $osPath = str_replace('/', DIRECTORY_SEPARATOR, $webPath);
         $real = realpath(BASE_PATH . '/public/' . $osPath);

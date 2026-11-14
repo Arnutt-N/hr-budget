@@ -83,6 +83,18 @@ class JwtTest extends TestCase
         $this->assertSecretRejected('abc');
     }
 
+    /** @test */
+    public function revoked_token_is_rejected_by_verify(): void
+    {
+        $token = Jwt::issue(42);
+        $payload = Jwt::verify($token);
+        $this->assertIsArray($payload);
+        $this->assertNotEmpty($payload['jti']);
+
+        Jwt::revoke((string) $payload['jti'], (int) $payload['exp']);
+        $this->assertNull(Jwt::verify($token));
+    }
+
     /**
      * Force the next Jwt::config() rebuild to pick up $_ENV['JWT_SECRET'],
      * expect the safety assertion to throw, then restore everything.

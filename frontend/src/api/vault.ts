@@ -1,4 +1,5 @@
 import { apiFetch } from '@/composables/useApi'
+import { apiUrl } from '@/api/base'
 import type { ApiResponse } from '@/types/api'
 import type { VaultFolder, VaultFile, FolderListResponse, VaultYear } from '@/types/vault'
 
@@ -65,6 +66,5 @@ export async function deleteVaultFile(id: number): Promise<ApiResponse<null>> {
 }
 
 export function vaultFileDownloadUrl(id: number): string {
-  const base = (import.meta.env.VITE_API_BASE_URL as string) || ''
-  return `${base}/api/v1/vault/files/${id}/download`
+  return apiUrl(`/vault/files/${id}/download`)
 }

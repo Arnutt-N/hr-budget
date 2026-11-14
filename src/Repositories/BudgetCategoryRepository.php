@@ -27,6 +27,12 @@ class BudgetCategoryRepository
         return Database::queryOne("SELECT * FROM budget_categories WHERE id = ?", [$id]);
     }
 
+    /** @return array<int,array<string,mixed>> */
+    public function findByParentId(int $parentId): array
+    {
+        return Database::query("SELECT * FROM budget_categories WHERE parent_id = ?", [$parentId]);
+    }
+
     public function getTree(): array
     {
         return Database::query(

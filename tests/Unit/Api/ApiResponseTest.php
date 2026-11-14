@@ -82,4 +82,18 @@ class ApiResponseTest extends TestCase
         $this->assertStringContainsString('สวัสดี', $raw);
         $this->assertStringNotContainsString('\\u0e2a', $raw);
     }
+
+    /** @test */
+    public function invalid_utf8_bytes_are_substituted_instead_of_empty_body(): void
+    {
+        ob_start();
+        ApiResponse::ok(['bad' => "\xB1\x31"], exit: false);
+        $raw = ob_get_clean();
+
+        $this->assertNotSame('', $raw);
+        $decoded = json_decode($raw, true);
+        $this->assertIsArray($decoded);
+        $this->assertTrue($decoded['success']);
+        $this->assertStringContainsString("\u{FFFD}", $decoded['data']['bad']);
+    }
 }

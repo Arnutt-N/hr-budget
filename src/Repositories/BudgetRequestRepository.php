@@ -82,7 +82,7 @@ class BudgetRequestRepository
     public function updateWhereStatus(int $id, string $expectedStatus, array $data): bool
     {
         $allowed = ['request_status', 'total_amount', 'submitted_at', 'approved_at',
-            'rejected_at', 'rejected_reason'];
+            'rejected_at', 'rejected_reason', 'current_level'];
 
         $updateData = [];
         foreach ($allowed as $field) {

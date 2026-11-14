@@ -25,6 +25,7 @@ class SimpleQueryBuilder
 
     public function where(string $column, $value): self
     {
+        $this->validateIdentifier($column);
         $this->conditions[] = "$column = ?";
         $this->params[] = $value;
         return $this;
@@ -32,20 +33,32 @@ class SimpleQueryBuilder
 
     public function whereNull(string $column): self
     {
+        $this->validateIdentifier($column);
         $this->conditions[] = "$column IS NULL";
         return $this;
     }
 
     public function whereNotNull(string $column): self
     {
+        $this->validateIdentifier($column);
         $this->conditions[] = "$column IS NOT NULL";
         return $this;
     }
-    
+
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
+        $this->validateIdentifier($column);
+        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $this->orderBy = " ORDER BY $column $direction";
         return $this;
+    }
+
+    /** Column names are interpolated into SQL verbatim — reject anything that is not [A-Za-z0-9_]. */
+    private function validateIdentifier(string $column): void
+    {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)) {
+            throw new \InvalidArgumentException("Invalid column name: {$column}");
+        }
     }
     
     public function get(): array

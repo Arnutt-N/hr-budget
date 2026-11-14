@@ -172,6 +172,7 @@ class BudgetRequestServiceTest extends TestCase
 
         $this->assertTrue($service->submit(5, 1));
         $this->assertSame('pending', $reqRepo->lastUpdateData['data']['request_status']);
+        $this->assertSame(1, $reqRepo->lastUpdateData['data']['current_level']);
         $this->assertSame('draft', $reqRepo->lastUpdateData['expected_status']);
         $this->assertArrayHasKey('submitted_at', $reqRepo->lastUpdateData['data']);
         $this->assertSame('submitted', $approvalRepo->logs[0]['action']);

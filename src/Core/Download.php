@@ -75,7 +75,14 @@ final class Download
         header('Content-Type: ' . self::safeMimeType($mime));
         header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: ' . self::contentDisposition($name));
-        header('Content-Length: ' . filesize($absPath));
+        $size = @filesize($absPath);
+        if ($size === false) {
+            // File vanished between the existence check and the header send —
+            // do not emit headers with a bogus length.
+            http_response_code(404);
+            exit;
+        }
+        header('Content-Length: ' . $size);
         readfile($absPath);
         exit;
     }

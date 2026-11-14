@@ -51,7 +51,7 @@ abstract class ApprovalSqliteTestCase extends RbacSqliteTestCase
         );
     }
 
-    protected function makeRequest(?int $orgId, string $status = 'pending', ?int $level = 1): int
+    protected function makeRequest(?int $orgId, string $status = 'pending', ?int $level = 1, int $createdBy = 999): int
     {
         return Database::insert('budget_requests', [
             'fiscal_year' => 2569,
@@ -59,7 +59,7 @@ abstract class ApprovalSqliteTestCase extends RbacSqliteTestCase
             'request_status' => $status,
             'current_level' => $level,
             'total_amount' => 1000,
-            'created_by' => 1,
+            'created_by' => $createdBy,
             'org_id' => $orgId,
         ]);
     }

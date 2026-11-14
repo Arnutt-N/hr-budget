@@ -113,4 +113,32 @@ class AccessGrantServiceTest extends RbacSqliteTestCase
         $this->assertFalse($second['ok']);
         $this->assertSame('duplicate_grant', $second['error']);
     }
+
+    /** @test */
+    public function non_super_cannot_self_grant(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $actor = $this->orgAdminActor($org);
+        $dto = new AssignGrantDto($this->roleId('viewer'), 'organization', $org);
+
+        $result = $this->service->assign($actor, $actor['id'], $dto);
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('forbidden_self_grant', $result['error']);
+    }
+
+    /** @test */
+    public function non_super_cannot_grant_role_with_permissions_they_do_not_hold(): void
+    {
+        $org = $this->makeOrg(null, 0);
+        $actor = $this->makeUser('editor');
+        $this->grant($actor['id'], 'budget_editor', 'organization', $org);
+        $target = $this->makeUser();
+        $dto = new AssignGrantDto($this->roleId('org_admin'), 'organization', $org);
+
+        $result = $this->service->assign($actor, $target['id'], $dto);
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame('forbidden_privileged_role', $result['error']);
+    }
 }

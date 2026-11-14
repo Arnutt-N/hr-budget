@@ -1,6 +1,12 @@
 # เปิดการใช้งาน mod_rewrite
 RewriteEngine On
 
+# Defense-in-depth when docroot is repo root: block dotfiles & internal dirs
+# (except .well-known/ so ACME HTTP-01 cert challenges still work)
+RewriteRule ^\.(?!well-known/) - [F,L]
+RewriteRule ^(src|config|database|scripts|tests|vendor|frontend|docs|PRPs|project-log-md|archives|secrets|storage|logs|examples|python)(/|$) - [F,L]
+RewriteRule ^(composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|phpstan.*)$ - [F,L]
+
 # =============================================
 # บังคับใช้ HTTPS (แก้ Not Secure)
 # ปิดการใช้งานบน localhost สำหรับ development

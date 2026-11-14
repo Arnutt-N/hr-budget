@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
+use App\Models\BudgetCategory;
 use App\Dtos\CreateCategoryDto;
 use App\Dtos\CreateCategoryItemDto;
 use App\Dtos\UpdateCategoryDto;
@@ -39,7 +40,7 @@ final class BudgetCategoryService
 
     public function getTree(): array
     {
-        return $this->catRepo->getTree();
+        return BudgetCategory::buildTree($this->catRepo->getTree());
     }
 
     public function findById(int $id): ?array
@@ -99,6 +100,9 @@ final class BudgetCategoryService
         if ($dto->isActive !== null) $updateData['is_active'] = $dto->isActive ? 1 : 0;
 
         if ($dto->parentId !== null) {
+            if ($dto->parentId === $id || $this->wouldCreateCycle($id, $dto->parentId)) {
+                return false;
+            }
             $updateData['parent_id'] = $dto->parentId;
             $parent = $this->catRepo->findById($dto->parentId);
             $updateData['level'] = $parent !== null ? (int) $parent['level'] + 1 : 0;
@@ -108,7 +112,53 @@ final class BudgetCategoryService
             return true;
         }
 
-        return $this->catRepo->update($id, $updateData);
+        Database::beginTransaction();
+        try {
+            $ok = $this->catRepo->update($id, $updateData);
+            if ($ok && isset($updateData['level'])) {
+                $visited = [$id => true];
+                $this->syncChildrenLevels($id, (int) $updateData['level'], $visited);
+            }
+            Database::commit();
+            return $ok;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            throw $e;
+        }
+    }
+
+    /** @param array<int,bool> $visited */
+    private function syncChildrenLevels(int $parentId, int $parentLevel, array &$visited): void
+    {
+        $children = $this->catRepo->findByParentId($parentId);
+        foreach ($children as $child) {
+            $childId = (int) $child['id'];
+            if (isset($visited[$childId])) {
+                continue;
+            }
+            $visited[$childId] = true;
+            $childLevel = $parentLevel + 1;
+            $this->catRepo->update($childId, ['level' => $childLevel]);
+            $this->syncChildrenLevels($childId, $childLevel, $visited);
+        }
+    }
+
+    private function wouldCreateCycle(int $categoryId, int $newParentId): bool
+    {
+        $visited = [$categoryId => true];
+        $cursor = $newParentId;
+        while ($cursor > 0) {
+            if (isset($visited[$cursor])) {
+                return true;
+            }
+            $visited[$cursor] = true;
+            $row = $this->catRepo->findById($cursor);
+            if ($row === null || $row['parent_id'] === null) {
+                break;
+            }
+            $cursor = (int) $row['parent_id'];
+        }
+        return false;
     }
 
     public function delete(string $role, int $id): bool
@@ -117,10 +167,16 @@ final class BudgetCategoryService
             return false;
         }
 
+        if ($this->catRepo->findById($id) === null) {
+            return false;
+        }
+
         Database::beginTransaction();
         try {
-            $this->itemRepo->deleteByCategoryId($id);
-            $this->catRepo->delete($id);
+            // Soft-delete items and deactivate category instead of hard-deleting,
+            // so historical budget_trackings rows are not wiped by ON DELETE CASCADE.
+            $this->itemRepo->softDeleteByCategoryId($id);
+            $this->catRepo->update($id, ['is_active' => 0]);
             Database::commit();
             return true;
         } catch (\Throwable $e) {

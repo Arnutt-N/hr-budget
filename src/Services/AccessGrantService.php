@@ -42,12 +42,18 @@ final class AccessGrantService
         $actorScope = $this->resolver->resolve($actor);
         $isSuper = $actorScope['isSuperAdmin'];
 
-        // Escalation guard: only super admin may grant privileged / system roles
-        // or the global 'all' scope.
+        // Self-grant guard: non-super actors cannot modify their own grants.
+        if (!$isSuper && $targetUserId === (int) ($actor['id'] ?? 0)) {
+            return ['ok' => false, 'error' => 'forbidden_self_grant'];
+        }
+
+        // Escalation guard: only super admin may grant privileged / system roles,
+        // roles carrying permissions the actor does not hold, or the global 'all' scope.
         $rolePerms = $this->roles->getPermissionCodes($dto->roleId);
         $privileged = (int) $role['is_system'] === 1
             || in_array('role.manage', $rolePerms, true)
-            || in_array('org.manage', $rolePerms, true);
+            || in_array('org.manage', $rolePerms, true)
+            || array_diff($rolePerms, $actorScope['permissions']) !== [];
         if (!$isSuper && $privileged) {
             return ['ok' => false, 'error' => 'forbidden_privileged_role'];
         }

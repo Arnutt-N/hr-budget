@@ -30,7 +30,7 @@ return [
     
     // Fiscal Year Configuration
     'fiscal_year' => [
-        'current' => 2569,
+        'current' => 2570,
         'start_month' => 10,  // October
         'end_month' => 9      // September
     ],

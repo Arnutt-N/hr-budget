@@ -103,6 +103,9 @@ final class OrganizationService
             $updateData['region'] = $dto->region;
         }
         if ($dto->parentId !== null) {
+            if ($dto->parentId === $id || $this->wouldCreateCycle($id, $dto->parentId)) {
+                return false;
+            }
             $updateData['parent_id'] = $dto->parentId;
             $parent = $this->repo->findById($dto->parentId);
             $updateData['level'] = $parent !== null ? (int) $parent['level'] + 1 : 0;
@@ -116,6 +119,24 @@ final class OrganizationService
         }
 
         return $this->repo->update($id, $updateData);
+    }
+
+    private function wouldCreateCycle(int $orgId, int $newParentId): bool
+    {
+        $visited = [$orgId => true];
+        $cursor = $newParentId;
+        while ($cursor > 0) {
+            if (isset($visited[$cursor])) {
+                return true;
+            }
+            $visited[$cursor] = true;
+            $row = $this->repo->findById($cursor);
+            if ($row === null || $row['parent_id'] === null) {
+                break;
+            }
+            $cursor = (int) $row['parent_id'];
+        }
+        return false;
     }
 
     public function delete(string $role, int $id): bool

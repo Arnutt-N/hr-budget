@@ -76,20 +76,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Clears the server cookie, then local state. Safe to call when already
-   * logged out (used by apiFetch's 401 handler) — skips the network call.
+   * Clears the server cookie, then local state. Always hits /auth/logout
+   * even when user is null so an httpOnly cookie cannot survive a stale tab;
+   * uses raw fetch (not apiFetch) so it cannot trigger a 401 loop.
    */
   async function logout(): Promise<void> {
-    if (user.value !== null) {
-      try {
-        await fetch(apiUrl('/auth/logout'), {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        })
-      } catch {
-        // Cookie clear failed (network down) — still drop local state.
-      }
+    try {
+      await fetch(apiUrl('/auth/logout'), {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      })
+    } catch {
+      // Cookie clear failed (network down) — still drop local state.
     }
     user.value = null
     // Force the next navigation to re-check the server: if the logout API

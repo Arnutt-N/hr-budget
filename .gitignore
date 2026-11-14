@@ -160,6 +160,8 @@ graphify-out/
 # Install: npx ux-ui-agent-skills init  (see AGENTS.md "Local-only skill pack").
 .claude/skills/
 .claude/rules/
+# Local-only agent skill-collection catalog (per-machine, like skills/rules)
+.claude/skill-collections/
 tokens/
 design-systems/
 components/

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\Database;
 use App\Repositories\AccessGrantRepository;
 use App\Repositories\ApprovalChainRepository;
 
@@ -73,6 +74,9 @@ final class ApprovalChainService
 
         $isSuper = ($actor['role'] ?? '') === 'admin';
         if (!$isSuper) {
+            if ($decision === 'approve' && (int) ($req['created_by'] ?? 0) === (int) ($actor['id'] ?? 0)) {
+                return ['ok' => false, 'error' => 'forbidden_self_approve'];
+            }
             if (!$this->grants->userHasActiveRole((int) ($actor['id'] ?? 0), $cfg['role_code'])) {
                 return ['ok' => false, 'error' => 'forbidden_wrong_level_role'];
             }
@@ -83,27 +87,36 @@ final class ApprovalChainService
             }
         }
 
-        $this->repo->recordAction([
-            'budget_request_id' => $requestId,
-            'action' => $decision === 'approve' ? 'approved' : 'rejected',
-            'level' => $level,
-            'user_id' => (int) ($actor['id'] ?? 0),
-            'note' => $note,
-        ]);
+        Database::beginTransaction();
+        try {
+            $this->repo->recordAction([
+                'budget_request_id' => $requestId,
+                'action' => $decision === 'approve' ? 'approved' : 'rejected',
+                'level' => $level,
+                'user_id' => (int) ($actor['id'] ?? 0),
+                'note' => $note,
+            ]);
 
-        if ($decision === 'reject') {
-            $this->repo->updateRequest($requestId, ['request_status' => 'rejected', 'current_level' => null]);
-            return ['ok' => true, 'status' => 'rejected', 'level' => null];
-        }
+            if ($decision === 'reject') {
+                $this->repo->updateRequest($requestId, ['request_status' => 'rejected', 'current_level' => null]);
+                Database::commit();
+                return ['ok' => true, 'status' => 'rejected', 'level' => null];
+            }
 
-        // approve: advance or finalize
-        if ($level >= $this->repo->maxLevel()) {
-            $this->repo->updateRequest($requestId, ['request_status' => 'approved', 'current_level' => null]);
-            return ['ok' => true, 'status' => 'approved', 'level' => null];
+            // approve: advance or finalize
+            if ($level >= $this->repo->maxLevel()) {
+                $this->repo->updateRequest($requestId, ['request_status' => 'approved', 'current_level' => null]);
+                Database::commit();
+                return ['ok' => true, 'status' => 'approved', 'level' => null];
+            }
+            $next = $level + 1;
+            $this->repo->updateRequest($requestId, ['current_level' => $next]);
+            Database::commit();
+            return ['ok' => true, 'status' => 'pending', 'level' => $next];
+        } catch (\Throwable $e) {
+            Database::rollback();
+            throw $e;
         }
-        $next = $level + 1;
-        $this->repo->updateRequest($requestId, ['current_level' => $next]);
-        return ['ok' => true, 'status' => 'pending', 'level' => $next];
     }
 
     /** @return array{request_status:?string,current_level:?int,history:array} */
@@ -117,6 +130,38 @@ final class ApprovalChainService
             'request_status' => $req['request_status'] ?? null,
             'current_level' => $req['current_level'] !== null ? (int) $req['current_level'] : null,
             'history' => $this->repo->historyFor($requestId),
+        ];
+    }
+
+    /**
+     * Scoped status lookup for HTTP endpoints — verifies the caller is admin,
+     * request owner, or holds an RBAC grant covering the request's organization.
+     *
+     * @param array<string,mixed> $user
+     * @return array{ok:bool,data?:array{request_status:?string,current_level:?int,history:array},error?:string}
+     */
+    public function statusForUser(array $user, int $requestId): array
+    {
+        $req = $this->repo->findRequest($requestId);
+        if ($req === null) {
+            return ['ok' => false, 'error' => 'not_found'];
+        }
+        $isSuper = ($user['role'] ?? '') === 'admin';
+        $isOwner = (int) ($req['created_by'] ?? 0) === (int) ($user['id'] ?? 0);
+        if (!$isSuper && !$isOwner) {
+            $scope = $this->resolver->resolve($user);
+            $orgId = $req['org_id'] !== null ? (int) $req['org_id'] : null;
+            if (!$scope['hasAll'] && ($orgId === null || !in_array($orgId, $scope['orgIds'], true))) {
+                return ['ok' => false, 'error' => 'forbidden_out_of_scope'];
+            }
+        }
+        return [
+            'ok' => true,
+            'data' => [
+                'request_status' => $req['request_status'] ?? null,
+                'current_level' => $req['current_level'] !== null ? (int) $req['current_level'] : null,
+                'history' => $this->repo->historyFor($requestId),
+            ],
         ];
     }
 }
