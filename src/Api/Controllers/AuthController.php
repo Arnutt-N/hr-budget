@@ -16,6 +16,7 @@ use App\Api\Middleware\AuthMiddleware;
 use App\Core\AuthCookie;
 use App\Core\Jwt;
 use App\Core\RateLimiter;
+use App\Core\Request;
 use App\Dtos\LoginRequestDto;
 use App\Services\AuthService;
 
@@ -42,7 +43,7 @@ final class AuthController
             return;
         }
 
-        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $ip = Request::clientIp();
         $emailKey = 'login:' . $ip . ':' . strtolower($dto->email);
         if (!RateLimiter::allow('login_ip:' . $ip, 30, 60) || !RateLimiter::allow($emailKey, 10, 60)) {
             if (!headers_sent()) {
@@ -88,7 +89,16 @@ final class AuthController
         if ($token !== '') {
             $payload = Jwt::verify($token);
             if ($payload !== null && isset($payload['jti'])) {
-                Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
+                // Revocation is fail-closed: if the marker cannot be written the
+                // stolen token stays valid, so logout must surface the error
+                // instead of reporting success and clearing the cookie anyway.
+                try {
+                    Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
+                } catch (\RuntimeException $e) {
+                    error_log('[auth] logout revocation failed: ' . $e->getMessage());
+                    ApiResponse::error('ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง', 500);
+                    return;
+                }
             }
         }
         AuthCookie::clear();

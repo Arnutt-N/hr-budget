@@ -38,6 +38,40 @@ class ApprovalChainRepository
         return Database::queryOne("SELECT * FROM budget_requests WHERE id = ?", [$id]);
     }
 
+    /**
+     * Conditional update guarded on the current chain level.
+     *
+     * Two actors at the same level can race: without the guard both updates
+     * apply and the last write wins (e.g. an approve overwriting a reject).
+     * The WHERE clause makes the transition conditional on the level the actor
+     * read, so the loser updates 0 rows.
+     *
+     * @return bool true only when exactly the expected row was transitioned
+     */
+    public function updateRequestAtLevel(int $id, int $expectedLevel, array $data): bool
+    {
+        $allowed = ['request_status', 'current_level'];
+        $clean = [];
+        foreach ($allowed as $f) {
+            if (array_key_exists($f, $data)) {
+                $clean[$f] = $data[$f];
+            }
+        }
+        if ($clean === []) {
+            return false;
+        }
+        $pdo = Database::getInstance();
+        $sets = [];
+        foreach (array_keys($clean) as $column) {
+            $sets[] = "{$column} = ?";
+        }
+        $sql = 'UPDATE budget_requests SET ' . implode(', ', $sets)
+            . ' WHERE id = ? AND current_level = ?';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([...array_values($clean), $id, $expectedLevel]);
+        return $stmt->rowCount() === 1;
+    }
+
     public function updateRequest(int $id, array $data): bool
     {
         $allowed = ['request_status', 'current_level'];

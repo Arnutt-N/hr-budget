@@ -38,4 +38,26 @@ final class Request
     {
         return filter_var($_ENV['TRUST_PROXY'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
+
+    /**
+     * Client IP for rate-limiting and audit logs.
+     *
+     * Direct connections: REMOTE_ADDR is authoritative.
+     * Behind a trusted reverse proxy (TRUST_PROXY=true): the left-most
+     * X-Forwarded-For entry is the original client (right-most is added by the
+     * nearest trusted proxy; entries in between are client-spoofable).
+     * Without TRUST_PROXY the header is ignored entirely — a spoofed header
+     * cannot mint unlimited rate-limit buckets.
+     */
+    public static function clientIp(): string
+    {
+        if (self::trustProxy()) {
+            $raw = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
+            $first = trim(explode(',', $raw)[0]);
+            if ($first !== '' && filter_var($first, FILTER_VALIDATE_IP)) {
+                return $first;
+            }
+        }
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    }
 }

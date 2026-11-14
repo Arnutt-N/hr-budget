@@ -98,19 +98,40 @@ final class ApprovalChainService
             ]);
 
             if ($decision === 'reject') {
-                $this->repo->updateRequest($requestId, ['request_status' => 'rejected', 'current_level' => null]);
+                $rejected = $this->repo->updateRequestAtLevel($requestId, $level, [
+                    'request_status' => 'rejected',
+                    'current_level' => null,
+                ]);
+                if (!$rejected) {
+                    // Another actor won the race (or the row moved on). The
+                    // action record stays out — only a transition that actually
+                    // applied is logged as history.
+                    Database::rollback();
+                    return ['ok' => false, 'error' => 'stale_level'];
+                }
                 Database::commit();
                 return ['ok' => true, 'status' => 'rejected', 'level' => null];
             }
 
             // approve: advance or finalize
             if ($level >= $this->repo->maxLevel()) {
-                $this->repo->updateRequest($requestId, ['request_status' => 'approved', 'current_level' => null]);
+                $finalized = $this->repo->updateRequestAtLevel($requestId, $level, [
+                    'request_status' => 'approved',
+                    'current_level' => null,
+                ]);
+                if (!$finalized) {
+                    Database::rollback();
+                    return ['ok' => false, 'error' => 'stale_level'];
+                }
                 Database::commit();
                 return ['ok' => true, 'status' => 'approved', 'level' => null];
             }
             $next = $level + 1;
-            $this->repo->updateRequest($requestId, ['current_level' => $next]);
+            $advanced = $this->repo->updateRequestAtLevel($requestId, $level, ['current_level' => $next]);
+            if (!$advanced) {
+                Database::rollback();
+                return ['ok' => false, 'error' => 'stale_level'];
+            }
             Database::commit();
             return ['ok' => true, 'status' => 'pending', 'level' => $next];
         } catch (\Throwable $e) {

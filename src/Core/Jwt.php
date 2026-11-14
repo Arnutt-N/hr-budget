@@ -98,6 +98,11 @@ final class Jwt
 
     /**
      * Revoke a token by its jti until its expiry timestamp.
+     *
+     * Fail-closed: if the revocation marker cannot be written the token would
+     * stay valid until expiry — a stolen token outliving logout. Callers get a
+     * RuntimeException so logout can surface the error instead of silently
+     * reporting success.
      */
     public static function revoke(string $jti, int $exp, ?string $dir = null): void
     {
@@ -105,7 +110,10 @@ final class Jwt
             return;
         }
         $path = self::revokePath($jti, $dir);
-        @file_put_contents($path, (string) $exp, LOCK_EX);
+        $ok = @file_put_contents($path, (string) $exp, LOCK_EX);
+        if ($ok === false) {
+            throw new \RuntimeException('JWT revocation store is not writable: ' . dirname($path));
+        }
     }
 
     public static function isRevoked(string $jti, ?string $dir = null): bool
