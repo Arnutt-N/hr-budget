@@ -109,8 +109,8 @@ final class RequestTest extends TestCase
         $this->assertSame('203.0.113.9', Request::clientIp());
     }
 
-    public function test_client_ip_empty_when_no_remote_addr(): void
+    public function test_client_ip_falls_back_to_unknown_when_no_remote_addr(): void
     {
-        $this->assertSame('', Request::clientIp());
+        $this->assertSame('unknown', Request::clientIp());
     }
 }

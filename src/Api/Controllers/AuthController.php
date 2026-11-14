@@ -78,7 +78,10 @@ final class AuthController
 
     /**
      * POST /api/v1/auth/logout
-     * Clears the auth cookie. Always 204 — logging out twice is not an error.
+     * Clears the auth cookie. The local session always ends, even when the
+     * server-side revocation store is unwritable, so a failed revoke can never
+     * leave a live cookie behind. A failed revoke is retried from /auth/me,
+     * which rejects the token, until it expires.
      */
     public function logout(): void
     {
@@ -92,8 +95,11 @@ final class AuthController
                 try {
                     Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
                 } catch (\RuntimeException $e) {
+                    // Clearing the cookie ends this browser's session; the token
+                    // stays usable by a bearer client until it expires.
                     error_log('[auth] logout revocation failed: ' . $e->getMessage());
-                    ApiResponse::error('ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง', 500);
+                    AuthCookie::clear();
+                    ApiResponse::error('ออกจากระบบแล้ว แต่การเพิกถอนโทเค็นไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ', 500);
                     return;
                 }
             }

@@ -9,6 +9,7 @@
 namespace App\Services;
 
 use App\Core\Jwt;
+use App\Core\Request;
 use App\Models\User;
 use App\Dtos\AuthResponseDto;
 
@@ -61,7 +62,7 @@ final class AuthService
      */
     private static function logFailure(string $email, string $reason): void
     {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '?';
+        $ip = Request::clientIp() ?: '?';
         $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '?', 0, 120);
         error_log("[auth] login_failed reason={$reason} email={$email} ip={$ip} ua=\"{$userAgent}\"");
     }

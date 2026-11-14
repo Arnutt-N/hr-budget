@@ -54,6 +54,6 @@ final class Request
                 return $first;
             }
         }
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
     }
 }
