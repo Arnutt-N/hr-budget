@@ -60,9 +60,10 @@ class ApprovalChainRepository
         $stmt = $pdo->prepare($sql);
         $stmt->execute([...array_values($clean), $id, $expectedLevel]);
         // rowCount() counts CHANGED rows on MySQL (no MYSQL_ATTR_FOUND_ROWS),
-        // so a no-op write whose SET value already matches reports 0. Every
-        // transition act() makes changes the stored value, so > 0 is the right
-        // predicate here; === 1 would misreport a legitimate no-op as a lost race.
+        // so a write whose SET value already matches reports 0 there and 1 on
+        // SQLite. Every transition act() makes changes the stored value, so > 0
+        // is the right predicate; === 1 would misreport a matched write on
+        // SQLite, which is the driver the unit suite runs on.
         return $stmt->rowCount() > 0;
     }
 

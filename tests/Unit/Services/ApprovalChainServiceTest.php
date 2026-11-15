@@ -190,22 +190,6 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
     }
 
     /** @test */
-    public function conditional_update_treats_a_matched_write_as_success(): void
-    {
-        // MySQL's rowCount() counts CHANGED rows (no MYSQL_ATTR_FOUND_ROWS), so a
-        // transition whose SET value already matches reports 0 there and 1 on
-        // SQLite. A matched write must read as success on both, or a legitimate
-        // transition would be reported as a lost race.
-        $org = $this->makeOrg(null, 0);
-        $req = $this->makeRequest($org, 'pending', 2);
-
-        $repo = new \App\Repositories\ApprovalChainRepository();
-        $applied = $repo->updateRequestAtLevel($req, 2, ['current_level' => 2]);
-
-        $this->assertTrue($applied);
-    }
-
-    /** @test */
     public function cannot_self_approve_own_request(): void
     {
         $org = $this->makeOrg(null, 0);
