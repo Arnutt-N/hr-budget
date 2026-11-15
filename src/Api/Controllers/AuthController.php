@@ -16,6 +16,7 @@ use App\Api\Middleware\AuthMiddleware;
 use App\Core\AuthCookie;
 use App\Core\Jwt;
 use App\Core\RateLimiter;
+use App\Core\Request;
 use App\Dtos\LoginRequestDto;
 use App\Services\AuthService;
 
@@ -42,7 +43,7 @@ final class AuthController
             return;
         }
 
-        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+        $ip = Request::clientIp();
         $emailKey = 'login:' . $ip . ':' . strtolower($dto->email);
         if (!RateLimiter::allow('login_ip:' . $ip, 30, 60) || !RateLimiter::allow($emailKey, 10, 60)) {
             if (!headers_sent()) {
@@ -77,7 +78,9 @@ final class AuthController
 
     /**
      * POST /api/v1/auth/logout
-     * Clears the auth cookie. Always 204 — logging out twice is not an error.
+     * Clears the auth cookie. The local session always ends, even when the
+     * server-side revocation store is unwritable, so a failed revoke can never
+     * leave a live cookie behind.
      */
     public function logout(): void
     {
@@ -85,13 +88,23 @@ final class AuthController
         $token = str_starts_with($header, 'Bearer ')
             ? substr($header, 7)
             : (string) ($_COOKIE[AuthMiddleware::COOKIE_NAME] ?? '');
+        $revokeFailed = false;
         if ($token !== '') {
             $payload = Jwt::verify($token);
             if ($payload !== null && isset($payload['jti'])) {
-                Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
+                try {
+                    Jwt::revoke((string) $payload['jti'], (int) ($payload['exp'] ?? (time() + 3600)));
+                } catch (\RuntimeException $e) {
+                    error_log('[auth] logout revocation failed: ' . $e->getMessage());
+                    $revokeFailed = true;
+                }
             }
         }
         AuthCookie::clear();
+        if ($revokeFailed) {
+            ApiResponse::error('ออกจากระบบแล้ว แต่การเพิกถอนโทเค็นไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ', 500);
+            return;
+        }
         ApiResponse::noContent();
     }
 

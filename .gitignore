@@ -162,6 +162,8 @@ graphify-out/
 .claude/rules/
 # Local-only agent skill-collection catalog (per-machine, like skills/rules)
 .claude/skill-collections/
+# pstack review worktrees and audit trails (per-session scratch, never commit)
+/.audit/
 tokens/
 design-systems/
 components/

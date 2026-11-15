@@ -30,20 +30,6 @@ final class ApprovalChainService
     }
 
     /**
-     * Enter the request into the chain at level 1 (called on submit).
-     * @return array{ok:bool,error?:string}
-     */
-    public function start(int $requestId): array
-    {
-        $req = $this->repo->findRequest($requestId);
-        if ($req === null) {
-            return ['ok' => false, 'error' => 'not_found'];
-        }
-        $this->repo->updateRequest($requestId, ['request_status' => 'pending', 'current_level' => 1]);
-        return ['ok' => true];
-    }
-
-    /**
      * Act on the current step.
      * @param array<string,mixed> $actor
      * @param string $decision 'approve'|'reject'
@@ -89,34 +75,59 @@ final class ApprovalChainService
 
         Database::beginTransaction();
         try {
-            $this->repo->recordAction([
-                'budget_request_id' => $requestId,
-                'action' => $decision === 'approve' ? 'approved' : 'rejected',
-                'level' => $level,
-                'user_id' => (int) ($actor['id'] ?? 0),
-                'note' => $note,
-            ]);
-
             if ($decision === 'reject') {
-                $this->repo->updateRequest($requestId, ['request_status' => 'rejected', 'current_level' => null]);
+                $rejected = $this->repo->updateRequestAtLevel($requestId, $level, [
+                    'request_status' => 'rejected',
+                    'current_level' => null,
+                ]);
+                if (!$rejected) {
+                    Database::rollback();
+                    return ['ok' => false, 'error' => 'stale_level'];
+                }
+                $this->recordDecision($requestId, $decision, $level, $actor, $note);
                 Database::commit();
                 return ['ok' => true, 'status' => 'rejected', 'level' => null];
             }
 
             // approve: advance or finalize
             if ($level >= $this->repo->maxLevel()) {
-                $this->repo->updateRequest($requestId, ['request_status' => 'approved', 'current_level' => null]);
+                $finalized = $this->repo->updateRequestAtLevel($requestId, $level, [
+                    'request_status' => 'approved',
+                    'current_level' => null,
+                ]);
+                if (!$finalized) {
+                    Database::rollback();
+                    return ['ok' => false, 'error' => 'stale_level'];
+                }
+                $this->recordDecision($requestId, $decision, $level, $actor, $note);
                 Database::commit();
                 return ['ok' => true, 'status' => 'approved', 'level' => null];
             }
             $next = $level + 1;
-            $this->repo->updateRequest($requestId, ['current_level' => $next]);
+            $advanced = $this->repo->updateRequestAtLevel($requestId, $level, ['current_level' => $next]);
+            if (!$advanced) {
+                Database::rollback();
+                return ['ok' => false, 'error' => 'stale_level'];
+            }
+            $this->recordDecision($requestId, $decision, $level, $actor, $note);
             Database::commit();
             return ['ok' => true, 'status' => 'pending', 'level' => $next];
         } catch (\Throwable $e) {
             Database::rollback();
             throw $e;
         }
+    }
+
+    /** @param array<string,mixed> $actor */
+    private function recordDecision(int $requestId, string $decision, int $level, array $actor, ?string $note): void
+    {
+        $this->repo->recordAction([
+            'budget_request_id' => $requestId,
+            'action' => $decision === 'approve' ? 'approved' : 'rejected',
+            'level' => $level,
+            'user_id' => (int) ($actor['id'] ?? 0),
+            'note' => $note,
+        ]);
     }
 
     /** @return array{request_status:?string,current_level:?int,history:array} */

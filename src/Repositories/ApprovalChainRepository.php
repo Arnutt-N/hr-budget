@@ -38,7 +38,7 @@ class ApprovalChainRepository
         return Database::queryOne("SELECT * FROM budget_requests WHERE id = ?", [$id]);
     }
 
-    public function updateRequest(int $id, array $data): bool
+    public function updateRequestAtLevel(int $id, int $expectedLevel, array $data): bool
     {
         $allowed = ['request_status', 'current_level'];
         $clean = [];
@@ -50,7 +50,13 @@ class ApprovalChainRepository
         if ($clean === []) {
             return false;
         }
-        return Database::update('budget_requests', $clean, 'id = ?', [$id]) > 0;
+        // rowCount() counts CHANGED rows on MySQL, MATCHED rows on SQLite.
+        return Database::update(
+            'budget_requests',
+            $clean,
+            'id = ? AND current_level = ?',
+            [$id, $expectedLevel]
+        ) > 0;
     }
 
     public function recordAction(array $data): int

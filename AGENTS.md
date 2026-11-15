@@ -357,6 +357,19 @@ supported surface.
 - Email/session/DB env vars are loaded with `Dotenv::safeLoad()`, so a missing `.env` won't
   throw — config fallbacks in `config/*.php` apply instead.
 
+## Repeat mistakes and what enforces them
+
+Classes that have recurred across reviews, paired with the check that makes the next one
+impossible. A rule with nothing enforcing it is documentation, not a guard.
+
+| Mistake class | Enforced by |
+| --- | --- |
+| A repository allow-list silently drops a field a service writes (the `current_level` submit bug). | `tests/Unit/Repositories/BudgetRequestRepositoryTest.php` writes every field the service sends and fails if one is dropped. Stub repos that override the write method bypass the allow-list, so they cannot catch this. |
+| A controller relies on `AuthMiddleware::require()` alone and skips `AccessScopeResolver::can()` (31 of 32 controllers at last count). | Nothing yet. Add `->can()` per route when the controller is touched; a sweep is tracked separately. |
+| A service writes in several statements with no `Database::beginTransaction()`, so a mid-way failure leaves the tree half-migrated. | `BudgetCategoryServiceTest` covers the category level sync. Other multi-statement writers are not yet covered. |
+| Soft-delete rows (`is_active = 0`) still surface in `findAll()` / `getTree()`. | Nothing yet. Queries must filter `is_active = 1` or the UI shows deleted rows. |
+| A write path trusts a client-supplied header (XFF) without a `TRUST_PROXY` gate. | `Request::clientIp()` is the single source; `RequestTest` covers the gate, the invalid-entry fallback, and the `unknown` sentinel. Never read `HTTP_X_FORWARDED_*` directly. |
+
 ## Stale docs to trust less than the code
 
 - **`README.md` mentions `/budgets`, `/files`, `/folders` as live legacy remnants — they are
