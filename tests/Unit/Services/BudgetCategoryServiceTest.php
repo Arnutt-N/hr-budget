@@ -82,10 +82,12 @@ final class BudgetCategoryServiceTest extends TestCase
             [10, ['id' => 10, 'parent_id' => null, 'level' => 0]],
             [5, ['id' => 5, 'parent_id' => null, 'level' => 1]],
         ]);
-        $catRepo->method('findByParentId')->willReturnMap([
-            [10, [['id' => 20, 'parent_id' => 10, 'level' => 1]]],
-            [20, []],
-        ]);
+        $catRepo->method('findByParentId')->willReturnCallback(
+            static fn (int $parentId, bool $activeOnly = true) => match ($parentId) {
+                10 => [['id' => 20, 'parent_id' => 10, 'level' => 1]],
+                default => [],
+            }
+        );
         $catRepo->expects($this->exactly(2))
             ->method('update')
             ->willReturn(true);
@@ -94,5 +96,43 @@ final class BudgetCategoryServiceTest extends TestCase
         $service = new BudgetCategoryService($catRepo, $itemRepo);
 
         $this->assertTrue($service->update('admin', 10, new UpdateCategoryDto(parentId: 5)));
+    }
+
+    public function testListHidesSoftDeletedCategories(): void
+    {
+        $catRepo = $this->createMock(BudgetCategoryRepository::class);
+        $catRepo->expects($this->once())
+            ->method('count')
+            ->with(activeOnly: true)
+            ->willReturn(1);
+        $catRepo->expects($this->once())
+            ->method('findAll')
+            ->with(100, 0, true)
+            ->willReturn([['id' => 1, 'code' => 'A', 'is_active' => 1]]);
+
+        $itemRepo = $this->createMock(BudgetCategoryItemRepository::class);
+        $service = new BudgetCategoryService($catRepo, $itemRepo);
+
+        $result = $service->list();
+
+        $this->assertCount(1, $result['data']);
+        $this->assertSame(1, $result['meta']['total']);
+    }
+
+    public function testTreeHidesSoftDeletedCategories(): void
+    {
+        $catRepo = $this->createMock(BudgetCategoryRepository::class);
+        $catRepo->expects($this->once())
+            ->method('getTree')
+            ->with(activeOnly: true)
+            ->willReturn([['id' => 1, 'parent_id' => null, 'name_th' => 'Root']]);
+
+        $itemRepo = $this->createMock(BudgetCategoryItemRepository::class);
+        $service = new BudgetCategoryService($catRepo, $itemRepo);
+
+        $tree = $service->getTree();
+
+        $this->assertCount(1, $tree);
+        $this->assertSame(1, $tree[0]['id']);
     }
 }

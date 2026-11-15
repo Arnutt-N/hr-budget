@@ -41,6 +41,15 @@ class OrganizationRepository
         );
     }
 
+    /** @return array<int,array<string,mixed>> */
+    public function findByParentId(int $parentId): array
+    {
+        return Database::query(
+            "SELECT * FROM organizations WHERE parent_id = ?",
+            [$parentId]
+        );
+    }
+
     public function insert(array $data): int
     {
         return Database::insert('organizations', $data);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\Database;
 use App\Dtos\CreateOrganizationDto;
 use App\Dtos\UpdateOrganizationDto;
 use App\Repositories\OrganizationRepository;
@@ -118,7 +119,35 @@ final class OrganizationService
             return true;
         }
 
-        return $this->repo->update($id, $updateData);
+        Database::beginTransaction();
+        try {
+            $ok = $this->repo->update($id, $updateData);
+            if ($ok && isset($updateData['level'])) {
+                $visited = [$id => true];
+                $this->syncChildrenLevels($id, (int) $updateData['level'], $visited);
+            }
+            Database::commit();
+            return $ok;
+        } catch (\Throwable $e) {
+            Database::rollback();
+            throw $e;
+        }
+    }
+
+    /** @param array<int,bool> $visited */
+    private function syncChildrenLevels(int $parentId, int $parentLevel, array &$visited): void
+    {
+        $children = $this->repo->findByParentId($parentId);
+        foreach ($children as $child) {
+            $childId = (int) $child['id'];
+            if (isset($visited[$childId])) {
+                continue;
+            }
+            $visited[$childId] = true;
+            $childLevel = $parentLevel + 1;
+            $this->repo->update($childId, ['level' => $childLevel]);
+            $this->syncChildrenLevels($childId, $childLevel, $visited);
+        }
     }
 
     private function wouldCreateCycle(int $orgId, int $newParentId): bool

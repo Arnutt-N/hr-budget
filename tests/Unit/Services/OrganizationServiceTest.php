@@ -36,4 +36,27 @@ final class OrganizationServiceTest extends TestCase
 
         $this->assertFalse($service->update('admin', 5, new UpdateOrganizationDto(parentId: 15)));
     }
+
+    public function testUpdateSyncsDescendantLevelsWhenParentChanges(): void
+    {
+        $repo = $this->createMock(OrganizationRepository::class);
+        $repo->method('findById')->willReturnMap([
+            [10, ['id' => 10, 'parent_id' => null, 'level' => 1]],
+            [5, ['id' => 5, 'parent_id' => null, 'level' => 0]],
+        ]);
+        $repo->method('findByParentId')->willReturnCallback(
+            static fn (int $parentId) => match ($parentId) {
+                10 => [
+                    ['id' => 20, 'parent_id' => 10, 'level' => 2],
+                    ['id' => 21, 'parent_id' => 10, 'level' => 2],
+                ],
+                default => [],
+            }
+        );
+        $repo->expects($this->exactly(3))->method('update')->willReturn(true);
+
+        $service = new OrganizationService($repo);
+
+        $this->assertTrue($service->update('admin', 10, new UpdateOrganizationDto(parentId: 5)));
+    }
 }

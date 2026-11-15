@@ -130,7 +130,7 @@ final class BudgetCategoryService
     /** @param array<int,bool> $visited */
     private function syncChildrenLevels(int $parentId, int $parentLevel, array &$visited): void
     {
-        $children = $this->catRepo->findByParentId($parentId);
+        $children = $this->catRepo->findByParentId($parentId, activeOnly: false);
         foreach ($children as $child) {
             $childId = (int) $child['id'];
             if (isset($visited[$childId])) {

@@ -8,17 +8,23 @@ use App\Core\Database;
 
 class BudgetCategoryRepository
 {
-    public function findAll(int $limit = 100, int $offset = 0): array
+    public function findAll(int $limit = 100, int $offset = 0, bool $activeOnly = true): array
     {
-        return Database::query(
-            "SELECT * FROM budget_categories ORDER BY level, sort_order, id LIMIT ? OFFSET ?",
-            [$limit, $offset]
-        );
+        $sql = "SELECT * FROM budget_categories";
+        if ($activeOnly) {
+            $sql .= " WHERE is_active = 1";
+        }
+        $sql .= " ORDER BY level, sort_order, id LIMIT ? OFFSET ?";
+        return Database::query($sql, [$limit, $offset]);
     }
 
-    public function count(): int
+    public function count(bool $activeOnly = true): int
     {
-        $result = Database::query("SELECT COUNT(*) as total FROM budget_categories");
+        $sql = "SELECT COUNT(*) as total FROM budget_categories";
+        if ($activeOnly) {
+            $sql .= " WHERE is_active = 1";
+        }
+        $result = Database::query($sql);
         return (int) ($result[0]['total'] ?? 0);
     }
 
@@ -27,17 +33,30 @@ class BudgetCategoryRepository
         return Database::queryOne("SELECT * FROM budget_categories WHERE id = ?", [$id]);
     }
 
-    /** @return array<int,array<string,mixed>> */
-    public function findByParentId(int $parentId): array
+    /**
+     * @return array<int,array<string,mixed>>
+     *
+     * Active-only by default, matching how the category tree presents itself.
+     * The level sync walks every child, including soft-deleted ones, so it
+     * passes false.
+     */
+    public function findByParentId(int $parentId, bool $activeOnly = true): array
     {
-        return Database::query("SELECT * FROM budget_categories WHERE parent_id = ?", [$parentId]);
+        $sql = "SELECT * FROM budget_categories WHERE parent_id = ?";
+        if ($activeOnly) {
+            $sql .= " AND is_active = 1";
+        }
+        return Database::query($sql, [$parentId]);
     }
 
-    public function getTree(): array
+    public function getTree(bool $activeOnly = true): array
     {
-        return Database::query(
-            "SELECT * FROM budget_categories ORDER BY level, sort_order, id"
-        );
+        $sql = "SELECT * FROM budget_categories";
+        if ($activeOnly) {
+            $sql .= " WHERE is_active = 1";
+        }
+        $sql .= " ORDER BY level, sort_order, id";
+        return Database::query($sql);
     }
 
     public function insert(array $data): int
