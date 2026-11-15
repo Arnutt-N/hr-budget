@@ -44,6 +44,10 @@ final class Request
      * Behind a trusted reverse proxy (TRUST_PROXY=true): the left-most
      * X-Forwarded-For entry is the original client (right-most is added by the
      * nearest trusted proxy; entries in between are client-spoofable).
+     * Left-most is correct only when the proxy overwrites XFF rather than
+     * appends to a client-supplied chain; verify the proxy's behavior before
+     * enabling TRUST_PROXY. This deployment serves PHP directly from Apache
+     * with no proxy in front, so TRUST_PROXY stays false.
      */
     public static function clientIp(): string
     {

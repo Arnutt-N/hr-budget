@@ -59,7 +59,11 @@ class ApprovalChainRepository
             . ' WHERE id = ? AND current_level = ?';
         $stmt = $pdo->prepare($sql);
         $stmt->execute([...array_values($clean), $id, $expectedLevel]);
-        return $stmt->rowCount() === 1;
+        // rowCount() counts CHANGED rows on MySQL (no MYSQL_ATTR_FOUND_ROWS),
+        // so a no-op write whose SET value already matches reports 0. Every
+        // transition act() makes changes the stored value, so > 0 is the right
+        // predicate here; === 1 would misreport a legitimate no-op as a lost race.
+        return $stmt->rowCount() > 0;
     }
 
     public function updateRequest(int $id, array $data): bool

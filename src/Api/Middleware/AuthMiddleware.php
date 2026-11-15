@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace App\Api\Middleware;
 
 use App\Core\Jwt;
+use App\Core\Request;
 use App\Models\User;
 use App\Api\Responses\ApiResponse;
 
@@ -105,7 +106,7 @@ final class AuthMiddleware
      */
     private static function logDenied(string $reason, array $context = []): void
     {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '?';
+        $ip = Request::clientIp() ?: '?';
         // Strip CR/LF so a crafted URI cannot inject fake log lines
         $path = preg_replace('/[\r\n]/', '', $_SERVER['REQUEST_URI'] ?? '?');
         $extra = $context === [] ? '' : ' ' . json_encode($context, JSON_UNESCAPED_SLASHES);

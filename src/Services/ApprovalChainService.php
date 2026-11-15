@@ -30,20 +30,6 @@ final class ApprovalChainService
     }
 
     /**
-     * Enter the request into the chain at level 1 (called on submit).
-     * @return array{ok:bool,error?:string}
-     */
-    public function start(int $requestId): array
-    {
-        $req = $this->repo->findRequest($requestId);
-        if ($req === null) {
-            return ['ok' => false, 'error' => 'not_found'];
-        }
-        $this->repo->updateRequest($requestId, ['request_status' => 'pending', 'current_level' => 1]);
-        return ['ok' => true];
-    }
-
-    /**
      * Act on the current step.
      * @param array<string,mixed> $actor
      * @param string $decision 'approve'|'reject'
