@@ -84,13 +84,21 @@ final class BudgetCategoryServiceTest extends TestCase
         ]);
         $catRepo->method('findByParentId')->willReturnCallback(
             static fn (int $parentId, bool $activeOnly = true) => match ($parentId) {
-                10 => [['id' => 20, 'parent_id' => 10, 'level' => 1]],
+                // Only returns children when the caller asks for inactive rows
+                // too, so flipping activeOnly back to true would fail this test.
+                10 => $activeOnly === false
+                    ? [['id' => 20, 'parent_id' => 10, 'level' => 1]]
+                    : [],
                 default => [],
             }
         );
         $catRepo->expects($this->exactly(2))
             ->method('update')
-            ->willReturn(true);
+            ->willReturnCallback(function (int $id, array $data): bool {
+                // First call moves 10 itself (parent_id + level), then the child.
+                $this->assertArrayHasKey('level', $data, "update({$id}) must set a level");
+                return true;
+            });
 
         $itemRepo = $this->createMock(BudgetCategoryItemRepository::class);
         $service = new BudgetCategoryService($catRepo, $itemRepo);

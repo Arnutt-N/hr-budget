@@ -53,7 +53,20 @@ final class OrganizationServiceTest extends TestCase
                 default => [],
             }
         );
-        $repo->expects($this->exactly(3))->method('update')->willReturn(true);
+        // First update is the moving org itself (parent_id + level), then each
+        // child gets that level + 1.
+        $expected = [
+            [10, ['parent_id' => 5, 'level' => 1]],
+            [20, ['level' => 2]],
+            [21, ['level' => 2]],
+        ];
+        $repo->expects($this->exactly(3))
+            ->method('update')
+            ->willReturnCallback(function (int $id, array $data) use (&$expected): bool {
+                $expectedRow = array_shift($expected);
+                $this->assertSame($expectedRow, [$id, $data], "update({$id}) must match the expected transition");
+                return true;
+            });
 
         $service = new OrganizationService($repo);
 
