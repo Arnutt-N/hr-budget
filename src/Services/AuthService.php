@@ -62,7 +62,7 @@ final class AuthService
      */
     private static function logFailure(string $email, string $reason): void
     {
-        $ip = Request::clientIp() ?: '?';
+        $ip = Request::clientIp();
         $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '?', 0, 120);
         error_log("[auth] login_failed reason={$reason} email={$email} ip={$ip} ua=\"{$userAgent}\"");
     }

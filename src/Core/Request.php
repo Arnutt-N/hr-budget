@@ -46,18 +46,45 @@ final class Request
      * nearest trusted proxy; entries in between are client-spoofable).
      * Left-most is correct only when the proxy overwrites XFF rather than
      * appends to a client-supplied chain; verify the proxy's behavior before
-     * enabling TRUST_PROXY. This deployment serves PHP directly from Apache
-     * with no proxy in front, so TRUST_PROXY stays false.
+     * enabling TRUST_PROXY.
      */
     public static function clientIp(): string
     {
         if (self::trustProxy()) {
             $raw = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
             $first = trim(explode(',', $raw)[0]);
-            if ($first !== '' && filter_var($first, FILTER_VALIDATE_IP)) {
-                return $first;
+            $ip = self::normalizeIp($first);
+            if ($ip !== null) {
+                return $ip;
             }
         }
         return (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    }
+
+    /**
+     * Accept an X-Forwarded-For entry only when it is a bare IP. Proxies
+     * commonly emit "[2001:db8::1]:443" or "198.51.100.7:443"; strip the
+     * brackets and port so those still identify the client instead of falling
+     * back to the proxy address and collapsing everyone into one bucket.
+     * Anything that is not an IP (a hostname, garbage) returns null.
+     */
+    private static function normalizeIp(string $value): ?string
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        $candidate = $value;
+        if (str_starts_with($candidate, '[')) {
+            $end = strpos($candidate, ']');
+            if ($end === false) {
+                return null;
+            }
+            $candidate = substr($candidate, 1, $end - 1);
+        } elseif (substr_count($candidate, ':') === 1) {
+            $candidate = strstr($candidate, ':', true);
+        }
+
+        return filter_var($candidate, FILTER_VALIDATE_IP) === false ? null : $candidate;
     }
 }

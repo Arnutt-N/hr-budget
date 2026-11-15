@@ -50,36 +50,13 @@ class ApprovalChainRepository
         if ($clean === []) {
             return false;
         }
-        $pdo = Database::getInstance();
-        $sets = [];
-        foreach (array_keys($clean) as $column) {
-            $sets[] = "{$column} = ?";
-        }
-        $sql = 'UPDATE budget_requests SET ' . implode(', ', $sets)
-            . ' WHERE id = ? AND current_level = ?';
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([...array_values($clean), $id, $expectedLevel]);
-        // rowCount() counts CHANGED rows on MySQL (no MYSQL_ATTR_FOUND_ROWS),
-        // so a write whose SET value already matches reports 0 there and 1 on
-        // SQLite. Every transition act() makes changes the stored value, so > 0
-        // is the right predicate; === 1 would misreport a matched write on
-        // SQLite, which is the driver the unit suite runs on.
-        return $stmt->rowCount() > 0;
-    }
-
-    public function updateRequest(int $id, array $data): bool
-    {
-        $allowed = ['request_status', 'current_level'];
-        $clean = [];
-        foreach ($allowed as $f) {
-            if (array_key_exists($f, $data)) {
-                $clean[$f] = $data[$f];
-            }
-        }
-        if ($clean === []) {
-            return false;
-        }
-        return Database::update('budget_requests', $clean, 'id = ?', [$id]) > 0;
+        // rowCount() counts CHANGED rows on MySQL, MATCHED rows on SQLite.
+        return Database::update(
+            'budget_requests',
+            $clean,
+            'id = ? AND current_level = ?',
+            [$id, $expectedLevel]
+        ) > 0;
     }
 
     public function recordAction(array $data): int

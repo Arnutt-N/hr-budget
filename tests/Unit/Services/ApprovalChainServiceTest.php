@@ -166,7 +166,7 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
 
         $this->service->act($this->approver('approver_division', $org), $req, 'approve', null);
 
-        $repo = new \App\Repositories\ApprovalChainRepository();
+        $repo = new ApprovalChainRepository();
         $applied = $repo->updateRequestAtLevel($req, 1, ['current_level' => 2]);
 
         $this->assertFalse($applied, 'stale conditional update must not apply');
@@ -181,7 +181,7 @@ class ApprovalChainServiceTest extends ApprovalSqliteTestCase
         $org = $this->makeOrg(null, 0);
         $req = $this->makeRequest($org, 'pending', 1);
 
-        $repo = new \App\Repositories\ApprovalChainRepository();
+        $repo = new ApprovalChainRepository();
         $applied = $repo->updateRequestAtLevel($req, 1, ['current_level' => 2]);
 
         $this->assertTrue($applied);

@@ -106,7 +106,7 @@ final class AuthMiddleware
      */
     private static function logDenied(string $reason, array $context = []): void
     {
-        $ip = Request::clientIp() ?: '?';
+        $ip = Request::clientIp();
         // Strip CR/LF so a crafted URI cannot inject fake log lines
         $path = preg_replace('/[\r\n]/', '', $_SERVER['REQUEST_URI'] ?? '?');
         $extra = $context === [] ? '' : ' ' . json_encode($context, JSON_UNESCAPED_SLASHES);

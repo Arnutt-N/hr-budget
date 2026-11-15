@@ -113,4 +113,38 @@ final class RequestTest extends TestCase
     {
         $this->assertSame('unknown', Request::clientIp());
     }
+
+    public function test_client_ip_strips_bracketed_ipv6_and_port(): void
+    {
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '[2001:db8::1]:443';
+        $this->assertSame('2001:db8::1', Request::clientIp());
+    }
+
+    public function test_client_ip_strips_ipv4_port(): void
+    {
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.7:443';
+        $this->assertSame('198.51.100.7', Request::clientIp());
+    }
+
+    public function test_client_ip_rejects_hostname_and_falls_back(): void
+    {
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = 'client.example.com';
+        $this->assertSame('203.0.113.9', Request::clientIp());
+    }
+
+    public function test_client_ip_treats_unbracketed_ipv6_with_port_as_address(): void
+    {
+        // Unbracketed IPv6 with a port is ambiguous; read it as the address
+        // rather than guessing where the port starts.
+        $_ENV['TRUST_PROXY'] = 'true';
+        $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
+        $_SERVER['HTTP_X_FORWARDED_FOR'] = '2001:db8::1:443';
+        $this->assertSame('2001:db8::1:443', Request::clientIp());
+    }
 }
