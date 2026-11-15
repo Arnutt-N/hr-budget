@@ -336,7 +336,6 @@ final class BudgetRequestService
             $updated = $this->requestRepo->updateWhereStatus($id, 'pending', [
                 'request_status' => 'approved',
                 'approved_at' => date('Y-m-d H:i:s'),
-                'current_level' => null,
             ]);
 
             if (!$updated) {
@@ -380,7 +379,6 @@ final class BudgetRequestService
                 'request_status' => 'rejected',
                 'rejected_at' => date('Y-m-d H:i:s'),
                 'rejected_reason' => $dto->note,
-                'current_level' => null,
             ]);
 
             if (!$updated) {

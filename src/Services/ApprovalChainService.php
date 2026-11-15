@@ -75,14 +75,6 @@ final class ApprovalChainService
 
         Database::beginTransaction();
         try {
-            $this->repo->recordAction([
-                'budget_request_id' => $requestId,
-                'action' => $decision === 'approve' ? 'approved' : 'rejected',
-                'level' => $level,
-                'user_id' => (int) ($actor['id'] ?? 0),
-                'note' => $note,
-            ]);
-
             if ($decision === 'reject') {
                 $rejected = $this->repo->updateRequestAtLevel($requestId, $level, [
                     'request_status' => 'rejected',
@@ -92,6 +84,7 @@ final class ApprovalChainService
                     Database::rollback();
                     return ['ok' => false, 'error' => 'stale_level'];
                 }
+                $this->recordDecision($requestId, $decision, $level, $actor, $note);
                 Database::commit();
                 return ['ok' => true, 'status' => 'rejected', 'level' => null];
             }
@@ -106,6 +99,7 @@ final class ApprovalChainService
                     Database::rollback();
                     return ['ok' => false, 'error' => 'stale_level'];
                 }
+                $this->recordDecision($requestId, $decision, $level, $actor, $note);
                 Database::commit();
                 return ['ok' => true, 'status' => 'approved', 'level' => null];
             }
@@ -115,12 +109,25 @@ final class ApprovalChainService
                 Database::rollback();
                 return ['ok' => false, 'error' => 'stale_level'];
             }
+            $this->recordDecision($requestId, $decision, $level, $actor, $note);
             Database::commit();
             return ['ok' => true, 'status' => 'pending', 'level' => $next];
         } catch (\Throwable $e) {
             Database::rollback();
             throw $e;
         }
+    }
+
+    /** @param array<string,mixed> $actor */
+    private function recordDecision(int $requestId, string $decision, int $level, array $actor, ?string $note): void
+    {
+        $this->repo->recordAction([
+            'budget_request_id' => $requestId,
+            'action' => $decision === 'approve' ? 'approved' : 'rejected',
+            'level' => $level,
+            'user_id' => (int) ($actor['id'] ?? 0),
+            'note' => $note,
+        ]);
     }
 
     /** @return array{request_status:?string,current_level:?int,history:array} */
