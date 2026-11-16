@@ -213,9 +213,8 @@ minutes. Verification runs locally instead. Do not assume a PR was gated by CI.
   auto-runs before every `git push`:
   - Gate 1 (blocks): PHPStan static analysis
   - Gate 2 (blocks): Frontend typecheck + build
-  - Advisory (prints, does NOT block): PHPUnit Unit suite — currently clean;
-    `BudgetRequestItemTest::getTree_returns_hierarchical_structure` is skipped because it
-    asserts a parent/child hierarchy the schema and `getTree()` never implemented.
+  - Advisory (prints, does NOT block): PHPUnit Unit suite — currently clean
+    (523 tests, 0 skipped).
   - Bypass with `git push --no-verify` when intentional.
   - Resolves Laragon PHP 8.3 automatically; no PATH setup needed.
 
