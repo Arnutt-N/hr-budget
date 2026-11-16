@@ -6,6 +6,8 @@ namespace Tests\Unit\Scripts;
 
 use PHPUnit\Framework\TestCase;
 
+require_once dirname(__DIR__, 3) . '/scripts/lib/fiscal_seed_guard.php';
+
 /**
  * Guards the fiscal-code import convention (PR1).
  *
@@ -65,5 +67,20 @@ final class ExpenseTypeFiscalCodeSeedTest extends TestCase
         $this->assertSame(['010', '020', '031', '032', '041', '050'], $codes);
         $this->assertCount(6, $codes);
         $this->assertCount(count($codes), array_unique($codes), 'Duplicate fiscal code exists');
+    }
+
+    public function testGuardRejectsProductionDatabase(): void
+    {
+        $this->assertNotNull(fiscalSeedDatabaseError('hr_budget'));
+    }
+
+    public function testGuardAllowsTestDatabase(): void
+    {
+        $this->assertNull(fiscalSeedDatabaseError('hr_budget_test'));
+    }
+
+    public function testGuardRejectsBareTestSuffix(): void
+    {
+        $this->assertNotNull(fiscalSeedDatabaseError('_test'));
     }
 }

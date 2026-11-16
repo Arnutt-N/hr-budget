@@ -12,7 +12,11 @@
  * expected clean value, so a second run reports "already correct" for every
  * row and changes nothing.
  *
- * Usage:  php scripts/seed_expense_type_fiscal_codes.php
+ * Usage:  php scripts/seed_expense_type_fiscal_codes.php --database=hr_budget_test
+ *
+ * Safe by construction: the script exits(1) unless the resolved database name
+ * ends in _test. Shell env vars do NOT reach $_ENV here (variables_order=GPCS),
+ * so use --database=NAME to select the target explicitly.
  *
  * Requires: vendor/ autoload, config/database.php (DB_* env or defaults),
  *           the expense_types table already migrated to 094.
@@ -20,7 +24,37 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// config/database.php reads $_ENV, so load .env before anything resolves it.
+Dotenv\Dotenv::createImmutable(dirname(__DIR__))->safeLoad();
+
+require_once __DIR__ . '/lib/fiscal_seed_guard.php';
+
 use App\Core\Database;
+
+// Parse the explicit CLI override before config is loaded.
+$databaseOption = null;
+foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--database=')) {
+        $databaseOption = substr($arg, strlen('--database='));
+    }
+}
+
+if ($databaseOption !== null) {
+    $optionError = fiscalSeedDatabaseError($databaseOption);
+    if ($optionError !== null) {
+        fwrite(STDERR, "Error: " . $optionError . "\n");
+        exit(1);
+    }
+    $_ENV['DB_DATABASE'] = $databaseOption;
+}
+
+// Resolve the database exactly as Database::connect() does, but before writes.
+$config = require dirname(__DIR__) . '/config/database.php';
+$configError = fiscalSeedDatabaseError((string) $config['database']);
+if ($configError !== null) {
+    fwrite(STDERR, "Error: " . $configError . "\n");
+    exit(1);
+}
 
 // Expected clean names keyed by the stable code column.
 // These are the 5 expense categories that existed before the fiscal-code
