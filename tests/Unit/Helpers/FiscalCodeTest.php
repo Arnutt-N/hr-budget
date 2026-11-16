@@ -33,6 +33,11 @@ final class FiscalCodeTest extends TestCase
         $this->assertFalse(FiscalCode::isValid20(''));
     }
 
+    public function testIsValid20RejectsTrailingNewline(): void
+    {
+        $this->assertFalse(FiscalCode::isValid20(self::VALID_20 . "\n"));
+    }
+
     public function testParent13ReturnsThirteenCharacters(): void
     {
         $parent = FiscalCode::parent13(self::VALID_20);
@@ -71,6 +76,26 @@ final class FiscalCodeTest extends TestCase
         $this->assertFalse(FiscalCode::isValidExpenseCategory('16002070012009900001'));
     }
 
+    public function testIsValidExpenseCategoryRejectsShortCodeEndingInValidCategory(): void
+    {
+        $this->assertFalse(FiscalCode::isValidExpenseCategory('160020700120041'));
+    }
+
+    public function testExpenseCategoryLabelsMatchExpenseTypes(): void
+    {
+        $this->assertSame(
+            [
+                '010' => 'งบบุคลากร',
+                '020' => 'งบดำเนินงาน',
+                '031' => 'ครุภัณฑ์และค่าจ้างบริการ',
+                '032' => 'ค่าก่อสร้างและปรับปรุงอาคาร',
+                '041' => 'งบเงินอุดหนุน',
+                '050' => 'ค่าใช้จ่ายโครงการ',
+            ],
+            FiscalCode::EXPENSE_CATEGORIES
+        );
+    }
+
     public function testExpenseCategoriesConstantHasExactlyTheSixSeedCodes(): void
     {
         $this->assertSame(
@@ -93,6 +118,11 @@ final class FiscalCodeTest extends TestCase
     public function testIsValidActivityCodeRejectsEighteenDigits(): void
     {
         $this->assertFalse(FiscalCode::isValidActivityCode('160026900038000001'));
+    }
+
+    public function testIsValidActivityCodeRejectsTrailingNewline(): void
+    {
+        $this->assertFalse(FiscalCode::isValidActivityCode('16002690003800000' . "\n"));
     }
 
     public function testActivityGroupReturnsTwelveCharacterPrefix(): void
