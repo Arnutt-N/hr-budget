@@ -267,8 +267,12 @@ final class ThaIdProviderTest extends TestCase
                 $found[] = $env;
             }
         }
-        foreach (glob('C:/laragon/bin/php/*/extras/ssl/openssl.cnf') ?: [] as $p) {
-            $found[] = $p;
+        // Windows Laragon dev boxes have openssl.cnf under their PHP install.
+        // Glob both common drive letters so neither D: nor C: dev boxes skip.
+        foreach (['C', 'D'] as $drive) {
+            foreach (glob("{$drive}:/laragon/bin/php/*/extras/ssl/openssl.cnf") ?: [] as $p) {
+                $found[] = $p;
+            }
         }
         return $found;
     }
