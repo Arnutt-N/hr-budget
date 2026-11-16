@@ -267,7 +267,7 @@ final class ThaIdProviderTest extends TestCase
                 $found[] = $env;
             }
         }
-        foreach (glob('D:/laragon/bin/php/*/extras/ssl/openssl.cnf') ?: [] as $p) {
+        foreach (glob('C:/laragon/bin/php/*/extras/ssl/openssl.cnf') ?: [] as $p) {
             $found[] = $p;
         }
         return $found;

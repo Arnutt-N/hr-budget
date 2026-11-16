@@ -120,17 +120,42 @@ class BudgetRequestItemTest extends TestCase
     }
 
     /** @test */
-    public function getTree_returns_hierarchical_structure()
+    public function getTree_returns_the_flat_item_list()
     {
-        // Body removed rather than left below an unconditional skip, where no
-        // tool in this project analyses it (phpstan.neon covers `src` only) and
-        // a rename would silently drift. Recover it from git history when the
-        // hierarchy feature lands.
-        $this->markTestSkipped(
-            'Parent/child hierarchy is not implemented: budget_request_items has no '
-            . 'parent_item_id column, and getTree() deliberately returns a flat list '
-            . '(see the comment in the model). Unskip when the hierarchy feature lands.'
+        $user = $this->createUser();
+
+        $requestId = BudgetRequest::create([
+            'fiscal_year' => 2568,
+            'request_title' => 'Test',
+            'created_by' => $user['id']
+        ]);
+
+        BudgetRequestItem::create([
+            'budget_request_id' => $requestId,
+            'item_name' => 'Item 1',
+            'quantity' => 1,
+            'unit_price' => 100
+        ]);
+
+        BudgetRequestItem::create([
+            'budget_request_id' => $requestId,
+            'item_name' => 'Item 2',
+            'quantity' => 2,
+            'unit_price' => 200
+        ]);
+
+        // budget_request_items has no parent_item_id column, so getTree() is
+        // documented to return the same flat list as getByRequestId(). Assert
+        // that contract so a future hierarchy feature has to change this test
+        // deliberately instead of silently drifting.
+        $tree = BudgetRequestItem::getTree($requestId);
+
+        $this->assertSame(
+            BudgetRequestItem::getByRequestId($requestId),
+            $tree
         );
+        $this->assertCount(2, $tree);
+        $this->assertArrayNotHasKey('children', $tree[0]);
     }
 
     /** @test */
