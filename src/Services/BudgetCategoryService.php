@@ -68,7 +68,11 @@ final class BudgetCategoryService
             $level = (int) $parent['level'] + 1;
         }
 
-        return $this->catRepo->insert([
+        if ($dto->fiscalCode !== null && $this->catRepo->findByFiscalCode($dto->fiscalCode) !== null) {
+            return null;
+        }
+
+        $data = [
             'code' => $dto->code,
             'name_th' => $dto->nameTh,
             'name_en' => $dto->nameEn,
@@ -77,7 +81,12 @@ final class BudgetCategoryService
             'level' => $level,
             'sort_order' => $dto->sortOrder,
             'is_active' => $dto->isActive ? 1 : 0,
-        ]);
+        ];
+        // ponytail: omit nulls; PR3 columns are absent on pre-PR3 databases.
+        if ($dto->fiscalCode !== null) $data['fiscal_code'] = $dto->fiscalCode;
+        if ($dto->expenseCatCode !== null) $data['expense_cat_code'] = $dto->expenseCatCode;
+
+        return $this->catRepo->insert($data);
     }
 
     public function update(string $role, int $id, UpdateCategoryDto $dto): bool
@@ -98,6 +107,14 @@ final class BudgetCategoryService
         if ($dto->description !== null) $updateData['description'] = $dto->description;
         if ($dto->sortOrder !== null) $updateData['sort_order'] = $dto->sortOrder;
         if ($dto->isActive !== null) $updateData['is_active'] = $dto->isActive ? 1 : 0;
+        if ($dto->fiscalCode !== null) {
+            if ($dto->fiscalCode !== ($existing['fiscal_code'] ?? null)
+                && $this->catRepo->findByFiscalCode($dto->fiscalCode) !== null) {
+                return false;
+            }
+            $updateData['fiscal_code'] = $dto->fiscalCode;
+        }
+        if ($dto->expenseCatCode !== null) $updateData['expense_cat_code'] = $dto->expenseCatCode;
 
         if ($dto->parentId !== null) {
             if ($dto->parentId === $id || $this->wouldCreateCycle($id, $dto->parentId)) {

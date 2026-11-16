@@ -33,6 +33,14 @@ class BudgetCategoryRepository
         return Database::queryOne("SELECT * FROM budget_categories WHERE id = ?", [$id]);
     }
 
+    public function findByFiscalCode(string $fiscalCode): ?array
+    {
+        return Database::queryOne(
+            "SELECT * FROM budget_categories WHERE fiscal_code = ?",
+            [$fiscalCode]
+        );
+    }
+
     /**
      * @return array<int,array<string,mixed>>
      *
@@ -67,7 +75,8 @@ class BudgetCategoryRepository
     public function update(int $id, array $data): bool
     {
         $allowed = ['code', 'name_th', 'name_en', 'description', 'parent_id',
-            'level', 'sort_order', 'is_active', 'is_plan', 'plan_name'];
+            'level', 'sort_order', 'is_active', 'is_plan', 'plan_name',
+            'fiscal_code', 'expense_cat_code'];
         $updateData = [];
         foreach ($allowed as $field) {
             if (array_key_exists($field, $data)) {

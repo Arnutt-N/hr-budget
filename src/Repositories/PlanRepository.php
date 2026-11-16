@@ -54,6 +54,7 @@ class PlanRepository
             'fiscal_year',
             'sort_order',
             'is_active',
+            'activity_code',
         ];
         $updateData = [];
         foreach ($allowed as $field) {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Dtos;
 
+use App\Helpers\FiscalCode;
+
 final class UpdatePlanDto
 {
     public function __construct(
@@ -15,6 +17,7 @@ final class UpdatePlanDto
         public readonly ?int $budgetTypeId = null,
         public readonly ?int $sortOrder = null,
         public readonly ?bool $isActive = null,
+        public readonly ?string $activityCode = null,
     ) {}
 
     /** @return array<string,string> */
@@ -36,6 +39,10 @@ final class UpdatePlanDto
 
         if ($this->fiscalYear !== null && $this->fiscalYear <= 0) {
             $errors['fiscal_year'] = 'กรุณาเลือกปีงบประมาณ';
+        }
+
+        if ($this->activityCode !== null && !FiscalCode::isValidActivityCode($this->activityCode)) {
+            $errors['activity_code'] = 'รหัสกิจกรรมหลักต้องมี 17 หลัก';
         }
 
         return $errors;
@@ -61,6 +68,10 @@ final class UpdatePlanDto
             budgetTypeId: array_key_exists('budget_type_id', $raw) ? (int) $raw['budget_type_id'] : null,
             sortOrder: array_key_exists('sort_order', $raw) ? (int) $raw['sort_order'] : null,
             isActive: array_key_exists('is_active', $raw) ? (bool) $raw['is_active'] : null,
+            // No trim: FiscalCode uses \z so a trailing newline stays invalid.
+            activityCode: array_key_exists('activity_code', $raw) && $raw['activity_code'] !== null
+                ? (string) $raw['activity_code']
+                : null,
         );
     }
 }
