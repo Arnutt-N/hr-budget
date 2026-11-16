@@ -50,7 +50,7 @@ final class PlanService
             }
         }
 
-        return $this->repo->insert([
+        $data = [
             'budget_type_id' => $dto->budgetTypeId,
             'code' => $dto->code,
             'name_th' => $dto->nameTh,
@@ -59,7 +59,11 @@ final class PlanService
             'fiscal_year' => $dto->fiscalYear,
             'sort_order' => $dto->sortOrder,
             'is_active' => $dto->isActive ? 1 : 0,
-        ]);
+        ];
+        // ponytail: omit nulls; PR3 column is absent on pre-PR3 databases.
+        if ($dto->activityCode !== null) $data['activity_code'] = $dto->activityCode;
+
+        return $this->repo->insert($data);
     }
 
     public function update(string $role, int $id, UpdatePlanDto $dto): bool
@@ -109,6 +113,9 @@ final class PlanService
         }
         if ($dto->isActive !== null) {
             $updateData['is_active'] = $dto->isActive ? 1 : 0;
+        }
+        if ($dto->activityCode !== null) {
+            $updateData['activity_code'] = $dto->activityCode;
         }
 
         if (empty($updateData)) {

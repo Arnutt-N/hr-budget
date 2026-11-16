@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Dtos;
 
+use App\Helpers\FiscalCode;
+
 final class UpdateCategoryItemDto
 {
     public function __construct(
@@ -14,6 +16,8 @@ final class UpdateCategoryItemDto
         public readonly ?int $sortOrder = null,
         public readonly ?bool $isActive = null,
         public readonly ?string $description = null,
+        public readonly ?string $fiscalCode = null,
+        public readonly ?string $expenseCatCode = null,
     ) {}
 
     /** @return array<string,string> */
@@ -23,6 +27,16 @@ final class UpdateCategoryItemDto
 
         if ($this->name !== null && $this->name === '') {
             $errors['name'] = 'ชื่อรายการไม่ควรเป็นค่าว่าง';
+        }
+
+        // ponytail: validate-only; PR3 adds no fiscal columns to budget_category_items.
+        // Upgrade when that table gains fiscal_code/expense_cat_code columns.
+        if ($this->fiscalCode !== null) {
+            if (!FiscalCode::isValid20($this->fiscalCode)) {
+                $errors['fiscal_code'] = 'รหัสงบประมาณต้องมี 20 หลัก';
+            } elseif (!FiscalCode::isValidExpenseCategory($this->fiscalCode)) {
+                $errors['fiscal_code'] = 'หมวดหมู่รหัสงบประมาณไม่ถูกต้อง';
+            }
         }
 
         return $errors;
@@ -47,6 +61,13 @@ final class UpdateCategoryItemDto
             sortOrder: array_key_exists('sort_order', $raw) ? (int) $raw['sort_order'] : null,
             isActive: array_key_exists('is_active', $raw) ? (bool) $raw['is_active'] : null,
             description: array_key_exists('description', $raw) ? $raw['description'] : null,
+            // No trim: FiscalCode uses \z so a trailing newline stays invalid.
+            fiscalCode: array_key_exists('fiscal_code', $raw) && $raw['fiscal_code'] !== null
+                ? (string) $raw['fiscal_code']
+                : null,
+            expenseCatCode: array_key_exists('expense_cat_code', $raw) && $raw['expense_cat_code'] !== null
+                ? (string) $raw['expense_cat_code']
+                : null,
         );
     }
 }
