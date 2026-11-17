@@ -18,6 +18,12 @@ use PHPUnit\Framework\TestCase;
  */
 final class FiscalCodeColumnTest extends TestCase
 {
+    /**
+     * Reserved probe code: 20 digits, outside every source code PR4 imports.
+     * Category 990 is invalid for the domain but fine for a DB uniqueness test.
+     */
+    private const PROBE_FISCAL_CODE = '99999999999999000001';
+
     private PDO $pdo;
 
     protected function setUp(): void
@@ -121,7 +127,7 @@ final class FiscalCodeColumnTest extends TestCase
     public function testFiscalCodeUniqueKeyRejectsDuplicate(): void
     {
         $this->requireFiscalCodeColumn();
-        $code = '16002142002002000000';
+        $code = self::PROBE_FISCAL_CODE;
         $this->pdo->beginTransaction();
         try {
             $this->insertCategory($code);
@@ -141,7 +147,7 @@ final class FiscalCodeColumnTest extends TestCase
         $this->requireFiscalCodeColumn();
         $this->pdo->beginTransaction();
         try {
-            $this->insertCategory('16002142002002000000');
+            $this->insertCategory(self::PROBE_FISCAL_CODE);
             $first = $this->insertCategory(null);
             $second = $this->insertCategory(null);
             $this->assertNotSame($first['code'], $second['code']);
