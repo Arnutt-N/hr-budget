@@ -38,6 +38,7 @@ use App\Api\Controllers\TargetTypeController as ApiTargetTypeController;
 use App\Api\Controllers\BudgetTargetController as ApiBudgetTargetController;
 use App\Api\Controllers\DashboardController as ApiDashboardController;
 use App\Api\Controllers\BudgetExecutionController as ApiBudgetExecutionController;
+use App\Api\Controllers\FiscalCodeReportController as ApiFiscalCodeReportController;
 use App\Api\Controllers\AnalyticsController as ApiAnalyticsController;
 use App\Api\Controllers\DisbursementSessionController as ApiDisbursementSessionController;
 use App\Api\Controllers\DisbursementRecordController as ApiDisbursementRecordController;
@@ -227,6 +228,11 @@ Router::get('/api/v1/dashboard/chart-data', [ApiDashboardController::class, 'cha
 Router::get('/api/v1/budget-execution/years', [ApiBudgetExecutionController::class, 'years']);
 Router::get('/api/v1/budget-execution/export', [ApiBudgetExecutionController::class, 'export']);
 Router::get('/api/v1/budget-execution', [ApiBudgetExecutionController::class, 'report']);
+
+Router::get('/api/v1/reports/fiscal-codes/by-expense-category', [ApiFiscalCodeReportController::class, 'byExpenseCategory']);
+Router::get('/api/v1/reports/fiscal-codes/by-activity', [ApiFiscalCodeReportController::class, 'byActivity']);
+Router::get('/api/v1/reports/fiscal-codes/by-parent-rollup', [ApiFiscalCodeReportController::class, 'byParentRollup']);
+Router::get('/api/v1/reports/fiscal-codes/by-agency', [ApiFiscalCodeReportController::class, 'byAgency']);
 
 // Analytics reporting (read-only, org-scoped per the caller's RBAC grants)
 Router::get('/api/v1/analytics/comparison', [ApiAnalyticsController::class, 'comparison']);
