@@ -7,6 +7,7 @@ namespace App\Api\Controllers;
 use App\Api\Middleware\AuthMiddleware;
 use App\Api\Middleware\CorsMiddleware;
 use App\Api\Responses\ApiResponse;
+use App\Models\FiscalYear;
 use App\Services\FiscalCodeReportService;
 
 final class FiscalCodeReportController
@@ -54,6 +55,11 @@ final class FiscalCodeReportController
         $param = $_GET['year'] ?? null;
         if ($param !== null && ctype_digit((string) $param)) {
             return (int) $param;
+        }
+
+        $current = FiscalYear::current();
+        if ($current !== null) {
+            return (int) $current['year'];
         }
 
         $config = require __DIR__ . '/../../../config/app.php';
