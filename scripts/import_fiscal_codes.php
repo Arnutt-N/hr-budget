@@ -9,8 +9,8 @@
  *
  * Usage: php scripts/import_fiscal_codes.php --database=NAME [--dry-run] [--verbose] [--help]
  *   --database=NAME  Required. Must end in _test, so production writes are impossible.
- *   --dry-run        Read the files, print planned counts, write nothing.
- *   --verbose        Print each planned or skipped row.
+ *   --dry-run        Read the files, print the preflight report, write nothing.
+ *   --verbose        Print row-level findings in the preflight report.
  *   --help           Print this message and exit.
  */
 
@@ -25,6 +25,8 @@ use App\Core\Database;
 use App\Helpers\FiscalCode;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
+require_once __DIR__ . '/lib/fiscal_import_preflight.php';
+
 $options = getopt('', ['dry-run', 'verbose', 'help', 'database::']);
 
 if (isset($options['help'])) {
@@ -32,8 +34,8 @@ if (isset($options['help'])) {
     echo "Usage: php scripts/import_fiscal_codes.php --database=NAME [OPTIONS]\n\n";
     echo "Options:\n";
     echo "  --database=NAME  Required. Target database, must end in _test.\n";
-    echo "  --dry-run        Preview counts without writing.\n";
-    echo "  --verbose        Print each planned or skipped row.\n";
+    echo "  --dry-run        Print a preflight report without writing.\n";
+    echo "  --verbose        Print row-level preflight findings.\n";
     echo "  --help           Show this help message.\n";
     exit(0);
 }
@@ -94,49 +96,112 @@ function cellString(mixed $cell): string
  * Parse the budget sheet into 13-digit parents and 20-digit children.
  *
  * @param list<list<mixed>> $rows
- * @return array{parents: array<string,string>, children: array<string,string>}
+ * @return array{parents: array<string,string>, children: array<string,string>, report_rows: list<array<string,mixed>>}
  */
-function parseBudgetRows(array $rows): array
+function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): array
 {
     $parents = [];
     $children = [];
+    $reportRows = [];
+    $seen = [];
+    $parentCodes = [];
 
-    foreach (array_slice($rows, 1) as $row) {
+    foreach (array_slice($rows, 1) as $index => $row) {
         $code = cellString($row[2] ?? '');
         $name = cellString($row[3] ?? '');
+        $kind = 'unknown';
+        $reason = null;
+
+        if ($name === '') {
+            $reason = 'MISSING_NAME';
+        } elseif (preg_match('/^\d{13}$/D', $code) === 1) {
+            $kind = 'parent';
+        } elseif (FiscalCode::isValid20($code)) {
+            $kind = 'child';
+        } else {
+            $reason = 'INVALID_CODE';
+        }
+
+        if ($reason === null && isset($seen[$code])) {
+            $reason = 'SOURCE_DUPLICATE';
+        } elseif ($reason === null) {
+            $seen[$code] = true;
+        }
+
+        if ($kind === 'parent') {
+            $parentCodes[$code] = true;
+        }
+        if ($reason === null && $kind === 'child' && !isset($parentCodes[substr($code, 0, 13)])) {
+            $reason = 'ORPHAN_CHILD';
+        }
+
+        $reportRows[] = [
+            'source_file' => $sourceFile,
+            'source_sheet' => $sourceSheet,
+            'row_number' => $index + 2,
+            'code' => $code,
+            'name' => $name,
+            'kind' => $kind,
+            'reason_code' => $reason,
+        ];
+
         if ($name === '') {
             continue;
         }
 
-        if (preg_match('/^\d{13}$/D', $code) === 1) {
+        if ($kind === 'parent') {
             $parents[$code] = $name;
-        } elseif (FiscalCode::isValid20($code)) {
+        } elseif ($kind === 'child') {
             $children[$code] = $name;
         }
     }
 
-    return ['parents' => $parents, 'children' => $children];
+    return ['parents' => $parents, 'children' => $children, 'report_rows' => $reportRows];
 }
 
 /**
  * Parse the activity sheet. Title rows 1-3 and the header row 4 are skipped.
  *
  * @param list<list<mixed>> $rows
- * @return array<string,string> Map of 17-digit code to description.
+ * @return array{map: array<string,string>, report_rows: list<array<string,mixed>>}
  */
-function parseActivityRows(array $rows): array
+function parseActivityRows(array $rows, string $sourceFile, string $sourceSheet): array
 {
     $activities = [];
+    $reportRows = [];
+    $seen = [];
 
-    foreach (array_slice($rows, 4) as $row) {
+    foreach (array_slice($rows, 4) as $index => $row) {
         $code = cellString($row[0] ?? '');
         $name = cellString($row[1] ?? '');
-        if (FiscalCode::isValidActivityCode($code) && $name !== '') {
+        $reason = null;
+
+        if (!FiscalCode::isValidActivityCode($code)) {
+            $reason = 'INVALID_CODE';
+        } elseif ($name === '') {
+            $reason = 'MISSING_NAME';
+        } elseif (isset($seen[$code])) {
+            $reason = 'SOURCE_DUPLICATE';
+        } else {
+            $seen[$code] = true;
+        }
+
+        $reportRows[] = [
+            'source_file' => $sourceFile,
+            'source_sheet' => $sourceSheet,
+            'row_number' => $index + 5,
+            'code' => $code,
+            'name' => $name,
+            'kind' => 'activity',
+            'reason_code' => $reason,
+        ];
+
+        if ($reason === null) {
             $activities[$code] = $name;
         }
     }
 
-    return $activities;
+    return ['map' => $activities, 'report_rows' => $reportRows];
 }
 
 /**
@@ -147,6 +212,10 @@ function parseActivityRows(array $rows): array
  */
 function existingFiscalCodes(array $codes): array
 {
+    if ($codes === []) {
+        return [];
+    }
+
     $found = [];
     foreach (array_chunk($codes, 500) as $chunk) {
         $marks = implode(',', array_fill(0, count($chunk), '?'));
@@ -170,6 +239,10 @@ function existingFiscalCodes(array $codes): array
  */
 function existingActivityCodes(array $codes): array
 {
+    if ($codes === []) {
+        return [];
+    }
+
     $found = [];
     foreach (array_chunk($codes, 500) as $chunk) {
         $marks = implode(',', array_fill(0, count($chunk), '?'));
@@ -186,8 +259,16 @@ function existingActivityCodes(array $codes): array
 }
 
 try {
-    $budget = parseBudgetRows(readSheet($config['budget_file'], $config['budget_sheet']));
-    $activities = parseActivityRows(readSheet($config['activity_file'], $config['activity_sheet']));
+    $budget = parseBudgetRows(
+        readSheet($config['budget_file'], $config['budget_sheet']),
+        (string) $config['budget_file'],
+        (string) $config['budget_sheet']
+    );
+    $activities = parseActivityRows(
+        readSheet($config['activity_file'], $config['activity_sheet']),
+        (string) $config['activity_file'],
+        (string) $config['activity_sheet']
+    );
 } catch (Throwable $e) {
     fwrite(STDERR, '[ERROR] ' . $e->getMessage() . "\n");
     exit(1);
@@ -196,18 +277,62 @@ try {
 $parents = $budget['parents'];
 $children = $budget['children'];
 
+if ($isDryRun) {
+    try {
+        $existingCategories = existingFiscalCodes(array_merge(
+            array_keys($parents),
+            array_keys($children)
+        ));
+        $existingActivities = existingActivityCodes(array_keys($activities['map']));
+    } catch (Throwable $e) {
+        fwrite(STDERR, '[ERROR] ' . $e->getMessage() . "\n");
+        exit(1);
+    }
+
+    $report = buildFiscalImportPreflightReport(
+        array_merge($budget['report_rows'], $activities['report_rows']),
+        $existingCategories,
+        $existingActivities,
+        $config
+    );
+
+    echo sprintf("ปีแหล่งที่มา: %d\n", $report['source']['fiscal_year']);
+    echo sprintf("ไฟล์งบ: %s (%s)\n", $report['source']['budget_file'], $report['source']['budget_sheet']);
+    echo sprintf("ไฟล์กิจกรรม: %s (%s)\n", $report['source']['activity_file'], $report['source']['activity_sheet']);
+    echo sprintf(
+        "ตรวจ %d แถว: อ่าน %d แถว, สร้างใหม่ %d แถว, พบปัญหา %d รายการ\n",
+        $report['summary']['source_rows'],
+        count($parents) + count($children) + count($activities['map']),
+        $report['summary']['planned_new_rows'],
+        $report['summary']['finding_count']
+    );
+    foreach ($report['summary']['finding_counts'] as $reasonCode => $count) {
+        echo sprintf("%s: %d\n", $reasonCode, $count);
+    }
+    if ($isVerbose) {
+        foreach ($report['findings'] as $finding) {
+            echo sprintf(
+                "%s | %s | %s | %s:%d | %s\n",
+                $finding['reason_code'],
+                $finding['message'],
+                $finding['code'],
+                $finding['source_file'],
+                $finding['row_number'],
+                $finding['name']
+            );
+        }
+    }
+    echo "[DRY-RUN] ไม่มีการเขียนข้อมูล\n";
+    exit(0);
+}
+
 echo sprintf(
     "Read %d rows: %d parents, %d children, %d activities.\n",
     count($parents) + count($children),
     count($parents),
     count($children),
-    count($activities)
+    count($activities['map'])
 );
-
-if ($isDryRun) {
-    echo "[DRY-RUN] No rows written.\n";
-    exit(0);
-}
 
 $stats = [
     'parents_written' => 0,
@@ -225,7 +350,7 @@ try {
         array_keys($parents),
         array_keys($children)
     ));
-    $existingActivities = existingActivityCodes(array_keys($activities));
+    $existingActivities = existingActivityCodes(array_keys($activities['map']));
 
     // Insert parents first so every child can resolve its parent id.
     $parentIds = [];
@@ -295,7 +420,7 @@ try {
     }
 
     $sortOrder = 0;
-    foreach ($activities as $code => $name) {
+    foreach ($activities['map'] as $code => $name) {
         if (isset($existingActivities[$code])) {
             $stats['activities_skipped']++;
             if ($isVerbose) {
