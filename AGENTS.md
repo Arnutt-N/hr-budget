@@ -361,8 +361,11 @@ supported surface.
 Classes that have recurred across reviews, paired with the check that makes the next one
 impossible. A rule with nothing enforcing it is documentation, not a guard.
 
+Start every new work item on a new branch. Never commit or push directly to `main`. Open a PR for review before merging. The local `.git/hooks/pre-push` hook blocks direct pushes to `main`.
+
 | Mistake class | Enforced by |
 | --- | --- |
+| Work committed and pushed directly to `main`, skipping PR review. | `.git/hooks/pre-push` exits 1 when the pushed ref is `refs/heads/main`. Create a feature branch and open a PR before requesting review. |
 | A repository allow-list silently drops a field a service writes (the `current_level` submit bug). | `tests/Unit/Repositories/BudgetRequestRepositoryTest.php` writes every field the service sends and fails if one is dropped. Stub repos that override the write method bypass the allow-list, so they cannot catch this. |
 | A controller relies on `AuthMiddleware::require()` alone and skips `AccessScopeResolver::can()` (31 of 32 controllers at last count). | Nothing yet. Add `->can()` per route when the controller is touched; a sweep is tracked separately. |
 | A service writes in several statements with no `Database::beginTransaction()`, so a mid-way failure leaves the tree half-migrated. | `BudgetCategoryServiceTest` covers the category level sync. Other multi-statement writers are not yet covered. |
