@@ -1,0 +1,46 @@
+PR5 fiscal-code validation — API response transcript
+HEAD: e8c8c4b133e5b500aa11499e90f559341775cf84
+Surface: POST /api/v1/categories (JSON)
+Auth: Bearer token from POST /api/v1/auth/login, user admin@moj.go.th
+Environment: PHP 8.3.36 built-in server, DB hr_budget_test, worktree C:/Users/arnutt.n/AppData/Local/Temp/fiscal-wt/pr5
+Captured: 2026-11-17 Asia/Bangkok
+
+--- Invalid fiscal code — 422 ---
+
+Request:
+  POST /api/v1/categories
+  Authorization: Bearer <redacted>
+  Content-Type: application/json
+  {"code":"RI1","name_th":"proof","fiscal_code":"12345"}
+
+Response status: HTTP/1.1 422 Unprocessable Entity
+Response body:
+  {"success":false,"error":"Validation failed","details":{"fiscal_code":"รหัสงบประมาณต้องมี 20 หลัก"}}
+
+Note: server emits reason phrase "Unknown Status Code" for 422; status number is 422.
+
+--- Valid fiscal code — 201 ---
+
+Request:
+  POST /api/v1/categories
+  Authorization: Bearer <redacted>
+  Content-Type: application/json
+  {"code":"RV1","name_th":"proof","fiscal_code":"00000000000001007701"}
+
+Response status: HTTP/1.1 201 Created
+Response body:
+  {"success":true,"data":{"id":909041,"code":"RV1","name_th":"proof","name_en":null,"description":null,"parent_id":null,"level":0,"sort_order":0,"is_active":1,"created_at":"2026-11-17 03:28:28","updated_at":"2026-11-17 03:28:28","is_plan":0,"plan_name":null,"fiscal_code":"00000000000001007701","fiscal_code_parent":null,"activity_code":null,"expense_cat_code":null,"items":[]}}
+
+Raw headers and bodies are in pr5-invalid-headers.txt, pr5-invalid.json, pr5-valid-headers.txt, pr5-valid.json in this directory.
+
+Artifact availability:
+- video: pr5-review.webm — locally rendered Chromium video of the two captured responses; not a live browser UI recording (no browser UI surface exists for this API-only check).
+- screenshots: pr5-invalid-422.png and pr5-valid-201.png — static renders of raw Playwright APIRequestContext responses (not browser UI shots).
+
+Supplemental invalid-code latency sample (same HEAD server, 5 sequential requests with fiscal_code=12345):
+0.3554 s, 0.2024 s, 0.2499 s, 0.2000 s, 0.2347 s — median 0.2347 s (rejection path is not the gate payload).
+
+Benchmark note (same environment, curl -w '%{time_total}', 10 alternating request pairs HEAD vs trunk 3369361):
+- HEAD median 0.2077 s (range 0.1603-0.3071 s), p95 0.3071 s
+- trunk median 0.3200 s (range 0.2519-0.4353 s), p95 0.4353 s
+- ratio 0.649, p95 under 200 ms rule NOT met by either side due to PHP built-in single-worker server and per-request bootstrap; this environment cannot validate p95<200 ms.

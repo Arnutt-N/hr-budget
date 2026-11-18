@@ -1,0 +1,15 @@
+HTTP/1.1 422 Unknown Status Code
+Host: 127.0.0.1:18083
+Date: Mon, 16 Nov 2026 20:28:29 GMT
+Connection: close
+X-Powered-By: PHP/8.3.36
+Set-Cookie: PHPSESSID=92iclmh7kqc19tp8qhko7pc84v; expires=Mon, 16 Nov 2026 22:28:29 GMT; Max-Age=7200; path=/; HttpOnly; SameSite=Lax
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
+Access-Control-Max-Age: 86400
+Vary: Origin
+Content-Type: application/json; charset=UTF-8
+

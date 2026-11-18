@@ -1,0 +1,46 @@
+PR6 independent verification — fiscal code read-only reports (REFRESHED AFTER FIX)
+HEAD: 791b62e87f3ff74f7de3fdce2c1b97a21efff509  (previous capture: d6483afc569ade5b0774e5154a8fe71aff14b12e)
+Base: 8302c399e1473d472f373e27a4548496e2792ebf
+Branch: fiscal/reports, PR #95
+Worktree: C:/Users/arnutt.n/AppData/Local/Temp/fiscal-wt/pr6
+Date: 2026-11-18 (artifact refresh)
+PHP: /c/laragon/bin/php/php-8.3.36-Win32-vs16-x64/php.exe
+MySQL CLI: /c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe
+DB under test: hr_budget_test (worktree .env confirmed DB_DATABASE=hr_budget_test). Production hr_budget read-only, untouched.
+
+WHAT CHANGED SINCE PRE-FIX CAPTURE
+Fix commit 791b62e "fix(api): resolve report fiscal year from current DB year".
+Controller now resolves default year from FiscalYear::current() (DB is_current year = 2569) before falling back to config/app.php fiscal_year.current. Query param `year` still wins. Tests added in tests/Unit/Api/FiscalCodeReportControllerTest.php.
+Pre-fix finding "bare by-activity returns 0 rows because config default 2570 differs from DB current 2569" is RESOLVED.
+
+CURRENT DEFAULT-ROUTE COUNTS (no `year` query, authenticated, live server)
+Server: php -S 127.0.0.1:18082 -t public (worktree root, test DB .env).
+JWT issued with App\Core\Jwt::issue(1) using worktree .env JWT_SECRET; user id 1 = admin@hrbudget.com, is_active=1.
+All four returned HTTP 200 with {"success":true,"data":[...]}; no-token control returned HTTP 401 {"success":false,"error":"Missing Bearer token"}.
+  GET /api/v1/reports/fiscal-codes/by-activity         -> 15 rows  (was 0 at d6483af)
+  GET /api/v1/reports/fiscal-codes/by-expense-category -> 6 rows
+  GET /api/v1/reports/fiscal-codes/by-parent-rollup    -> 15 rows
+  GET /api/v1/reports/fiscal-codes/by-agency           -> 1 group (agency_code 16002, count 75, name_th null)
+by-activity first row: {"activity_code":"16002690001800000","name_th":"การพัฒนากฎหมาย","count":1}
+by-activity last row:  {"activity_code":"16002698307000000","name_th":"ปฏิรูปกฎหมายและพัฒนากระบวนการยุติธรรม","count":1}
+
+REFRESHED ARTIFACTS (main checkout, untracked)
+  by-activity-auth.json   — live response, 15 rows, default year (no `year` query)
+  by-activity-auth.png    — Playwright screenshot of that same rendered 15-row JSON
+  by-activity-auth-headers.txt — live response headers for the refreshed request
+  review.txt              — this file
+  pr6-review.webm         — REGENERATED at the fix head with local Playwright/Chromium. Shows the four authenticated default routes (15/6/15/1) plus the 401 no-token control. The earlier video recorded at d6483af documented the pre-fix 0-row finding and is no longer present.
+Other artifacts (by-activity-year2569-*, by-expense-category-*, by-parent-rollup-*, by-agency-*, noauth headers/JSON/PNG) were left untouched.
+
+GATES (captured at pre-fix head d6483af; not rerun during this refresh)
+Focused test: php vendor/bin/phpunit tests/Unit/Services/FiscalCodeReportServiceTest.php — OK (4 tests, 22 assertions).
+composer verify (PATH prepended with PHP dir): phpstan [OK] 217 files; phpunit --testsuite Unit OK (573 tests, 1242 assertions), EXIT=0.
+Fix commit adds tests/Unit/Api/FiscalCodeReportControllerTest.php; those were not rerun in this time-boxed refresh.
+
+STATIC / SCHEMA NOTES (from earlier review, still applicable)
+- routes/web.php: 4 GET routes inside the read-only reporting block.
+- FiscalCodeReportService uses fixed SQL with bound fiscal-year params; no write SQL, no string interpolation of user input.
+- Production information_schema check: fiscal/activity code columns occur only in hr_budget_test; zero rows for hr_budget. PASS.
+
+REMAINING NON-BLOCKING NOTE
+- by-agency name_th is null for the only group (16002): divisions has no row with that code. Data gap, not a code bug.
