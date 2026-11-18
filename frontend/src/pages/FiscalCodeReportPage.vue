@@ -76,6 +76,9 @@ const bahtFmt = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'T
         />
 
         <DataTable :value="section.rows" :loading="section.isLoading" data-key="code" class="text-sm">
+          <template #empty>
+            <ListEmptyState message="ไม่มีข้อมูลสำหรับรายงานนี้" />
+          </template>
           <Column field="code" header="รหัส" />
           <Column header="ชื่อ">
             <template #body="{ data }">
@@ -91,11 +94,6 @@ const bahtFmt = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'T
             <template #body="{ data }">{{ bahtFmt.format(data.allocated_pba) }}</template>
           </Column>
         </DataTable>
-
-        <ListEmptyState
-          v-if="!section.isLoading && !section.error && section.rows.length === 0"
-          message="ไม่มีข้อมูลสำหรับรายงานนี้"
-        />
       </section>
     </div>
   </div>

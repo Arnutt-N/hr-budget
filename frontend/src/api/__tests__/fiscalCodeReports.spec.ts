@@ -89,6 +89,19 @@ describe('fetchFiscalCodeReport boundary normalization', () => {
     expect(rows[0]).toHaveProperty('allocated_pba', 12500)
   })
 
+  test('converts decimal strings from MySQL into numbers', async () => {
+    stubFetch(200, {
+      success: true,
+      data: [{ code: 'E1', name_th: 'หมวด', count: '4', allocated_pba: '12500.50' }],
+    })
+    const rows = await fetchFiscalCodeReport({
+      path: `${BASE}/by-expense-category`,
+      hasAllocation: true,
+      year: 2569,
+    })
+    expect(rows).toEqual([{ code: 'E1', name_th: 'หมวด', count: 4, allocated_pba: 12500.5 }])
+  })
+
   test('drops allocated_pba from a non-expense-category payload', async () => {
     stubFetch(200, {
       success: true,
@@ -116,6 +129,16 @@ describe('fetchFiscalCodeReport boundary normalization', () => {
     stubFetch(200, { success: true, data: [{ code: 'A1', name_th: null, count: 'many' }] })
     await expect(
       fetchFiscalCodeReport({ path: `${BASE}/by-agency`, hasAllocation: false }),
+    ).rejects.toThrow('ข้อมูลรายงานรหัสงบประมาณไม่ถูกต้อง')
+  })
+
+  test('rejects an expense-category row with a non-finite allocation', async () => {
+    stubFetch(200, {
+      success: true,
+      data: [{ code: 'E1', name_th: 'หมวด', count: 1, allocated_pba: 'many' }],
+    })
+    await expect(
+      fetchFiscalCodeReport({ path: `${BASE}/by-expense-category`, hasAllocation: true }),
     ).rejects.toThrow('ข้อมูลรายงานรหัสงบประมาณไม่ถูกต้อง')
   })
 

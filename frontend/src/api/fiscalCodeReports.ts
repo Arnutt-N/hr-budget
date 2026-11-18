@@ -27,6 +27,15 @@ export interface FiscalCodeFetchOptions {
 
 const INVALID_ROW = 'ข้อมูลรายงานรหัสงบประมาณไม่ถูกต้อง'
 
+function finiteNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
 function firstStringCode(raw: WireFiscalCodeRow): string {
   for (const key of ['code', 'activity_code', 'parent_code', 'agency_code'] as const) {
     if (typeof raw[key] === 'string' && raw[key] !== '') return raw[key] as string
@@ -37,17 +46,19 @@ function firstStringCode(raw: WireFiscalCodeRow): string {
 function toRow(raw: WireFiscalCodeRow, hasAllocation: boolean): FiscalCodeRow {
   const code = firstStringCode(raw)
   const name_th = typeof raw.name_th === 'string' ? raw.name_th : null
-  if (typeof raw.count !== 'number' || !Number.isFinite(raw.count)) {
+  const count = finiteNumber(raw.count)
+  if (count === null) {
     throw new Error(INVALID_ROW)
   }
 
   if (hasAllocation) {
-    const amount = typeof raw.allocated_pba === 'number' && Number.isFinite(raw.allocated_pba)
-      ? raw.allocated_pba
-      : 0
-    return { code, name_th, count: raw.count, allocated_pba: amount } as ExpenseCategoryRow
+    const amount = finiteNumber(raw.allocated_pba)
+    if (amount === null) {
+      throw new Error(INVALID_ROW)
+    }
+    return { code, name_th, count, allocated_pba: amount } as ExpenseCategoryRow
   }
-  return { code, name_th, count: raw.count } as ActivityRow | ParentRollupRow | AgencyRow
+  return { code, name_th, count } as ActivityRow | ParentRollupRow | AgencyRow
 }
 
 /** Fetch and normalize one fiscal-code report. Throws Thai errors at the boundary. */
