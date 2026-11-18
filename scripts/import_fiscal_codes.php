@@ -10,7 +10,7 @@
  * Usage: php scripts/import_fiscal_codes.php --database=NAME [--dry-run] [--verbose] [--help]
  *   --database=NAME  Required. Must end in _test, so production writes are impossible.
  *   --dry-run        Read the files, print the preflight report, write nothing.
- *   --verbose        Print row-level findings in the preflight report.
+ *   --verbose        Print row-level findings and written or skipped rows.
  *   --help           Print this message and exit.
  */
 
@@ -35,7 +35,7 @@ if (isset($options['help'])) {
     echo "Options:\n";
     echo "  --database=NAME  Required. Target database, must end in _test.\n";
     echo "  --dry-run        Print a preflight report without writing.\n";
-    echo "  --verbose        Print row-level preflight findings.\n";
+    echo "  --verbose        Print row-level findings and written or skipped rows.\n";
     echo "  --help           Show this help message.\n";
     exit(0);
 }
@@ -104,7 +104,6 @@ function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): 
     $children = [];
     $reportRows = [];
     $seen = [];
-    $parentCodes = [];
 
     foreach (array_slice($rows, 1) as $index => $row) {
         $code = cellString($row[2] ?? '');
@@ -128,13 +127,6 @@ function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): 
             $seen[$code] = true;
         }
 
-        if ($kind === 'parent') {
-            $parentCodes[$code] = true;
-        }
-        if ($reason === null && $kind === 'child' && !isset($parentCodes[substr($code, 0, 13)])) {
-            $reason = 'ORPHAN_CHILD';
-        }
-
         $reportRows[] = [
             'source_file' => $sourceFile,
             'source_sheet' => $sourceSheet,
@@ -155,6 +147,20 @@ function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): 
             $children[$code] = $name;
         }
     }
+
+    $reportRows = array_map(
+        static function (array $reportRow) use ($parents): array {
+            if ($reportRow['reason_code'] !== null || $reportRow['kind'] !== 'child') {
+                return $reportRow;
+            }
+            $parentCode = substr((string) $reportRow['code'], 0, 13);
+            if (!isset($parents[$parentCode])) {
+                $reportRow['reason_code'] = 'ORPHAN_CHILD';
+            }
+            return $reportRow;
+        },
+        $reportRows
+    );
 
     return ['parents' => $parents, 'children' => $children, 'report_rows' => $reportRows];
 }

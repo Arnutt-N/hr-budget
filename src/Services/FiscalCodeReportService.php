@@ -26,6 +26,8 @@ final class FiscalCodeReportService
                        AND deleted_at IS NULL
                      GROUP BY expense_type_id
                 ) a ON a.expense_type_id = e.id
+              WHERE e.is_active = 1
+                AND bc.is_active = 1
               GROUP BY e.fiscal_code, e.name_th
               ORDER BY e.fiscal_code",
             [$fiscalYear]
@@ -61,6 +63,7 @@ final class FiscalCodeReportService
                  ON parent.fiscal_code = child.fiscal_code_parent
               WHERE LENGTH(child.fiscal_code) = 20
                 AND child.fiscal_code_parent <> ''
+                AND child.is_active = 1
               GROUP BY child.fiscal_code_parent, parent.name_th
               ORDER BY parent_code"
         );
@@ -78,6 +81,7 @@ final class FiscalCodeReportService
                  ON d.code = SUBSTR(child.fiscal_code, 1, 5)
               WHERE LENGTH(child.fiscal_code) = 20
                 AND child.expense_cat_code IS NOT NULL
+                AND child.is_active = 1
               GROUP BY SUBSTR(child.fiscal_code, 1, 5), d.name_th
               ORDER BY agency_code"
         );

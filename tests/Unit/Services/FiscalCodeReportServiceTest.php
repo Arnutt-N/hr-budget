@@ -22,10 +22,10 @@ final class FiscalCodeReportServiceTest extends TestCase
         $this->service = new FiscalCodeReportService();
 
         $this->pdo->exec(
-            "CREATE TABLE expense_types (id INTEGER PRIMARY KEY, fiscal_code TEXT, name_th TEXT);
+            "CREATE TABLE expense_types (id INTEGER PRIMARY KEY, fiscal_code TEXT, name_th TEXT, is_active INTEGER DEFAULT 1);
              CREATE TABLE budget_categories (
                 id INTEGER PRIMARY KEY, fiscal_code TEXT, fiscal_code_parent TEXT,
-                expense_cat_code TEXT, activity_code TEXT, name_th TEXT
+                expense_cat_code TEXT, activity_code TEXT, name_th TEXT, is_active INTEGER DEFAULT 1
              );
              CREATE TABLE plans (id INTEGER PRIMARY KEY, fiscal_year INTEGER,
                 activity_code TEXT, name_th TEXT, deleted_at TEXT);
@@ -37,12 +37,13 @@ final class FiscalCodeReportServiceTest extends TestCase
         $this->pdo->exec(
             "INSERT INTO expense_types (id, fiscal_code, name_th) VALUES
                 (1, '010', 'งบบุคลากร'), (2, '020', 'งบดำเนินงาน');
-             INSERT INTO budget_categories (id, fiscal_code, fiscal_code_parent, expense_cat_code, name_th) VALUES
-                (1, '16002070012001000001', '1600207001200', '010', 'รายการบุคลากร'),
-                (2, '16002070012000200001', '1600207001200', '020', 'รายการดำเนินงาน'),
-                (3, '16002140002001000001', '1600214000200', '010', 'รายการบุคลากร 2'),
-                (4, '1600207001200', NULL, NULL, 'โครงการแม่'),
-                (5, '1600214000200', NULL, NULL, 'โครงการแม่ 2');
+             INSERT INTO budget_categories (id, fiscal_code, fiscal_code_parent, expense_cat_code, name_th, is_active) VALUES
+                (1, '16002070012001000001', '1600207001200', '010', 'รายการบุคลากร', 1),
+                (2, '16002070012000200001', '1600207001200', '020', 'รายการดำเนินงาน', 1),
+                (3, '16002140002001000001', '1600214000200', '010', 'รายการบุคลากร 2', 1),
+                (4, '1600207001200', NULL, NULL, 'โครงการแม่', 1),
+                (5, '1600214000200', NULL, NULL, 'โครงการแม่ 2', 1),
+                (6, '16002140002001000002', '1600214000200', '010', 'รายการที่ยกเลิก', 0);
              INSERT INTO plans (id, fiscal_year, activity_code, name_th, deleted_at) VALUES
                 (1, 2569, '16002690001800000', 'การพัฒนากฎหมาย', NULL),
                 (2, 2569, '16002690001800000', 'การพัฒนากฎหมาย', NULL),
@@ -77,6 +78,20 @@ final class FiscalCodeReportServiceTest extends TestCase
         $this->assertEquals(150, $rows[0]['allocated_pba']);
         $this->assertSame(1, (int) $rows[1]['count']);
         $this->assertEquals(25, $rows[1]['allocated_pba']);
+    }
+
+    public function test_reports_skip_inactive_rows(): void
+    {
+        $this->assertCount(2, $this->service->byExpenseCategory(2569));
+        $this->assertSame(2, (int) $this->service->byExpenseCategory(2569)[0]['count']);
+
+        $rollup = $this->service->byParentRollup();
+        $this->assertCount(2, $rollup);
+        $this->assertSame(2, (int) $rollup[0]['count']);
+
+        $agency = $this->service->byAgency();
+        $this->assertCount(1, $agency);
+        $this->assertSame(3, (int) $agency[0]['count']);
     }
 
     public function test_by_activity_filters_fiscal_year(): void

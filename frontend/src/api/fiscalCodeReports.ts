@@ -1,14 +1,11 @@
 import { apiFetch } from '@/composables/useApi'
 import type {
-  AgencyRow,
-  ActivityRow,
   ExpenseCategoryRow,
+  FiscalCodeCountRow,
   FiscalCodeRow,
   FiscalCodeRowSet,
-  ParentRollupRow,
 } from '@/types/fiscal-code-report'
 
-/** Raw JSON row. Every field is unknown until the boundary narrows it. */
 interface WireFiscalCodeRow {
   code?: unknown
   activity_code?: unknown
@@ -58,10 +55,9 @@ function toRow(raw: WireFiscalCodeRow, hasAllocation: boolean): FiscalCodeRow {
     }
     return { code, name_th, count, allocated_pba: amount } as ExpenseCategoryRow
   }
-  return { code, name_th, count } as ActivityRow | ParentRollupRow | AgencyRow
+  return { code, name_th, count } satisfies FiscalCodeCountRow
 }
 
-/** Fetch and normalize one fiscal-code report. Throws Thai errors at the boundary. */
 export async function fetchFiscalCodeReport(options: FiscalCodeFetchOptions): Promise<FiscalCodeRowSet> {
   const params = new URLSearchParams()
   if (options.year) params.set('year', String(options.year))

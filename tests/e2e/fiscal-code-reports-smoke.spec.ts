@@ -17,6 +17,13 @@ async function loginAsAdmin(page: Page): Promise<void> {
 }
 
 test('fiscal code report smoke', async ({ page }) => {
+  const requests: Request[] = []
+  page.on('request', (request) => {
+    if (fiscalReportPath(request)) requests.push(request)
+  })
+
+  await loginAsAdmin(page)
+
   const consoleErrors: string[] = []
   page.on('console', (message) => {
     if (message.type() !== 'error') return
@@ -25,15 +32,11 @@ test('fiscal code report smoke', async ({ page }) => {
     consoleErrors.push(text)
   })
 
-  const requests: Request[] = []
-  page.on('request', (request) => {
-    if (fiscalReportPath(request)) requests.push(request)
-  })
-
-  await loginAsAdmin(page)
   await page.goto('/fiscal-code-reports')
   await expect(page.getByRole('heading', { name: 'รหัสงบประมาณ' })).toBeVisible()
-  await expect.poll(() => requests.length).toBe(4)
+  await expect.poll(() => requests.length).toBe(2)
+  await expect(page.getByText('ประจำปีปัจจุบัน')).toBeVisible()
+  expect(await page.getByText('ปีปัจจุบัน', { exact: true }).count()).toBe(2)
 
   const byPath = new Map<string, URL>()
   for (const request of requests) {
@@ -41,29 +44,20 @@ test('fiscal code report smoke', async ({ page }) => {
     if (path) byPath.set(path, new URL(request.url()))
   }
 
-  expect(byPath.has('/api/v1/reports/fiscal-codes/by-expense-category')).toBe(true)
-  expect(byPath.has('/api/v1/reports/fiscal-codes/by-activity')).toBe(true)
+  expect(byPath.has('/api/v1/reports/fiscal-codes/by-expense-category')).toBe(false)
+  expect(byPath.has('/api/v1/reports/fiscal-codes/by-activity')).toBe(false)
   expect(byPath.has('/api/v1/reports/fiscal-codes/by-parent-rollup')).toBe(true)
   expect(byPath.has('/api/v1/reports/fiscal-codes/by-agency')).toBe(true)
 
-  const selectedYearText = (await page.getByRole('combobox', { name: 'เลือกปีงบประมาณ' }).textContent()) ?? ''
-  const selectedYear = selectedYearText.match(/\d{4}/)?.[0] ?? ''
-  expect(selectedYear).toMatch(/^\d{4}$/)
-  await expect(page.getByText(`ประจำปีงบ พ.ศ. ${selectedYear}`)).toBeVisible()
   await expect(page.getByText('ปีที่เลือกใช้เฉพาะยอดจัดสรร จำนวนรหัสไม่กรองตามปี')).toBeVisible()
   await expect(page.getByText('จำนวนแถวแผนในปีที่เลือก')).toBeVisible()
   expect(await page.getByText('ไม่กรองตามปี', { exact: true }).count()).toBe(2)
-
-  const expenseUrl = byPath.get('/api/v1/reports/fiscal-codes/by-expense-category')!
-  const activityUrl = byPath.get('/api/v1/reports/fiscal-codes/by-activity')!
-  expect(expenseUrl.searchParams.get('year')).toBe(selectedYear)
-  expect(activityUrl.searchParams.get('year')).toBe(selectedYear)
 
   for (const name of ['by-parent-rollup', 'by-agency']) {
     expect(byPath.get(`/api/v1/reports/fiscal-codes/${name}`)!.searchParams.has('year')).toBe(false)
   }
 
-  const expenseResponse = await page.request.get(`/api/v1/reports/fiscal-codes/by-expense-category?year=${selectedYear}`)
+  const expenseResponse = await page.request.get('/api/v1/reports/fiscal-codes/by-expense-category')
   expect(expenseResponse.status()).toBe(200)
   const expenseEnvelope = await expenseResponse.json()
   const expenseRows = expenseEnvelope.data
@@ -79,16 +73,7 @@ test('fiscal code report smoke', async ({ page }) => {
 
   const amountColumn = page.getByRole('columnheader', { name: 'ยอดจัดสรร (บาท)' })
   await expect(amountColumn).toBeVisible()
-  const amountCells = page.locator('td').filter({ hasText: /฿|บาท/ })
-  expect(await amountCells.count()).toBeGreaterThan(0)
 
-  const consoleErrors: string[] = []
-  page.on('console', (message) => {
-    if (message.type() !== 'error') return
-    const text = message.text()
-    if (text.includes('ERR_NAME_NOT_RESOLVED')) return
-    consoleErrors.push(text)
-  })
   await page.screenshot({ path: 'test-results/fiscal-code-reports-smoke.png', fullPage: true })
   expect(consoleErrors).toEqual([])
 })
@@ -98,5 +83,4 @@ test('fiscal code report requires authentication', async ({ request }) => {
     const response = await request.get(`/api/v1/reports/fiscal-codes/${name}`)
     expect(response.status()).toBe(401)
   }
-})
 })

@@ -15,7 +15,6 @@ interface ReportMeta {
   hasAllocation: boolean
 }
 
-/** One source of truth for report titles, year semantics, and amount columns. */
 const REPORTS: readonly ReportMeta[] = [
   {
     id: 'by-expense-category',
@@ -80,10 +79,6 @@ export interface FiscalCodeSection {
   retry: () => void
 }
 
-/**
- * Vue hooks cannot run in a loop, so the four calls below are explicit.
- * REPORTS stays the single source of truth for order and presentation.
- */
 export function useFiscalCodeReports(year: Ref<number | undefined>): {
   sections: ComputedRef<readonly FiscalCodeSection[]>
 } {
@@ -92,7 +87,7 @@ export function useFiscalCodeReports(year: Ref<number | undefined>): {
   const parentRollup = useQuery<FiscalCodeRowSet, Error>(buildQuery(REPORTS[2], year))
   const agency = useQuery<FiscalCodeRowSet, Error>(buildQuery(REPORTS[3], year))
 
-  const byId: Record<FiscalCodeReportId, QueryResult> = {
+  const queries: Record<FiscalCodeReportId, QueryResult> = {
     'by-expense-category': expenseCategory,
     'by-activity': activity,
     'by-parent-rollup': parentRollup,
@@ -101,7 +96,7 @@ export function useFiscalCodeReports(year: Ref<number | undefined>): {
 
   const sections = computed<readonly FiscalCodeSection[]>(() =>
     REPORTS.map((meta) => {
-      const query = byId[meta.id]
+      const query = queries[meta.id]
       return {
         title: meta.title,
         scope: meta.scope,

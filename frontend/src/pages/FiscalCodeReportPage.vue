@@ -6,24 +6,19 @@ import Select from 'primevue/select'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
-import { useFiscalYearOptions } from '@/queries/useFiscalYears'
+import { useFiscalYearList } from '@/queries/useFiscalYears'
 import { useFiscalCodeReports } from '@/queries/fiscalCodeReports'
 
-const currentFiscalYear = (() => {
-  const now = new Date()
-  const beYear = now.getFullYear() + 543
-  return now.getMonth() + 1 >= 10 ? beYear + 1 : beYear
-})()
-
-const selectedYear = ref<number>(currentFiscalYear)
-const yearOptions = useFiscalYearOptions()
-const yearSelectOptions = computed(() => {
-  const years = new Set<number>([currentFiscalYear])
-  for (const option of yearOptions.value) years.add(option.value)
-  return [...years]
-    .sort((a, b) => b - a)
-    .map((year) => ({ label: `ปีงบ ${year}`, value: year }))
-})
+const fiscalYearsQuery = useFiscalYearList()
+const selectedYear = ref<number | undefined>(undefined)
+const yearSelectOptions = computed(() =>
+  (fiscalYearsQuery.data.value ?? [])
+    .map((fiscalYear) => ({
+      label: fiscalYear.is_current ? `ปีงบ ${fiscalYear.year} (ปีปัจจุบัน)` : `ปีงบ ${fiscalYear.year}`,
+      value: fiscalYear.year,
+    }))
+    .sort((a, b) => b.value - a.value),
+)
 
 const { sections } = useFiscalCodeReports(selectedYear)
 
@@ -35,7 +30,7 @@ const bahtFmt = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'T
   <div>
     <PageHeader
       title="รหัสงบประมาณ"
-      :subtitle="`จำนวนรหัสงบประมาณและยอดจัดสรร ประจำปีงบ พ.ศ. ${selectedYear}`"
+      :subtitle="selectedYear ? `จำนวนรหัสงบประมาณและยอดจัดสรร ประจำปีงบ พ.ศ. ${selectedYear}` : 'จำนวนรหัสงบประมาณและยอดจัดสรร ประจำปีปัจจุบัน'"
     >
       <Select
         v-model="selectedYear"
@@ -64,7 +59,7 @@ const bahtFmt = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'T
             class="badge"
             :class="section.supportsYear ? 'badge-blue' : 'badge-gray'"
           >
-            {{ section.supportsYear ? `ปีงบ ${selectedYear}` : 'ไม่กรองตามปี' }}
+            {{ section.supportsYear ? (selectedYear ? `ปีงบ ${selectedYear}` : 'ปีปัจจุบัน') : 'ไม่กรองตามปี' }}
           </span>
         </div>
         <p class="mb-4 text-sm text-dark-muted">{{ section.scope }}</p>

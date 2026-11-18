@@ -2,17 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Pure report builder for the fiscal importer dry run.
- *
- * Parsed rows carry their source position and any source-level reason. This
- * builder correlates them with existing database codes and returns data only.
- * The CLI owns printing; writes stay in the importer's transaction path.
- */
-
-/**
- * Reason codes and their Thai messages.
- */
 const FISCAL_PREFLIGHT_REASON_MESSAGES = [
     'SOURCE_DUPLICATE' => 'รหัสซ้ำในไฟล์ต้นทาง',
     'ORPHAN_CHILD' => 'ไม่พบรหัสแม่ในไฟล์ต้นทาง',

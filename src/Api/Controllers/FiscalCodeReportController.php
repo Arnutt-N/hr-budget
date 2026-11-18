@@ -53,7 +53,7 @@ final class FiscalCodeReportController
     private function resolveFiscalYear(): int
     {
         $param = $_GET['year'] ?? null;
-        if ($param !== null && ctype_digit((string) $param)) {
+        if (is_string($param) && ctype_digit($param)) {
             return (int) $param;
         }
 
