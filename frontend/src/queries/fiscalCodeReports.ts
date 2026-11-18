@@ -1,10 +1,19 @@
 import { useQuery, type UseQueryReturnType } from '@tanstack/vue-query'
 import { computed, type ComputedRef, type Ref } from 'vue'
-import { fetchFiscalCodeReport } from '@/api/fiscalCodeReports'
+import { fetchFiscalCodeReport, fetchFiscalCodeReportYears } from '@/api/fiscalCodeReports'
+import type { FiscalCodeYearOption } from '@/api/fiscalCodeReports'
 import type { FiscalCodeReportId, FiscalCodeRowSet } from '@/types/fiscal-code-report'
 
 const QUERY_KEY = ['fiscal-code-reports'] as const
+const YEARS_QUERY_KEY = ['fiscal-code-report-years'] as const
 type QueryResult = UseQueryReturnType<FiscalCodeRowSet, Error>
+
+export function useFiscalCodeReportYears() {
+  return useQuery<FiscalCodeYearOption[], Error>({
+    queryKey: YEARS_QUERY_KEY,
+    queryFn: fetchFiscalCodeReportYears,
+  })
+}
 
 interface ReportMeta {
   id: FiscalCodeReportId

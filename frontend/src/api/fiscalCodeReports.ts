@@ -16,6 +16,26 @@ interface WireFiscalCodeRow {
   allocated_pba?: unknown
 }
 
+export interface FiscalCodeYearOption {
+  year: number
+  is_current: boolean
+}
+
+const INVALID_YEAR_PAYLOAD = 'ข้อมูลปีงบประมาณไม่ถูกต้อง'
+
+export async function fetchFiscalCodeReportYears(): Promise<FiscalCodeYearOption[]> {
+  const res = await apiFetch<unknown>('/reports/fiscal-codes/years')
+  if (!res.success) throw new Error(res.error ?? 'โหลดปีงบประมาณไม่สำเร็จ')
+  if (!Array.isArray(res.data)) throw new Error(INVALID_YEAR_PAYLOAD)
+
+  return res.data.map((raw: unknown) => {
+    if (typeof raw !== 'object' || raw === null) throw new Error(INVALID_YEAR_PAYLOAD)
+    const year = (raw as { year?: unknown }).year
+    if (typeof year !== 'number' || !Number.isFinite(year)) throw new Error(INVALID_YEAR_PAYLOAD)
+    return { year, is_current: (raw as { is_current?: unknown }).is_current === true }
+  })
+}
+
 export interface FiscalCodeFetchOptions {
   path: string
   hasAllocation: boolean

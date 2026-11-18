@@ -229,6 +229,7 @@ Router::get('/api/v1/budget-execution/years', [ApiBudgetExecutionController::cla
 Router::get('/api/v1/budget-execution/export', [ApiBudgetExecutionController::class, 'export']);
 Router::get('/api/v1/budget-execution', [ApiBudgetExecutionController::class, 'report']);
 
+Router::get('/api/v1/reports/fiscal-codes/years', [ApiFiscalCodeReportController::class, 'years']);
 Router::get('/api/v1/reports/fiscal-codes/by-expense-category', [ApiFiscalCodeReportController::class, 'byExpenseCategory']);
 Router::get('/api/v1/reports/fiscal-codes/by-activity', [ApiFiscalCodeReportController::class, 'byActivity']);
 Router::get('/api/v1/reports/fiscal-codes/by-parent-rollup', [ApiFiscalCodeReportController::class, 'byParentRollup']);

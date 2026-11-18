@@ -32,11 +32,16 @@ test('fiscal code report smoke', async ({ page }) => {
     consoleErrors.push(text)
   })
 
+  const yearsResponse = await page.request.get('/api/v1/reports/fiscal-codes/years')
+  expect(yearsResponse.status()).toBe(200)
+  const years = (await yearsResponse.json()).data as { year: number; is_current: boolean }[]
+  const currentYear = years.find((year) => year.is_current)?.year
+  expect(currentYear).toBeDefined()
+
   await page.goto('/fiscal-code-reports')
   await expect(page.getByRole('heading', { name: 'รหัสงบประมาณ' })).toBeVisible()
-  await expect.poll(() => requests.length).toBe(2)
-  await expect(page.getByText('ประจำปีปัจจุบัน')).toBeVisible()
-  expect(await page.getByText('ปีปัจจุบัน', { exact: true }).count()).toBe(2)
+  await expect.poll(() => requests.length).toBe(5)
+  await expect(page.getByText(`ประจำปีงบ พ.ศ. ${currentYear}`)).toBeVisible()
 
   const byPath = new Map<string, URL>()
   for (const request of requests) {
@@ -44,10 +49,13 @@ test('fiscal code report smoke', async ({ page }) => {
     if (path) byPath.set(path, new URL(request.url()))
   }
 
-  expect(byPath.has('/api/v1/reports/fiscal-codes/by-expense-category')).toBe(false)
-  expect(byPath.has('/api/v1/reports/fiscal-codes/by-activity')).toBe(false)
+  expect(byPath.has('/api/v1/reports/fiscal-codes/years')).toBe(true)
+  expect(byPath.has('/api/v1/reports/fiscal-codes/by-expense-category')).toBe(true)
+  expect(byPath.has('/api/v1/reports/fiscal-codes/by-activity')).toBe(true)
   expect(byPath.has('/api/v1/reports/fiscal-codes/by-parent-rollup')).toBe(true)
   expect(byPath.has('/api/v1/reports/fiscal-codes/by-agency')).toBe(true)
+  expect(byPath.get('/api/v1/reports/fiscal-codes/by-expense-category')!.searchParams.get('year')).toBe(String(currentYear))
+  expect(byPath.get('/api/v1/reports/fiscal-codes/by-activity')!.searchParams.get('year')).toBe(String(currentYear))
 
   await expect(page.getByText('ปีที่เลือกใช้เฉพาะยอดจัดสรร จำนวนรหัสไม่กรองตามปี')).toBeVisible()
   await expect(page.getByText('จำนวนแถวแผนในปีที่เลือก')).toBeVisible()
