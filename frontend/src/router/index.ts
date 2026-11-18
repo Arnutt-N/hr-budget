@@ -65,6 +65,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/BudgetExecutionPage.vue'),
         meta: { title: 'ผลการเบิกจ่ายงบประมาณ' },
       },
+      // Fiscal-code report (authed staff — read-only, not org-scoped)
+      {
+        path: 'fiscal-code-reports',
+        name: 'fiscal-code-reports',
+        component: () => import('@/pages/FiscalCodeReportPage.vue'),
+        meta: { title: 'รหัสงบประมาณ' },
+      },
       // Analytics: comparison / forecast vs actual / request vs approved
       // (authed staff — read-only, org-scoped by the backend)
       {

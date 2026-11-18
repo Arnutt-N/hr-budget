@@ -141,6 +141,11 @@ async function onLogout(): Promise<void> {
           <span class="ml-3">ผลการเบิกจ่าย</span>
         </RouterLink>
 
+        <RouterLink to="/fiscal-code-reports" class="nav-link" :aria-current="isCurrent('/fiscal-code-reports') ? 'page' : undefined" @click="sidebarOpen = false">
+          <FileText aria-hidden="true" class="h-5 w-5" />
+          <span class="ml-3">รหัสงบประมาณ</span>
+        </RouterLink>
+
         <RouterLink to="/analytics" class="nav-link" :aria-current="isCurrent('/analytics') ? 'page' : undefined" @click="sidebarOpen = false">
           <LineChart aria-hidden="true" class="h-5 w-5" />
           <span class="ml-3">รายงานวิเคราะห์</span>
