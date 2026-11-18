@@ -366,7 +366,8 @@ impossible. A rule with nothing enforcing it is documentation, not a guard.
 | A repository allow-list silently drops a field a service writes (the `current_level` submit bug). | `tests/Unit/Repositories/BudgetRequestRepositoryTest.php` writes every field the service sends and fails if one is dropped. Stub repos that override the write method bypass the allow-list, so they cannot catch this. |
 | A controller relies on `AuthMiddleware::require()` alone and skips `AccessScopeResolver::can()` (31 of 32 controllers at last count). | Nothing yet. Add `->can()` per route when the controller is touched; a sweep is tracked separately. |
 | A service writes in several statements with no `Database::beginTransaction()`, so a mid-way failure leaves the tree half-migrated. | `BudgetCategoryServiceTest` covers the category level sync. Other multi-statement writers are not yet covered. |
-| Soft-delete rows (`is_active = 0`) still surface in `findAll()` / `getTree()`. | Nothing yet. Queries must filter `is_active = 1` or the UI shows deleted rows. |
+| Soft-delete rows (`is_active = 0`) still surface in `findAll()` / `getTree()`. | `BudgetCategorySoftDeleteTest` and `tests/Unit/Services/FiscalCodeReportServiceTest.php::test_reports_skip_inactive_rows` fail when a report or repository drops the `is_active = 1` filter. Queries must still filter `is_active = 1` or the UI shows deleted rows. |
+| MySQL `DECIMAL` values arrive as JSON strings and render as zero after a numeric cast. | `frontend/src/api/__tests__/fiscalCodeReports.spec.ts` covers finite numeric strings and rejects non-finite allocations. Reuse `finiteNumber()` at new report boundaries. |
 | A write path trusts a client-supplied header (XFF) without a `TRUST_PROXY` gate. | `Request::clientIp()` is the single source; `RequestTest` covers the gate, the invalid-entry fallback, and the `unknown` sentinel. Never read `HTTP_X_FORWARDED_*` directly. |
 
 ## Stale docs to trust less than the code
