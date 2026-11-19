@@ -5,12 +5,21 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
+use App\Services\AccessScopeResolver;
 
 final class FiscalCodeReportService
 {
-    /** @return list<array<string,mixed>> */
-    public function byExpenseCategory(int $fiscalYear): array
+    private const ALLOCATION_ORG_EXPR = 'CAST(COALESCE(bli.section_id, bli.division_id, bli.department_id, bli.ministry_id) AS SIGNED)';
+
+    public function __construct(
+        private readonly AccessScopeResolver $scopeResolver = new AccessScopeResolver(),
+    ) {}
+
+    /** @param array<string,mixed> $user @return list<array<string,mixed>> */
+    public function byExpenseCategory(array $user, int $fiscalYear): array
     {
+        $scope = $this->scopeResolver->orgScopeFilter($user, self::ALLOCATION_ORG_EXPR);
+
         return Database::query(
             "SELECT e.fiscal_code AS code, e.name_th AS name_th,
                     COUNT(bc.id) AS count,
@@ -21,16 +30,17 @@ final class FiscalCodeReportService
                 AND LENGTH(bc.fiscal_code) = 20
                LEFT JOIN (
                     SELECT expense_type_id, SUM(COALESCE(allocated_pba, 0)) AS allocated_pba
-                      FROM budget_line_items
-                     WHERE fiscal_year = ?
-                       AND deleted_at IS NULL
-                     GROUP BY expense_type_id
+                      FROM budget_line_items bli
+                     WHERE bli.fiscal_year = ?
+                       AND bli.deleted_at IS NULL
+                       AND {$scope['sql']}
+                     GROUP BY bli.expense_type_id
                 ) a ON a.expense_type_id = e.id
               WHERE e.is_active = 1
                 AND bc.is_active = 1
               GROUP BY e.fiscal_code, e.name_th
               ORDER BY e.fiscal_code",
-            [$fiscalYear]
+            array_merge([$fiscalYear], $scope['params'])
         );
     }
 
