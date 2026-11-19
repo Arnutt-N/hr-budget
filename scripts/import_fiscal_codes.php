@@ -341,3 +341,5 @@ echo sprintf(
     $stats['activities_skipped'],
     $stats['errors']
 );
+
+exit($stats['errors'] > 0 ? 1 : 0);
