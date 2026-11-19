@@ -3,13 +3,23 @@ import { expect, test, type Page, type Request } from '@playwright/test'
 const ADMIN_EMAIL = 'admin@moj.go.th'
 const ADMIN_PASSWORD = 'admin123'
 
+const baseUrl = new URL(process.env.BASE_URL || 'http://localhost:5174')
+const appPrefix = baseUrl.pathname.replace(/\/$/, '')
+const apiPrefix = appPrefix.replace(/\/app$/, '')
+
+function apiPath(path: string): string {
+  return `${apiPrefix}${path}`
+}
+
 function fiscalReportPath(request: Request): string | null {
   const url = new URL(request.url())
-  return url.pathname.includes('/reports/fiscal-codes/') ? url.pathname : null
+  const marker = '/reports/fiscal-codes/'
+  const index = url.pathname.indexOf(marker)
+  return index >= 0 ? url.pathname.slice(index - '/api/v1'.length) : null
 }
 
 async function loginAsAdmin(page: Page): Promise<void> {
-  await page.goto('/login')
+  await page.goto(`${appPrefix}/login`)
   await page.fill('input[name="email"]', ADMIN_EMAIL)
   await page.fill('input[name="password"]', ADMIN_PASSWORD)
   await page.click('button[type="submit"]')
@@ -32,13 +42,13 @@ test('fiscal code report smoke', async ({ page }) => {
     consoleErrors.push(text)
   })
 
-  const yearsResponse = await page.request.get('/api/v1/reports/fiscal-codes/years')
+  const yearsResponse = await page.request.get(apiPath('/api/v1/reports/fiscal-codes/years'))
   expect(yearsResponse.status()).toBe(200)
   const years = (await yearsResponse.json()).data as { year: number; is_current: boolean }[]
   const currentYear = years.find((year) => year.is_current)?.year
   expect(currentYear).toBeDefined()
 
-  await page.goto('/fiscal-code-reports')
+  await page.goto(`${appPrefix}/fiscal-code-reports`)
   await expect(page.getByRole('heading', { name: 'รหัสงบประมาณ' })).toBeVisible()
   await expect.poll(() => requests.length).toBe(5)
   await expect(page.getByText(`ประจำปีงบ พ.ศ. ${currentYear}`)).toBeVisible()
@@ -65,7 +75,7 @@ test('fiscal code report smoke', async ({ page }) => {
     expect(byPath.get(`/api/v1/reports/fiscal-codes/${name}`)!.searchParams.has('year')).toBe(false)
   }
 
-  const expenseResponse = await page.request.get('/api/v1/reports/fiscal-codes/by-expense-category')
+  const expenseResponse = await page.request.get(apiPath('/api/v1/reports/fiscal-codes/by-expense-category'))
   expect(expenseResponse.status()).toBe(200)
   const expenseEnvelope = await expenseResponse.json()
   const expenseRows = expenseEnvelope.data
@@ -88,7 +98,7 @@ test('fiscal code report smoke', async ({ page }) => {
 
 test('fiscal code report requires authentication', async ({ request }) => {
   for (const name of ['by-expense-category', 'by-activity', 'by-parent-rollup', 'by-agency']) {
-    const response = await request.get(`/api/v1/reports/fiscal-codes/${name}`)
+    const response = await request.get(apiPath(`/api/v1/reports/fiscal-codes/${name}`))
     expect(response.status()).toBe(401)
   }
 })
