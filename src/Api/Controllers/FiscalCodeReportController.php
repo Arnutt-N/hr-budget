@@ -16,6 +16,39 @@ final class FiscalCodeReportController
         private readonly FiscalCodeReportService $service = new FiscalCodeReportService(),
     ) {}
 
+    /** Read-only year options for the report page, available to any authenticated user. */
+    public function years(bool $exit = true): void
+    {
+        CorsMiddleware::apply();
+        AuthMiddleware::require();
+
+        try {
+            ApiResponse::ok($this->buildYearOptions(), [], $exit);
+        } catch (\Throwable $e) {
+            error_log("[FiscalCodeReportController::years] {$e->getMessage()}");
+            ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500, null, $exit);
+        }
+    }
+
+    /** @return list<array{year:int,is_current:bool}> */
+    private function buildYearOptions(): array
+    {
+        $rows = FiscalYear::all();
+        if ($rows === []) {
+            return [['year' => $this->resolveFiscalYear(), 'is_current' => true]];
+        }
+
+        $options = [];
+        foreach ($rows as $row) {
+            $options[] = [
+                'year' => (int) $row['year'],
+                'is_current' => (bool) $row['is_current'],
+            ];
+        }
+
+        return $options;
+    }
+
     public function byExpenseCategory(): void
     {
         $this->report(fn (): array => $this->service->byExpenseCategory($this->resolveFiscalYear()));

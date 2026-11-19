@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Select from 'primevue/select'
 import ListEmptyState from '@/components/ListEmptyState.vue'
 import PageHeader from '@/components/PageHeader.vue'
 import QueryErrorState from '@/components/QueryErrorState.vue'
-import { useFiscalYearList } from '@/queries/useFiscalYears'
-import { useFiscalCodeReports } from '@/queries/fiscalCodeReports'
+import { useFiscalCodeReportYears, useFiscalCodeReports } from '@/queries/fiscalCodeReports'
 
-const fiscalYearsQuery = useFiscalYearList()
+const yearsQuery = useFiscalCodeReportYears()
 const selectedYear = ref<number | undefined>(undefined)
+watch(
+  yearsQuery.data,
+  (years) => {
+    if (selectedYear.value !== undefined || !years?.length) return
+    selectedYear.value = (years.find((year) => year.is_current) ?? years[0]).year
+  },
+  { immediate: true },
+)
 const yearSelectOptions = computed(() =>
-  (fiscalYearsQuery.data.value ?? [])
+  (yearsQuery.data.value ?? [])
     .map((fiscalYear) => ({
       label: fiscalYear.is_current ? `ปีงบ ${fiscalYear.year} (ปีปัจจุบัน)` : `ปีงบ ${fiscalYear.year}`,
       value: fiscalYear.year,
@@ -46,6 +53,12 @@ const bahtFmt = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'T
       ตารางที่ระบุว่าไม่กรองตามปีจะแสดงรหัสทั้งหมดในระบบ ปีที่เลือกมีผลเฉพาะตารางที่ระบุว่ากรองตามปี
       จำนวนรหัสและยอดจัดสรรเป็นหน่วยต่างกัน จึงแสดงแยกคอลัมน์
     </p>
+
+    <QueryErrorState
+      v-if="yearsQuery.error.value"
+      :error="yearsQuery.error.value"
+      :retry="() => yearsQuery.refetch()"
+    />
 
     <div class="space-y-6">
       <section

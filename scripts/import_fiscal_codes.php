@@ -26,6 +26,7 @@ use App\Helpers\FiscalCode;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 require_once __DIR__ . '/lib/fiscal_import_preflight.php';
+require_once __DIR__ . '/lib/fiscal_import_parsers.php';
 
 $options = getopt('', ['dry-run', 'verbose', 'help', 'database::']);
 
@@ -82,132 +83,6 @@ function readSheet(string $file, string $sheetName): array
     }
 
     return $sheet->toArray(null, true, true, false);
-}
-
-/**
- * Normalise a spreadsheet cell to a trimmed UTF-8 string.
- */
-function cellString(mixed $cell): string
-{
-    return trim((string) $cell);
-}
-
-/**
- * Parse the budget sheet into 13-digit parents and 20-digit children.
- *
- * @param list<list<mixed>> $rows
- * @return array{parents: array<string,string>, children: array<string,string>, report_rows: list<array<string,mixed>>}
- */
-function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): array
-{
-    $parents = [];
-    $children = [];
-    $reportRows = [];
-    $seen = [];
-
-    foreach (array_slice($rows, 1) as $index => $row) {
-        $code = cellString($row[2] ?? '');
-        $name = cellString($row[3] ?? '');
-        $kind = 'unknown';
-        $reason = null;
-
-        if ($name === '') {
-            $reason = 'MISSING_NAME';
-        } elseif (preg_match('/^\d{13}$/D', $code) === 1) {
-            $kind = 'parent';
-        } elseif (FiscalCode::isValid20($code)) {
-            $kind = 'child';
-        } else {
-            $reason = 'INVALID_CODE';
-        }
-
-        if ($reason === null && isset($seen[$code])) {
-            $reason = 'SOURCE_DUPLICATE';
-        } elseif ($reason === null) {
-            $seen[$code] = true;
-        }
-
-        $reportRows[] = [
-            'source_file' => $sourceFile,
-            'source_sheet' => $sourceSheet,
-            'row_number' => $index + 2,
-            'code' => $code,
-            'name' => $name,
-            'kind' => $kind,
-            'reason_code' => $reason,
-        ];
-
-        if ($name === '') {
-            continue;
-        }
-
-        if ($kind === 'parent') {
-            $parents[$code] = $name;
-        } elseif ($kind === 'child') {
-            $children[$code] = $name;
-        }
-    }
-
-    $reportRows = array_map(
-        static function (array $reportRow) use ($parents): array {
-            if ($reportRow['reason_code'] !== null || $reportRow['kind'] !== 'child') {
-                return $reportRow;
-            }
-            $parentCode = substr((string) $reportRow['code'], 0, 13);
-            if (!isset($parents[$parentCode])) {
-                $reportRow['reason_code'] = 'ORPHAN_CHILD';
-            }
-            return $reportRow;
-        },
-        $reportRows
-    );
-
-    return ['parents' => $parents, 'children' => $children, 'report_rows' => $reportRows];
-}
-
-/**
- * Parse the activity sheet. Title rows 1-3 and the header row 4 are skipped.
- *
- * @param list<list<mixed>> $rows
- * @return array{map: array<string,string>, report_rows: list<array<string,mixed>>}
- */
-function parseActivityRows(array $rows, string $sourceFile, string $sourceSheet): array
-{
-    $activities = [];
-    $reportRows = [];
-    $seen = [];
-
-    foreach (array_slice($rows, 4) as $index => $row) {
-        $code = cellString($row[0] ?? '');
-        $name = cellString($row[1] ?? '');
-        $reason = null;
-
-        if (!FiscalCode::isValidActivityCode($code)) {
-            $reason = 'INVALID_CODE';
-        } elseif ($name === '') {
-            $reason = 'MISSING_NAME';
-        } elseif (isset($seen[$code])) {
-            $reason = 'SOURCE_DUPLICATE';
-        } else {
-            $seen[$code] = true;
-        }
-
-        $reportRows[] = [
-            'source_file' => $sourceFile,
-            'source_sheet' => $sourceSheet,
-            'row_number' => $index + 5,
-            'code' => $code,
-            'name' => $name,
-            'kind' => 'activity',
-            'reason_code' => $reason,
-        ];
-
-        if ($reason === null) {
-            $activities[$code] = $name;
-        }
-    }
-
-    return ['map' => $activities, 'report_rows' => $reportRows];
 }
 
 /**
@@ -466,3 +341,5 @@ echo sprintf(
     $stats['activities_skipped'],
     $stats['errors']
 );
+
+exit($stats['errors'] > 0 ? 1 : 0);
