@@ -94,6 +94,31 @@ function buildFiscalImportPreflightReport(
 }
 
 /**
+ * @param array{parents_written:int, children_written:int, activities_written:int, categories_skipped:int, activities_skipped:int, errors:int} $stats
+ */
+function buildFiscalImportSummary(array $stats): string
+{
+    $written = sprintf(
+        'Written %d parents, %d children, %d activities.',
+        $stats['parents_written'],
+        $stats['children_written'],
+        $stats['activities_written']
+    );
+    $skipped = sprintf(
+        ' Skipped %d categories, %d activities.',
+        $stats['categories_skipped'],
+        $stats['activities_skipped']
+    );
+
+    if ($stats['errors'] === 0) {
+        return $written . $skipped . ' Errors: 0.';
+    }
+
+    return 'PARTIAL IMPORT: ' . $written . $skipped
+        . sprintf(' %d row(s) NOT written due to errors; see [ERROR] lines above.', $stats['errors']);
+}
+
+/**
  * Describe one row-level finding.
  *
  * @param array<string,mixed> $row

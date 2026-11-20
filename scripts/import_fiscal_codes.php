@@ -332,14 +332,6 @@ try {
     exit(1);
 }
 
-echo sprintf(
-    "Written %d parents, %d children, %d activities. Skipped %d categories, %d activities. Errors: %d.\n",
-    $stats['parents_written'],
-    $stats['children_written'],
-    $stats['activities_written'],
-    $stats['categories_skipped'],
-    $stats['activities_skipped'],
-    $stats['errors']
-);
+echo buildFiscalImportSummary($stats) . "\n";
 
 exit($stats['errors'] > 0 ? 1 : 0);
