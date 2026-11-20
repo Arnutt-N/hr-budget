@@ -51,7 +51,7 @@ final class FiscalCodeReportController
 
     public function byExpenseCategory(): void
     {
-        $this->report(fn (): array => $this->service->byExpenseCategory($this->resolveFiscalYear()));
+        $this->report(fn (array $user): array => $this->service->byExpenseCategory($user, $this->resolveFiscalYear()));
     }
 
     public function byActivity(): void
@@ -69,14 +69,14 @@ final class FiscalCodeReportController
         $this->report(fn (): array => $this->service->byAgency());
     }
 
-    /** @param callable(): list<array<string,mixed>> $rows */
+    /** @param callable(array): list<array<string,mixed>> $rows */
     private function report(callable $rows): void
     {
         CorsMiddleware::apply();
-        AuthMiddleware::require();
+        $user = AuthMiddleware::require();
 
         try {
-            ApiResponse::ok($rows());
+            ApiResponse::ok($rows($user));
         } catch (\Throwable $e) {
             error_log("[FiscalCodeReportController] {$e->getMessage()}");
             ApiResponse::error('เกิดข้อผิดพลาดในระบบ', 500);

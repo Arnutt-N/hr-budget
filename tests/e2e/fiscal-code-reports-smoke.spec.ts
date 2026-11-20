@@ -4,7 +4,7 @@ const ADMIN_EMAIL = 'admin@moj.go.th'
 const ADMIN_PASSWORD = 'admin123'
 
 const baseUrl = new URL(process.env.BASE_URL || 'http://localhost:5174')
-const appPrefix = baseUrl.pathname.replace(/\/$/, '')
+const appPrefix = baseUrl.pathname.replace(/\/$/, '').replace(/\/app$/, '') + '/app'
 const apiPrefix = appPrefix.replace(/\/app$/, '')
 
 function apiPath(path: string): string {
@@ -75,19 +75,55 @@ test('fiscal code report smoke', async ({ page }) => {
     expect(byPath.get(`/api/v1/reports/fiscal-codes/${name}`)!.searchParams.has('year')).toBe(false)
   }
 
-  const expenseResponse = await page.request.get(apiPath('/api/v1/reports/fiscal-codes/by-expense-category'))
-  expect(expenseResponse.status()).toBe(200)
-  const expenseEnvelope = await expenseResponse.json()
-  const expenseRows = expenseEnvelope.data
-  expect(Array.isArray(expenseRows)).toBe(true)
-  expect(expenseRows.length).toBeGreaterThan(0)
-  expect(typeof expenseRows[0].allocated_pba).toBe('string')
-
   await expect(page.getByRole('heading', { name: 'รหัสตามประเภทรายจ่าย' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'รหัสตามกิจกรรมหลัก' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'รหัสลูกต่อรหัสแม่' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'รหัสลูกตามหน่วยงาน' })).toBeVisible()
   await expect(page.getByText('ไม่กรองตามปี').first()).toBeVisible()
+
+  const targetYear =
+    years.find(({ year, is_current }) => year === 2569 && !is_current)?.year ??
+    years.find(({ is_current }) => !is_current)?.year
+  if (targetYear === undefined) throw new Error('no non-current fiscal year available to switch to')
+
+  await page.getByRole('combobox', { name: 'เลือกปีงบประมาณ' }).click()
+  await page.getByRole('option', { name: `ปีงบ ${targetYear}`, exact: true }).click()
+
+  const hasTargetYear = (request: Request): boolean =>
+    new URL(request.url()).searchParams.get('year') === String(targetYear)
+  await expect.poll(() => requests.filter(hasTargetYear).length, { timeout: 10000 }).toBe(2)
+  const scopedPaths = requests.filter(hasTargetYear).map((request) => fiscalReportPath(request))
+  expect(new Set(scopedPaths)).toEqual(
+    new Set([
+      '/api/v1/reports/fiscal-codes/by-expense-category',
+      '/api/v1/reports/fiscal-codes/by-activity',
+    ]),
+  )
+  await expect(page.getByText(`ประจำปีงบ พ.ศ. ${targetYear}`)).toBeVisible()
+
+  const expenseResponse = await page.request.get(
+    apiPath(`/api/v1/reports/fiscal-codes/by-expense-category?year=${targetYear}`),
+  )
+  expect(expenseResponse.status()).toBe(200)
+  const expenseRows = (await expenseResponse.json()).data as { code: string; allocated_pba: string }[]
+  expect(Array.isArray(expenseRows)).toBe(true)
+  const allocationRow = expenseRows.find(({ code }) => typeof code === 'string' && code !== '')
+  expect(allocationRow, 'no expense row with a valid code').toBeDefined()
+  const apiAmount = Number(allocationRow!.allocated_pba)
+  expect(Number.isFinite(apiAmount)).toBe(true)
+  // Format in the browser so ICU data matches the Vue page's formatter.
+  const expectedAmount = await page.evaluate(
+    (amount) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount),
+    apiAmount,
+  )
+  const expenseSection = page.locator('section').filter({
+    has: page.getByRole('heading', { name: 'รหัสตามประเภทรายจ่าย' }),
+  })
+  const matchedRow = expenseSection.getByRole('row').filter({
+    has: page.getByRole('cell', { name: allocationRow!.code, exact: true }),
+  })
+  await expect(matchedRow).toHaveCount(1)
+  await expect(matchedRow.getByRole('cell', { name: expectedAmount, exact: true })).toBeVisible()
 
   const amountColumn = page.getByRole('columnheader', { name: 'ยอดจัดสรร (บาท)' })
   await expect(amountColumn).toBeVisible()

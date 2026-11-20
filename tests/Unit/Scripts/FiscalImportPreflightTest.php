@@ -103,6 +103,34 @@ final class FiscalImportPreflightTest extends TestCase
         ], $report['findings'][1]);
     }
 
+    public function testWriteSummaryMarksPartialImportAndCountsUnwrittenRows(): void
+    {
+        $partial = buildFiscalImportSummary([
+            'parents_written' => 15,
+            'children_written' => 74,
+            'activities_written' => 15,
+            'categories_skipped' => 0,
+            'activities_skipped' => 0,
+            'errors' => 1,
+        ]);
+
+        $this->assertStringContainsString('PARTIAL IMPORT', $partial);
+        $this->assertStringContainsString('Written 15 parents, 74 children, 15 activities.', $partial);
+        $this->assertStringContainsString('1 row(s) NOT written', $partial);
+
+        $clean = buildFiscalImportSummary([
+            'parents_written' => 15,
+            'children_written' => 75,
+            'activities_written' => 15,
+            'categories_skipped' => 0,
+            'activities_skipped' => 0,
+            'errors' => 0,
+        ]);
+
+        $this->assertStringNotContainsString('PARTIAL', $clean);
+        $this->assertStringContainsString('Errors: 0.', $clean);
+    }
+
     /**
      * @return array<string,mixed>
      */

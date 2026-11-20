@@ -210,17 +210,20 @@ minutes. Verification runs locally instead. Do not assume a PR was gated by CI.
 - **`composer verify`** (repo root) — PHPStan + PHPUnit Unit suite (`@analyse` then `@test:unit`).
 - **`npm run verify`** (`frontend/`) — `typecheck` (`vue-tsc --noEmit`) + `build` (`vue-tsc -b && vite build`).
 - **git `pre-push` hook** (local-only, lives in `.git/hooks/pre-push`, **NOT committed**) —
-  blocks a push whose local ref is `refs/heads/main`. It reads only the local ref. It does not
-  check the destination ref, run verification, or protect a fresh clone. `git push --no-verify`
-  skips it.
+  blocks a push when either the local ref or the destination ref is `refs/heads/main`. For other
+  pushes it runs `composer verify` and the frontend `npm run verify`. It resolves PHP from a known
+  Laragon path and uses npm from PATH or a known local install. It keeps the default frontend build
+  so verification does not overwrite the tracked deploy bundle. The hook is local-only, does not
+  protect a fresh clone, and `git push --no-verify` skips it.
 - **GitHub branch protection on `main`** — service-enforced. Requires changes to arrive through a
   PR and applies to admins (`enforce_admins: true`). It requires zero approving reviews because
   this repository has one admin, and it specifies no required status checks while GitHub Actions
   is disabled.
 
-Run `composer verify` and `npm run verify` manually before pushing. The local hook only blocks
-a direct push from local `main`; GitHub branch protection is the rule that blocks direct changes
-to remote `main`.
+Run `composer verify` and `npm run verify` manually before pushing. The local hook blocks a direct
+push from local `main` and a push to remote `main`, and runs both verification commands for other
+pushes. GitHub branch protection is the service-enforced rule that also blocks direct changes to
+remote `main`.
 
 ### Static analysis status
 

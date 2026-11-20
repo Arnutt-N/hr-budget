@@ -31,7 +31,14 @@ final class FiscalCodeReportServiceTest extends TestCase
                 activity_code TEXT, name_th TEXT, deleted_at TEXT);
              CREATE TABLE divisions (id INTEGER PRIMARY KEY, code TEXT, name_th TEXT);
              CREATE TABLE budget_line_items (id INTEGER PRIMARY KEY, fiscal_year INTEGER,
-                expense_type_id INTEGER, allocated_pba REAL, deleted_at TEXT);"
+                expense_type_id INTEGER, allocated_pba REAL, deleted_at TEXT,
+                ministry_id INTEGER, department_id INTEGER, division_id INTEGER, section_id INTEGER);
+             CREATE TABLE organizations (id INTEGER PRIMARY KEY, parent_id INTEGER, code TEXT, name_th TEXT);
+             CREATE TABLE user_access_grants (id INTEGER PRIMARY KEY, user_id INTEGER,
+                role_id INTEGER, scope_type TEXT, scope_ref_id INTEGER, is_active INTEGER);
+             CREATE TABLE roles (id INTEGER PRIMARY KEY, code TEXT, name_th TEXT, is_active INTEGER);
+             CREATE TABLE role_permissions (role_id INTEGER, permission_id INTEGER);
+             CREATE TABLE permissions (id INTEGER PRIMARY KEY, code TEXT);"
         );
 
         $this->pdo->exec(
@@ -52,12 +59,22 @@ final class FiscalCodeReportServiceTest extends TestCase
                 (5, 2569, '16002690003200000', 'Activity ลบแล้ว', '2569-01-01');
              INSERT INTO divisions (id, code, name_th) VALUES
                 (1, '16002', 'กรมยุติธรรม');
-             INSERT INTO budget_line_items (id, fiscal_year, expense_type_id, allocated_pba, deleted_at) VALUES
-                (1, 2569, 1, 100, NULL),
-                (2, 2569, 1, 50, NULL),
-                (3, 2569, 2, 25, NULL),
-                (4, 2570, 1, 999, NULL),
-                (5, 2569, 1, 999, '2569-01-01');"
+             INSERT INTO budget_line_items (id, fiscal_year, expense_type_id, allocated_pba, deleted_at,
+                ministry_id, department_id, division_id, section_id) VALUES
+                (1, 2569, 1, 100, NULL, 10, 11, 12, 13),
+                (2, 2569, 1, 50, NULL, 10, 20, NULL, NULL),
+                (3, 2569, 2, 25, NULL, 10, 20, NULL, NULL),
+                (4, 2570, 1, 999, NULL, 10, 11, 12, 13),
+                (5, 2569, 1, 999, '2569-01-01', 10, 11, 12, 13);
+             INSERT INTO organizations (id, parent_id, code, name_th) VALUES
+                (10, NULL, 'MIN', 'กระทรวง'), (11, 10, 'DEP', 'กรมหนึ่ง'),
+                (12, 11, 'DIV', 'กองหนึ่ง'), (13, 12, 'SEC', 'ฝ่ายหนึ่ง'),
+                (20, 10, 'DEP2', 'กรมสอง');
+             INSERT INTO roles (id, code, name_th, is_active) VALUES (1, 'viewer', 'ผู้ดูแล', 1);
+             INSERT INTO permissions (id, code) VALUES (1, 'fiscal_code_report.view');
+             INSERT INTO role_permissions (role_id, permission_id) VALUES (1, 1);
+             INSERT INTO user_access_grants (id, user_id, role_id, scope_type, scope_ref_id, is_active) VALUES
+                (1, 7, 1, 'organization', 11, 1);"
         );
     }
 
@@ -67,9 +84,27 @@ final class FiscalCodeReportServiceTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_by_expense_category_scopes_allocations_to_granted_org_subtree(): void
+    {
+        $rows = $this->service->byExpenseCategory(['id' => 7, 'role' => 'viewer'], 2569);
+
+        $this->assertSame(2, (int) $rows[0]['count']);
+        $this->assertEquals(100, $rows[0]['allocated_pba']);
+        $this->assertEquals(0, $rows[1]['allocated_pba']);
+    }
+
+    public function test_by_expense_category_hides_all_allocations_without_org_scope(): void
+    {
+        $rows = $this->service->byExpenseCategory(['id' => 8, 'role' => 'viewer'], 2569);
+
+        $this->assertCount(2, $rows);
+        $this->assertEquals(0, $rows[0]['allocated_pba']);
+        $this->assertEquals(0, $rows[1]['allocated_pba']);
+    }
+
     public function test_by_expense_category_reads_thai_labels_and_year_amounts(): void
     {
-        $rows = $this->service->byExpenseCategory(2569);
+        $rows = $this->service->byExpenseCategory(['role' => 'admin', 'id' => 1], 2569);
 
         $this->assertCount(2, $rows);
         $this->assertSame('010', $rows[0]['code']);
@@ -82,8 +117,8 @@ final class FiscalCodeReportServiceTest extends TestCase
 
     public function test_reports_skip_inactive_rows(): void
     {
-        $this->assertCount(2, $this->service->byExpenseCategory(2569));
-        $this->assertSame(2, (int) $this->service->byExpenseCategory(2569)[0]['count']);
+        $this->assertCount(2, $this->service->byExpenseCategory(['role' => 'admin', 'id' => 1], 2569));
+        $this->assertSame(2, (int) $this->service->byExpenseCategory(['role' => 'admin', 'id' => 1], 2569)[0]['count']);
 
         $rollup = $this->service->byParentRollup();
         $this->assertCount(2, $rollup);
