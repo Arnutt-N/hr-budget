@@ -7,6 +7,7 @@ namespace Tests\Unit\Scripts;
 use PHPUnit\Framework\TestCase;
 
 require_once dirname(__DIR__, 3) . '/scripts/lib/fiscal_import_preflight.php';
+require_once dirname(__DIR__, 3) . '/scripts/lib/fiscal_import_parsers.php';
 
 final class FiscalImportPreflightTest extends TestCase
 {
@@ -101,6 +102,18 @@ final class FiscalImportPreflightTest extends TestCase
             'source_sheet' => self::BUDGET_SHEET,
             'row_number' => 4,
         ], $report['findings'][1]);
+    }
+
+    public function testCountsParserRejectionsWithoutDoubleCountingOrphans(): void
+    {
+        $rows = [
+            self::budgetRow(2, self::PARENT_CODE, 'งบบุคลากร', 'parent', null),
+            self::budgetRow(3, self::CHILD_CODE, 'รายการใหม่', 'child', 'ORPHAN_CHILD'),
+            self::budgetRow(4, '', '', 'unknown', 'INVALID_CODE'),
+            self::budgetRow(5, self::CHILD_CODE, 'รายการซ้ำ', 'unknown', 'SOURCE_DUPLICATE'),
+        ];
+
+        $this->assertSame(2, countParserRejections($rows, []));
     }
 
     public function testWriteSummaryMarksPartialImportAndCountsUnwrittenRows(): void

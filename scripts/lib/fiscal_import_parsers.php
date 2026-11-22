@@ -76,6 +76,18 @@ function parseBudgetRows(array $rows, string $sourceFile, string $sourceSheet): 
     return ['parents' => $parents, 'children' => $children, 'report_rows' => $reportRows];
 }
 
+function countParserRejections(array $budgetRows, array $activityRows): int
+{
+    $count = 0;
+    foreach (array_merge($budgetRows, $activityRows) as $row) {
+        if (isset($row['reason_code']) && $row['reason_code'] !== 'ORPHAN_CHILD') {
+            $count++;
+        }
+    }
+
+    return $count;
+}
+
 function parseActivityRows(array $rows, string $sourceFile, string $sourceSheet): array
 {
     $activities = [];
