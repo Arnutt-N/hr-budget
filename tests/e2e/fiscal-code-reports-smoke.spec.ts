@@ -111,6 +111,7 @@ test('fiscal code report smoke', async ({ page }) => {
   expect(allocationRow, 'no expense row with a valid code').toBeDefined()
   const apiAmount = Number(allocationRow!.allocated_pba)
   expect(Number.isFinite(apiAmount)).toBe(true)
+  expect(apiAmount, 'target-year allocation seed should be nonzero').toBeGreaterThan(0)
   // Format in the browser so ICU data matches the Vue page's formatter.
   const expectedAmount = await page.evaluate(
     (amount) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount),

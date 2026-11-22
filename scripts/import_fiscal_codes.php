@@ -224,6 +224,8 @@ $stats = [
     'errors' => 0,
 ];
 
+$stats['errors'] = countParserRejections($budget['report_rows'], $activities['report_rows']);
+
 Database::beginTransaction();
 
 try {
